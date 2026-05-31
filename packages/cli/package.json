@@ -1,0 +1,33 @@
+{
+  "name": "@crowsnest/cli",
+  "version": "0.1.0",
+  "description": "Crowsnest supply chain security CLI",
+  "type": "module",
+  "bin": {
+    "crowsnest": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "inquirer": "^10.1.0",
+    "table": "^6.8.2",
+    "conf": "^13.0.0",
+    "semver": "^7.6.3",
+    "eventsource": "^2.0.2",
+    "date-fns": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/semver": "^7.5.8",
+    "typescript": "^5.5.0",
+    "tsx": "^4.16.0",
+    "eslint": "^9.0.0"
+  }
+}

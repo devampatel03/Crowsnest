@@ -1,0 +1,10 @@
+name: sigstore_rekor
+type: api
+base_url: https://rekor.sigstore.dev/api/v1
+auth:
+  type: none
+tables:
+  - name: sigstore_rekor
+    endpoint: /log/entries/{uuid}
+    index_endpoint: /index/retrieve
+refresh_interval: 1800

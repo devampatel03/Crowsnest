@@ -1,0 +1,170 @@
+[
+  {
+    "campaign_name": "Shai-Hulud-Wave-1",
+    "ioc_type": "npm_publisher",
+    "value": "antv_compromised_001",
+    "first_seen": "2026-04-15T10:22:00Z",
+    "attribution": "Unit42/Snyk",
+    "attack_wave": "1"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-1",
+    "ioc_type": "package_name",
+    "value": "@antv/s2-react",
+    "first_seen": "2026-04-15T10:22:00Z",
+    "attribution": "Unit42",
+    "attack_wave": "1"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "package_name",
+    "value": "@tanstack/react-query",
+    "first_seen": "2026-05-11T12:00:00Z",
+    "attribution": "StepSecurity/Snyk",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "package_name",
+    "value": "@tanstack/query-core",
+    "first_seen": "2026-05-11T12:00:00Z",
+    "attribution": "StepSecurity/Snyk",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "package_name",
+    "value": "mistral-common",
+    "first_seen": "2026-05-11T12:15:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "package_name",
+    "value": "@uipath/robot",
+    "first_seen": "2026-05-11T12:30:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "package_name",
+    "value": "opensearch-client",
+    "first_seen": "2026-05-11T12:45:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-2",
+    "ioc_type": "c2_domain",
+    "value": "cdn-pkg-cache.io",
+    "first_seen": "2026-05-11T12:00:00Z",
+    "attribution": "Unit42",
+    "attack_wave": "2"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-3",
+    "ioc_type": "package_name",
+    "value": "react-codeshift",
+    "first_seen": "2026-01-15T08:00:00Z",
+    "attribution": "SecurityResearcher",
+    "attack_wave": "3"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-3",
+    "ioc_type": "npm_publisher",
+    "value": "teampcp_wave3",
+    "first_seen": "2026-04-20T14:00:00Z",
+    "attribution": "Snyk",
+    "attack_wave": "3"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-3",
+    "ioc_type": "c2_domain",
+    "value": "pkg-update-service.net",
+    "first_seen": "2026-04-20T14:00:00Z",
+    "attribution": "Snyk",
+    "attack_wave": "3"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-4",
+    "ioc_type": "npm_publisher",
+    "value": "mini_shai_hulud_actor",
+    "first_seen": "2026-04-28T22:10:00Z",
+    "attribution": "Unit42",
+    "attack_wave": "4"
+  },
+  {
+    "campaign_name": "Shai-Hulud-Wave-4",
+    "ioc_type": "burst_pattern",
+    "value": "300_packages_22_minutes",
+    "first_seen": "2026-04-28T22:10:00Z",
+    "attribution": "Unit42",
+    "attack_wave": "4"
+  },
+  {
+    "campaign_name": "AntV-Compromise",
+    "ioc_type": "package_name",
+    "value": "@antv/g2",
+    "first_seen": "2026-04-10T09:00:00Z",
+    "attribution": "Snyk",
+    "attack_wave": "antv"
+  },
+  {
+    "campaign_name": "AntV-Compromise",
+    "ioc_type": "package_name",
+    "value": "@antv/g6",
+    "first_seen": "2026-04-10T09:00:00Z",
+    "attribution": "Snyk",
+    "attack_wave": "antv"
+  },
+  {
+    "campaign_name": "AntV-Compromise",
+    "ioc_type": "package_name",
+    "value": "@antv/x6",
+    "first_seen": "2026-04-10T09:00:00Z",
+    "attribution": "Snyk",
+    "attack_wave": "antv"
+  },
+  {
+    "campaign_name": "Bitwarden-CLI-Compromise",
+    "ioc_type": "package_name",
+    "value": "@bitwarden/cli",
+    "first_seen": "2026-03-20T11:00:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "bitwarden"
+  },
+  {
+    "campaign_name": "Slopsquat-Campaign-Jan2026",
+    "ioc_type": "package_name",
+    "value": "react-codeshift",
+    "first_seen": "2026-01-10T00:00:00Z",
+    "attribution": "SecurityResearcher/GitHubScan",
+    "attack_wave": "slopsquat-1"
+  },
+  {
+    "campaign_name": "Slopsquat-Campaign-Jan2026",
+    "ioc_type": "propagation_pattern",
+    "value": "ai_agent_autonomous_propagation",
+    "first_seen": "2026-01-15T00:00:00Z",
+    "attribution": "GitHubScan",
+    "attack_wave": "slopsquat-1"
+  },
+  {
+    "campaign_name": "TanStack-SLSA-Attack",
+    "ioc_type": "slsa_build_pattern",
+    "value": "pull_request_target_with_checkout",
+    "first_seen": "2026-05-11T12:00:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "tanstack"
+  },
+  {
+    "campaign_name": "TanStack-SLSA-Attack",
+    "ioc_type": "package_name",
+    "value": "@tanstack/react-table",
+    "first_seen": "2026-05-11T12:10:00Z",
+    "attribution": "StepSecurity",
+    "attack_wave": "tanstack"
+  }
+]

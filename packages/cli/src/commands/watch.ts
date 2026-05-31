@@ -1,0 +1,65 @@
+import chalk from 'chalk';
+import { getConfig } from '../config.js';
+
+export async function watchCommand(opts: { slack?: boolean; channel?: string }): Promise<void> {
+  const { apiUrl } = getConfig();
+  const sseUrl = `${apiUrl}/api/events`;
+
+  console.log();
+  console.log(chalk.cyan.bold('  CROWSNEST WATCH') + chalk.dim(' — live event stream'));
+  console.log(chalk.dim(`  Connecting to ${sseUrl}...`));
+  console.log(chalk.dim('  Press Ctrl+C to stop'));
+  console.log();
+
+  const EventSource = (await import('eventsource')).default;
+  const es = new EventSource(sseUrl);
+
+  es.onopen = () => {
+    console.log(chalk.green('  ● Connected') + chalk.dim(' — monitoring npm publish firehose'));
+    console.log();
+  };
+
+  es.onmessage = (event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data) as Record<string, unknown>;
+      renderEvent(data);
+    } catch {
+      // ignore malformed events
+    }
+  };
+
+  es.onerror = () => {
+    console.log(chalk.yellow('  ⚡ Connection lost, reconnecting...'));
+  };
+
+  // Keep process alive
+  await new Promise<never>(() => {});
+}
+
+function renderEvent(event: Record<string, unknown>): void {
+  const ts = new Date().toLocaleTimeString();
+  const type = String(event.type || '');
+
+  if (type === 'publish_event') {
+    const pkg = String(event.package || '');
+    const ver = String(event.version || '');
+    // Dim for regular, bright for suspicious
+    const isSuspicious = String(event.probability || 0) > '0.5';
+    const color = isSuspicious ? chalk.yellow : chalk.dim;
+    const flag = isSuspicious ? chalk.yellow(' ⚠ suspicious') : '';
+    console.log(color(`  [${ts}] 📦 ${pkg}@${ver}${flag}`));
+  } else if (type === 'incident_detected') {
+    const sev = String(event.severity || 'MEDIUM');
+    const pattern = String(event.attack_pattern || '');
+    const packages = (event.packages as string[] || []).slice(0, 2).join(', ');
+    const color = sev === 'CRITICAL' ? chalk.red.bold : sev === 'HIGH' ? chalk.red : chalk.yellow;
+    console.log(color(`  [${ts}] 🚨 INCIDENT: ${sev} — ${pattern} — ${packages}`));
+  } else if (type === 'scan_progress') {
+    const phase = String(event.phase || '');
+    if (phase === 'complete') {
+      const incidents = Number(event.incidents_found || 0);
+      const tokens = Number(event.token_usage || 0);
+      console.log(chalk.cyan(`  [${ts}] ✓ Scan complete — ${incidents} incident(s) — ${tokens.toLocaleString()} tokens`));
+    }
+  }
+}

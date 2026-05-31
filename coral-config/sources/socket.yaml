@@ -1,0 +1,12 @@
+name: socket
+type: api
+base_url: https://api.socket.dev/v0
+auth:
+  type: basic_auth
+  env_var: SOCKET_API_KEY
+  required: false
+tables:
+  - name: socket_alerts
+    endpoint: /{ecosystem}/scores/{package}
+    rate_limit: 60/minute
+refresh_interval: 900

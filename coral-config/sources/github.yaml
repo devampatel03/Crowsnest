@@ -1,0 +1,23 @@
+name: github
+type: api
+base_url: https://api.github.com
+auth:
+  type: bearer_token
+  env_var: GITHUB_TOKEN
+  required: false
+tables:
+  - name: gh_repos
+    endpoint: /orgs/{org}/repos
+    rate_limit: 5000/hour
+  - name: gh_commits
+    endpoint: /repos/{org}/{repo}/commits
+  - name: gh_releases
+    endpoint: /repos/{org}/{repo}/releases
+  - name: gh_actions_runs
+    endpoint: /repos/{org}/{repo}/actions/runs
+  - name: gh_workflow_files
+    endpoint: /repos/{org}/{repo}/contents/.github/workflows
+  - name: gh_repo_perms_audit
+    endpoint: /orgs/{org}/audit-log
+    required_scope: admin:org
+refresh_interval: 600

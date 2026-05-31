@@ -1,0 +1,6 @@
+packages:
+  - 'packages/cli'
+  - 'packages/dashboard'
+  - 'packages/vscode-extension'
+  - 'packages/slack-bot'
+  - 'packages/shared'

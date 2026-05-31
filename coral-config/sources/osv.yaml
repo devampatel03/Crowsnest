@@ -1,0 +1,11 @@
+name: osv
+type: api
+base_url: https://api.osv.dev/v1
+auth:
+  type: none
+tables:
+  - name: osv_advisories
+    endpoint: /query
+    method: POST
+    batch_endpoint: /querybatch
+refresh_interval: 3600

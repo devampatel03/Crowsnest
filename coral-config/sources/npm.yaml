@@ -1,0 +1,22 @@
+name: npm_registry
+type: api
+base_url: https://registry.npmjs.org
+auth:
+  type: bearer_token
+  env_var: NPM_TOKEN
+  required: false
+tables:
+  - name: npm_packages
+    endpoint: /{package}
+    rate_limit: 100/minute
+  - name: npm_versions
+    endpoint: /{package}
+    sub_path: versions
+  - name: npm_maintainers
+    endpoint: /{package}
+    synthesized: true
+  - name: npm_publish_events
+    endpoint: /-/v1/search
+    streaming: true
+    stream_endpoint: https://skimdb.npmjs.com/registry/_changes
+refresh_interval: 300

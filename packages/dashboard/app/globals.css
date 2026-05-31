@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #020817;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+  --primary: #22d3ee;
+  --danger: #ef4444;
+}
+
+body {
+  background-color: var(--bg);
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glowing borders for critical alerts */
+.alert-critical {
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  border-color: #ef4444;
+}
+.alert-high {
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.3);
+  border-color: #f97316;
+}
+
+/* Live dot pulse */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+.live-dot {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Firehose scroll */
+.firehose-container {
+  overflow-y: auto;
+  height: 200px;
+  scroll-behavior: smooth;
+}
