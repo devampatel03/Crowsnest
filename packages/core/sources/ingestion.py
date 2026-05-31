@@ -46,15 +46,20 @@ class IngestorService:
 
     async def ingest_lockfile(self, project_path: str, engine: CoralEngine) -> int:
         """Parse lockfile and source imports; insert into CoralDB."""
-        records = await self._lockfile.fetch(project_path=project_path)
+        # Run lockfile detection and parsing in executor
+        records = await asyncio.get_event_loop().run_in_executor(
+            None, self._lockfile.detect_and_parse, project_path
+        )
         if not records:
             log.warning("ingest.lockfile_empty", path=project_path)
             return 0
 
         await engine.ingest("local_lockfiles", records)
 
-        # Also scan source imports
-        import_records = self._lockfile.scan_source_imports(project_path)
+        # Also scan source imports in executor
+        import_records = await asyncio.get_event_loop().run_in_executor(
+            None, self._lockfile.scan_source_imports, project_path
+        )
         if import_records:
             await engine.ingest("local_source_packages_mentioned", import_records)
 
