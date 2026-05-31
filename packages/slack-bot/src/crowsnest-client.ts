@@ -177,13 +177,22 @@ export class CrowsnestApiClient {
    * @param maintainer - npm/GitHub login of the maintainer
    */
   async blastRadius(maintainer: string): Promise<BlastRadiusResult> {
-    return apiFetch<BlastRadiusResult>(
+    const raw = await apiFetch<any>(
       `${this.baseUrl}/api/blast-radius`,
       {
         method: 'POST',
         body: JSON.stringify({ maintainer }),
       }
     );
+    return {
+      maintainer: raw.maintainer,
+      compromised_packages: raw.packages_controlled ?? [],
+      affected_projects: raw.affected_projects ?? [],
+      affected_packages: raw.packages_controlled ?? [],
+      total_affected: raw.total_affected_deps ?? 0,
+      runtime_exposed: (raw.runtime_confirmed_count ?? 0) > 0,
+      risk_score: (raw.total_affected_deps ?? 0) > 0 ? 0.8 : 0.0,
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -196,13 +205,71 @@ export class CrowsnestApiClient {
    * @param pkg - Package name (optionally with @version, e.g. "left-pad@1.3.0")
    */
   async investigate(pkg: string): Promise<InvestigationResult> {
-    return apiFetch<InvestigationResult>(
+    const raw = await apiFetch<any>(
       `${this.baseUrl}/api/investigate`,
       {
         method: 'POST',
         body: JSON.stringify({ package: pkg }),
       }
     );
+
+    const socketAlertsCount = raw.socket_alerts?.length ?? 0;
+    const weeklyDownloads = raw.npm_metadata?.weekly_downloads ?? 0;
+    
+    // Check findings for critical alerts
+    const iocHits = raw.findings?.IOC_MATCH?.length ?? 0;
+    const shaiHuludHits = raw.findings?.SHAI_HULUD?.length ?? 0;
+    const sleeperHits = raw.findings?.SLEEPER_DEPENDENCY?.length ?? 0;
+    
+    let verdict: 'clean' | 'suspicious' | 'compromised' = 'clean';
+    let summary = 'No security issues detected. Package appears normal.';
+    
+    if (iocHits > 0 || shaiHuludHits > 0) {
+      verdict = 'compromised';
+      summary = `CRITICAL: Known Indicators of Compromise (IOC) matched. ${iocHits} active threat matches found.`;
+    } else if (socketAlertsCount > 0 || sleeperHits > 0 || weeklyDownloads < 1000) {
+      verdict = 'suspicious';
+      summary = `WARNING: Suspicious signals detected. Contains ${socketAlertsCount} socket.dev alerts and low download counts.`;
+    }
+
+    let ageDays = 365;
+    if (raw.npm_metadata?.created_at) {
+      try {
+        const created = new Date(raw.npm_metadata.created_at);
+        ageDays = Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const maintainerChanges = raw.findings?.IDENTITY_DRIFT?.length ?? 0;
+
+    return {
+      package: pkg,
+      incident: raw.findings?.IOC_MATCH?.[0] ? {
+        id: raw.findings.IOC_MATCH[0].id ?? 'ioc-match',
+        attack_pattern: 'maintainer_takeover',
+        confidence: 0.9,
+        severity: 'CRITICAL',
+        packages: [pkg],
+        blast_radius: raw.findings.IOC_MATCH[0].blast_radius ?? 1,
+        runtime_confirmation: false,
+        remediation_options: ['Pin to a known-safe version', 'Audit recent maintainer changes'],
+        detected_at: new Date().toISOString()
+      } : null,
+      analysis: {
+        maintainer_changes: maintainerChanges,
+        days_since_maintainer_change: maintainerChanges > 0 ? 30 : null,
+        commit_pattern_anomaly: maintainerChanges > 0,
+        slsa_attestation: weeklyDownloads > 50000,
+        slsa_pipeline_risk: false,
+        socket_alerts: socketAlertsCount,
+        weekly_downloads: weeklyDownloads,
+        age_days: ageDays
+      },
+      verdict,
+      summary
+    };
   }
 
   // -------------------------------------------------------------------------

@@ -17,7 +17,6 @@
  */
 
 import * as vscode from 'vscode';
-import 'event-stream'
 import { CrowsnestClient, VetoResult } from './client';
 
 // ─────────────────────────────────────────────
