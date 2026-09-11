@@ -16,9 +16,8 @@ from typing import Any
 class QueryLibrary:
     """Registry of named, parameterisable SQL detection queries."""
 
-    # ------------------------------------------------------------------ #
-    #  §5.1  XZ Utils pattern — maintainer takeover                       #
-    # ------------------------------------------------------------------ #
+    # XZ Utils pattern — maintainer takeover                 
+
     XZ_PATTERN = """
 -- Detect deps where a new maintainer is making structural changes
 -- after the long-time maintainer's activity has collapsed (XZ Utils style).
@@ -69,9 +68,8 @@ ORDER BY m_new.ts DESC
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.2  Shai-Hulud pattern — token-theft worm burst                  #
-    # ------------------------------------------------------------------ #
+    # Shai-Hulud pattern — token-theft worm burst        
+
     SHAI_HULUD = """
 -- Detect publish bursts that match token-theft worm behaviour:
 -- 10+ packages published by the same account in under 30 minutes.
@@ -103,9 +101,8 @@ GROUP BY
 ORDER BY b.packages_published DESC
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.3  Slopsquatting — AI-hallucinated dependencies                 #
-    # ------------------------------------------------------------------ #
+    # Slopsquatting — AI-hallucinated dependencies       
+        
     SLOPSQUATTING = """
 -- Find packages in your codebase likely AI-suggested and suspiciously new.
 SELECT
@@ -138,9 +135,8 @@ ORDER BY s.ai_authored_likelihood DESC, n.weekly_downloads ASC
 LIMIT 100
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.4  SLSA-attested malware — the May 11 TanStack pattern          #
-    # ------------------------------------------------------------------ #
+    # SLSA-attested malware — TanStack pattern       
+
     SLSA_POISONING = """
 -- Packages with valid SLSA provenance but a build pipeline that has
 -- known-exploitable patterns.  Caught TanStack/Mistral/UiPath on 2026-05-11.
@@ -178,9 +174,8 @@ WHERE
 ORDER BY a.started_at DESC
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.5  Blast radius — exposure to a compromised maintainer          #
-    # ------------------------------------------------------------------ #
+    # Blast radius — exposure to a compromised maintainer   
+
     BLAST_RADIUS = """
 -- If maintainer X is compromised, what is our exposure across all projects?
 WITH compromised_packages AS (
@@ -208,9 +203,8 @@ ORDER BY
   array_length(l.parent_chain)
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.6  Sleeper dependency — multi-stage payload                     #
-    # ------------------------------------------------------------------ #
+    # Sleeper dependency — multi-stage payload   
+                     
     SLEEPER_DEPENDENCY = """
 -- Packages that were quiet for 6+ months but suddenly have install scripts
 -- and suspicious Socket alerts — the multi-stage payload pattern.
@@ -248,9 +242,8 @@ WHERE
 ORDER BY s.severity DESC, v.published_at DESC
 """
 
-    # ------------------------------------------------------------------ #
-    #  §5.7  Author identity drift — account takeover signal              #
-    # ------------------------------------------------------------------ #
+    # Author identity drift — account takeover signal              
+
     IDENTITY_DRIFT = """
 -- Detect when a maintainer's commit 'style fingerprint' suddenly changes
 -- (timezone, commit message verbosity, file-touching patterns).
@@ -283,9 +276,8 @@ ORDER BY hour_z_score DESC NULLS LAST
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  Typosquat distance scoring                                         #
-    # ------------------------------------------------------------------ #
+    #  Typosquat distance scoring                                         
+
     TYPOSQUAT_DISTANCE = """
 -- Installed packages that are suspiciously similar to very popular packages
 -- (Levenshtein-style — DuckDB does not have built-in edit distance, so we
@@ -319,9 +311,8 @@ ORDER BY pop.weekly_downloads DESC
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  Abandoned-but-popular packages                                     #
-    # ------------------------------------------------------------------ #
+    #  Abandoned-but-popular packages        
+                                 
     ABANDONED_POPULAR = """
 -- Popular packages in your dep graph with no activity in 365+ days.
 SELECT
@@ -341,9 +332,8 @@ ORDER BY n.weekly_downloads DESC
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  OIDC token misuse                                                  #
-    # ------------------------------------------------------------------ #
+    #  OIDC token misuse                                                  
+    
     OIDC_TOKEN_MISUSE = """
 -- OIDC tokens issued for builds triggered outside expected branch contexts.
 SELECT
@@ -368,9 +358,8 @@ ORDER BY a.started_at DESC
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  Dependency confusion                                               #
-    # ------------------------------------------------------------------ #
+    #  Dependency confusion                                               
+   
     DEP_CONFUSION = """
 -- Private/internal package names that have been registered publicly —
 -- could be a dependency confusion attack.
@@ -397,9 +386,8 @@ WHERE
 ORDER BY n.created_at DESC
 """
 
-    # ------------------------------------------------------------------ #
-    #  CI cache poisoning                                                 #
-    # ------------------------------------------------------------------ #
+    #  CI cache poisoning                                                 
+    
     CI_CACHE_POISONING = """
 -- Workflows using mutable cache keys that also published packages.
 SELECT
@@ -428,9 +416,8 @@ ORDER BY a.started_at DESC
 LIMIT 50
 """
 
-    # ------------------------------------------------------------------ #
-    #  Shai-Hulud IOC match against lockfile                             #
-    # ------------------------------------------------------------------ #
+    #  Shai-Hulud IOC match against lockfile                             
+   
     IOC_MATCH = """
 -- Packages in your lockfile that match known Shai-Hulud / TeamPCP IOCs.
 SELECT
@@ -456,9 +443,8 @@ JOIN shai_hulud_iocs i
 ORDER BY i.first_seen DESC
 """
 
-    # ------------------------------------------------------------------ #
-    #  Maintainer reputation score query                                  #
-    # ------------------------------------------------------------------ #
+    #  Maintainer reputation score query                                  
+    
     MAINTAINER_REPUTATION = """
 -- Score every maintainer in your transitive dep graph.
 WITH maintainer_list AS (
@@ -534,9 +520,7 @@ ORDER BY risk_score DESC, packages_in_graph DESC
 """
 
 
-    # ------------------------------------------------------------------ #
-    #  Public query registry                                              #
-    # ------------------------------------------------------------------ #
+    #  Public query registry                                              
 
     _REGISTRY: dict[str, str] = {}
 
