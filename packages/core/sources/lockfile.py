@@ -24,7 +24,7 @@ except ImportError:
     try:
         import tomli as tomllib  # type: ignore[no-redef]
     except ImportError:
-        tomllib = None  # type: ignore[assignment]
+        tomllib = None  # type: ignore[assignment]=
 
 try:
     import yaml

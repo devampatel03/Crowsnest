@@ -1,4 +1,4 @@
-"""
+ """
 Detection Planner agent.
 
 Reads the scan context (project path, ecosystem, recent IOC feeds, last-scan

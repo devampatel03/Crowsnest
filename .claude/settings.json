@@ -1,0 +1,100 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/id_rsa)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/pre-tool-guard.sh" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/protect-files.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/post-tool-lint.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/stop-verify.sh" }
+        ]
+      }
+    ]
+  }
+}
+
+
+
+
+
+
+
+// {
+//   "permissions": {
+//     "deny": [
+//       "Bash(rm -rf /*)",
+//       "Bash(curl * | sh)",
+//       "Bash(curl * | bash)",
+//       "Read(./.env)",
+//       "Read(./.env.*)",
+//       "Read(./**/*.pem)",
+//       "Read(./**/id_rsa)"
+//     ]
+//   },
+//   "hooks": {
+//     "PreToolUse": [
+//       {
+//         "matcher": "Bash",
+//         "hooks": [
+//           { "type": "command", "command": "bash .claude/hooks/pre-tool-guard.sh" }
+//         ]
+//       },
+//       {
+//         "matcher": "Write|Edit",
+//         "hooks": [
+//           { "type": "command", "command": "bash .claude/hooks/protect-files.sh" }
+//         ]
+//       },
+//       {
+//         "matcher": "Read|Write|Edit|Bash|Glob|Grep",
+//         "hooks": [
+//           { "type": "command", "command": "bash .claude/hooks/enforce-boundary.sh" }
+//         ]
+//       }
+//     ],
+//     "PostToolUse": [
+//       {
+//         "matcher": "Write|Edit",
+//         "hooks": [
+//           { "type": "command", "command": "bash .claude/hooks/post-tool-lint.sh" },
+//           { "type": "command", "command": "bash .claude/hooks/review-flag.sh" }
+//         ]
+//       }
+//     ],
+//     "Stop": [
+//       {
+//         "hooks": [
+//           { "type": "command", "command": "bash .claude/hooks/stop-verify.sh" }
+//         ]
+//       }
+//     ]
+//   }
+// }

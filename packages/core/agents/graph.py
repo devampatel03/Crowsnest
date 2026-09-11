@@ -1,24 +1,4 @@
-"""
-LangGraph state machine for Crowsnest.
 
-         ┌──────────────────┐
-         │ detection_planner│
-         └────────┬─────────┘
-                  │ emits pending_queries
-         ┌────────▼─────────┐
-         │  investigation   │  ← runs CoralDB queries
-         └────────┬─────────┘
-                  │ emits incidents
-         ┌────────▼─────────┐
-         │     triage       │  ← deduplicate + re-score
-         └────────┬─────────┘
-                  │ emits triage_output
-         ┌────────▼─────────┐
-         │   remediation    │  ← generate PR / Slack / ticket
-         └────────┬─────────┘
-                  │
-                 END
-"""
 
 from __future__ import annotations
 
@@ -78,20 +58,6 @@ async def run_scan(
 ) -> CrowsnestState:
     """
     Convenience wrapper — run a full Crowsnest scan and return the final state.
-
-    Usage:
-        result = await run_scan(
-            coral_engine=engine,
-            scan_context={
-                "project_path": "/home/user/myapp",
-                "ecosystem": "npm",
-                "lockfile_path": None,
-                "last_scan_ts": None,
-                "recent_ioc_campaigns": ["shai-hulud-wave-4"],
-                "github_org": "myorg",
-            },
-            anthropic_api_key="sk-ant-...",
-        )
     """
     compiled = build_graph(coral_engine, anthropic_api_key)
 
