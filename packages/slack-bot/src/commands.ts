@@ -14,7 +14,6 @@
  */
 
 import type { App } from '@slack/bolt';
-import type { WebClient } from '@slack/web-api';
 import { CrowsnestApiClient, CrowsnestApiError } from './crowsnest-client.js';
 import {
   formatScanResult,
@@ -28,12 +27,20 @@ import { config } from './config.js';
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+// Derived from `App` itself (rather than importing `@slack/web-api` directly)
+// so these types always match whatever version @slack/bolt bundles internally
+// — importing a separately-resolved @slack/web-api here previously caused a
+// WebClient version mismatch (bolt's bundled 6.x vs a standalone 7.x install).
+type SlackClient = App['client'];
+type ChatPostMessageArgs = NonNullable<Parameters<SlackClient['chat']['postMessage']>[0]>;
+type SlackBlocks = ChatPostMessageArgs['blocks'];
+
 /**
  * Posts an error message back to the channel / response_url when an API call
  * fails.  Distinguishes between "API is down" and other errors.
  */
 async function postError(
-  client: WebClient,
+  client: SlackClient,
   channelId: string,
   context: string,
   err: unknown
@@ -56,10 +63,10 @@ async function postError(
  * Posts a Block Kit message to the channel where the command was issued.
  */
 async function postBlocks(
-  client: WebClient,
+  client: SlackClient,
   channelId: string,
   fallbackText: string,
-  blocks: Record<string, unknown>[]
+  blocks: SlackBlocks
 ): Promise<void> {
   await client.chat.postMessage({
     channel: channelId,

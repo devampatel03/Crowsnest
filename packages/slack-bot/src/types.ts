@@ -140,6 +140,15 @@ export interface IncidentEvent extends PublishEvent {
 
 // ---------------------------------------------------------------------------
 // Slack block kit convenience alias
-// Using Record<string, unknown> keeps us compatible with any @slack/bolt version
-// ---------------------------------------------------------------------------
-export type Block = Record<string, unknown>;
+//
+// Derived directly from `App['client']['chat']['postMessage']`'s own expected
+// blocks shape rather than a hand-rolled `Record<string, unknown>` — the
+// latter looked "compatible with any @slack/bolt version" but actually fails
+// to satisfy chat.postMessage's real `(Block | KnownBlock)[]` parameter type,
+// since a bare Record doesn't carry the discriminant `type` literals Slack's
+// Block Kit types require. Deriving from `App` also means this always matches
+// whichever @slack/web-api version @slack/bolt bundles internally, instead of
+// a separately-resolved @slack/web-api causing duplicate-type conflicts.
+import type { App as _SlackApp } from '@slack/bolt';
+type SlackChatPostMessageArgs = NonNullable<Parameters<_SlackApp['client']['chat']['postMessage']>[0]>;
+export type Block = NonNullable<SlackChatPostMessageArgs['blocks']>[number];

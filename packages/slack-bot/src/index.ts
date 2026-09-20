@@ -11,7 +11,7 @@
  */
 
 import pkgBolt from '@slack/bolt';
-const { App } = pkgBolt;
+const { App, LogLevel } = pkgBolt;
 import { config, warnMissingConfig } from './config.js';
 import { CrowsnestApiClient } from './crowsnest-client.js';
 import { registerCommands } from './commands.js';
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
       error: (...msgs) => console.error('[bolt]', ...msgs),
       setLevel: () => { /* noop */ },
       setName:  () => { /* noop */ },
-      getLevel: () => 'info' as const,
+      getLevel: () => LogLevel.INFO,
     },
   });
 

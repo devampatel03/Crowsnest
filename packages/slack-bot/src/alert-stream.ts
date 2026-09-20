@@ -155,10 +155,11 @@ export class AlertStream {
     const eventType: PublishEvent['type'] =
       (event.type as PublishEvent['type']) ?? forcedType ?? 'heartbeat';
 
+    const raw = parsed as Record<string, unknown>;
     const publishEvent: PublishEvent = {
       type:      eventType,
-      payload:   (event as Record<string, unknown>).payload ?? parsed,
-      timestamp: (event as Record<string, unknown>).timestamp as string ?? new Date().toISOString(),
+      payload:   raw.payload ?? parsed,
+      timestamp: (raw.timestamp as string) ?? new Date().toISOString(),
     };
 
     // Notify the generic subscriber

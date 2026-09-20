@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { SecurityEvent } from '@/lib/types';
 
 interface FirehoseEntry {
@@ -16,11 +16,13 @@ interface PublishFirehoseProps {
 }
 
 export function PublishFirehose({ events }: PublishFirehoseProps) {
-  const [entries, setEntries] = useState<FirehoseEntry[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const publishEvents = events
+  // `entries` is entirely derived from `events` — compute it during render
+  // with useMemo instead of useState+useEffect (calling setState synchronously
+  // inside an effect causes an extra cascading render for no benefit here).
+  const entries = useMemo<FirehoseEntry[]>(() => {
+    return events
       .filter((e) => e.type === 'publish_event')
       .slice(-50)
       .map((e) => ({
@@ -31,8 +33,6 @@ export function PublishFirehose({ events }: PublishFirehoseProps) {
         reason: e.type === 'incident_detected' ? String(e.attack_pattern || '') : undefined,
       }))
       .filter((e) => e.package);
-
-    setEntries(publishEvents);
   }, [events]);
 
   // Auto-scroll to bottom
