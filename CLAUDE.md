@@ -1,3 +1,9 @@
+# graphify
+- **graphify** (`.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+
+
 # Crowsnest
 
 Supply chain security sentinel: detects malicious packages, account takeovers,
@@ -40,8 +46,8 @@ packages before they land in production lockfiles.
 ## Running locally
 
 ```bash
-# Backend (from repo root, Windows venv)
-.venv-claude\Scripts\activate
+# Backend (from repo root)
+source .venv-claude/bin/activate         # Windows: .venv-claude\Scripts\activate
 uvicorn packages.core.api:app --host 0.0.0.0 --port 8000 --reload
 
 # Any JS package
@@ -60,7 +66,9 @@ slack-bot, shared) — they do **not** touch `packages/core`.
   bypass this when adding new query templates.
 - On Windows, orphaned uvicorn `--reload` subprocesses can lock
   `crowsnest.duckdb`; kill the process holding port 8000 if you see
-  `IO Error: Cannot open file ... being used by another process`.
+  `IO Error: Cannot open file ... being used by another process`
+  (Windows: find the PID via `netstat -ano | findstr :8000` then
+  `taskkill /PID <pid> /F`; macOS/Linux: `lsof -i :8000` then `kill <pid>`).
 - Missing API keys (Socket.dev, GitHub, Anthropic) degrade gracefully to
   cached/seeded data — don't assume a scan failure means a bug.
 - Reference docs: `crowsnest_comprehensive_architecture.md` (deep dive),

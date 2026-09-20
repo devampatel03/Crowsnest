@@ -1,0 +1,26 @@
+# Crowsnest FastAPI backend (CoralEngine + LangGraph agents).
+# Build context is the repo root (see infra/docker-compose.yml: context: ..).
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install build tools needed by a couple of native deps (duckdb, tree-sitter).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only what the editable install needs first, to keep layer caching useful.
+COPY pyproject.toml ./
+COPY packages/core ./packages/core
+
+RUN pip install --no-cache-dir .
+
+# CROWSNEST_DB_PATH / CROWSNEST_SNAPSHOT_DIR are overridden by docker-compose to
+# point at the mounted /data volume; these are just sane container defaults.
+ENV CROWSNEST_DB_PATH=/data/crowsnest.duckdb \
+    CROWSNEST_SNAPSHOT_DIR=/data/snapshots \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "packages.core.api:app", "--host", "0.0.0.0", "--port", "8000"]

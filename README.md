@@ -156,7 +156,7 @@ Four feeds, all federated through Coral.
 
 ## Setup
 
-Requirements: Python 3.11+, Node 18+, pnpm or npm.
+Requirements: Python 3.12+, Node 18+, pnpm or npm.
 
 ### 1. Environment
 
