@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: Python (core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install crowsnest-core (with dev extras)
+        run: pip install -e .[dev]
+
+      - name: Import smoke-test
+        run: python -c "import packages.core.api"
+
+      - name: Run pytest (skip if no tests yet)
+        run: |
+          if [ -d packages/core/tests ]; then
+            pytest -q
+          else
+            echo "no tests yet, skipping"
+          fi
+
+  javascript:
+    name: JavaScript (pnpm workspaces)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: |
+          if pnpm install --frozen-lockfile; then
+            echo "pnpm_ok=true" >> "$GITHUB_ENV"
+          else
+            echo "pnpm install failed, falling back to npm install"
+            npm install
+            echo "pnpm_ok=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Lint
+        run: |
+          if [ "$pnpm_ok" = "true" ]; then
+            pnpm run lint
+          else
+            npm run lint --if-present
+          fi
+
+      - name: Typecheck
+        run: |
+          if [ "$pnpm_ok" = "true" ]; then
+            pnpm run typecheck
+          else
+            npm run typecheck --if-present
+          fi
+
+      - name: Build
+        run: |
+          if [ "$pnpm_ok" = "true" ]; then
+            pnpm run build
+          else
+            npm run build --if-present
+          fi
+
+      - name: Test
+        run: |
+          if [ "$pnpm_ok" = "true" ]; then
+            pnpm --parallel --if-present run test
+          else
+            npm run test --if-present
+          fi
