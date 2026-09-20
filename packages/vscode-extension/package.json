@@ -54,7 +54,10 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "build": "npm run compile",
+    "dev": "npm run watch",
+    "typecheck": "tsc --noEmit -p ./"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
