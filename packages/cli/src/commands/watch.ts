@@ -1,7 +1,13 @@
 import chalk from 'chalk';
 import { getConfig } from '../config.js';
 
-export async function watchCommand(opts: { slack?: boolean; channel?: string }): Promise<void> {
+/**
+ * `crowsnest watch` streams live supply chain events to the console only.
+ * It does not post to Slack — use the @crowsnest/slack-bot package (Bolt
+ * Socket Mode bot) for chat alerts, which already subscribes to the same
+ * SSE stream and handles severity-based routing.
+ */
+export async function watchCommand(): Promise<void> {
   const { apiUrl } = getConfig();
   const sseUrl = `${apiUrl}/api/events`;
 

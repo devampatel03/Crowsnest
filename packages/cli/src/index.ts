@@ -67,19 +67,24 @@ program
 // ── watch ─────────────────────────────────────────────────────────────────
 program
   .command('watch')
-  .description('Daemon mode: stream live supply chain events')
-  .option('--slack', 'post critical events to Slack')
-  .option('--channel <channel>', 'Slack channel', '#security')
-  .action(async (opts) => {
-    await watchCommand(opts);
+  .description(
+    'Daemon mode: stream live supply chain events to the console. ' +
+      'For Slack alerts, run the @crowsnest/slack-bot package instead.',
+  )
+  .action(async () => {
+    await watchCommand();
   });
 
 // ── install ───────────────────────────────────────────────────────────────
 program
   .command('install <package>')
   .description('Safe install wrapper: veto checks before npm install')
-  .action(async (pkg: string) => {
-    await installCommand(pkg);
+  .option(
+    '--crowsnest-acknowledge-risk',
+    'Proceed with install despite a risk block',
+  )
+  .action(async (pkg: string, opts: { crowsnestAcknowledgeRisk?: boolean }) => {
+    await installCommand(pkg, { acknowledgeRisk: Boolean(opts.crowsnestAcknowledgeRisk) });
   });
 
 // ── config ────────────────────────────────────────────────────────────────

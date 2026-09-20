@@ -17,7 +17,7 @@ import { ThreatTimeline } from '@/components/charts/ThreatTimeline';
 export default function HorizonPage() {
   const [liveEvents, setLiveEvents] = useState<SecurityEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [projectPath, setProjectPath] = useState('c:/DEVAM/MY_PROJECTS/claude-code/Crowsnest');
+  const [projectPath, setProjectPath] = useState('');
   const [scanStatus, setScanStatus] = useState<'idle' | 'triggering' | 'ingesting' | 'running' | 'complete' | 'failed'>('idle');
   const [activeScanId, setActiveScanId] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -194,11 +194,11 @@ export default function HorizonPage() {
                   value={projectPath}
                   onChange={(e) => setProjectPath(e.target.value)}
                   className="w-full bg-[#020817] border border-slate-800 rounded px-3 py-2 pl-10 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
-                  placeholder="e.g. c:/path/to/project"
+                  placeholder="/path/to/your/project"
                 />
               </div>
               <p className="text-[10px] text-slate-600">
-                Note: The FastAPI backend will parse the project's lockfile, fetch metadata, and execute LLM-agent reasoning.
+                Note: The FastAPI backend will parse the project&apos;s lockfile, fetch metadata, and execute LLM-agent reasoning.
               </p>
             </div>
 
