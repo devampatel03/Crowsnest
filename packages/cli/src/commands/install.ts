@@ -12,7 +12,14 @@ import { api, VetoResult } from '../api.js';
 
 const BORDER = '═'.repeat(56);
 
-export async function installCommand(packageSpec: string): Promise<void> {
+export interface InstallOptions {
+  acknowledgeRisk?: boolean;
+}
+
+export async function installCommand(
+  packageSpec: string,
+  options: InstallOptions = {},
+): Promise<void> {
   const [pkgName, version] = parsePackageSpec(packageSpec);
 
   const spinner = ora({
@@ -34,6 +41,17 @@ export async function installCommand(packageSpec: string): Promise<void> {
 
   if (result.blocked) {
     renderBlockScreen(result);
+    if (options.acknowledgeRisk) {
+      const probPct = Math.round(result.probability * 100);
+      console.log(
+        chalk.yellow.bold(
+          `⚠ Proceeding despite blocked risk score ${probPct}% — acknowledged via --crowsnest-acknowledge-risk`,
+        ),
+      );
+      console.log();
+      await runNpmInstall(packageSpec);
+      return;
+    }
     process.exit(3);
   } else {
     renderApprovalScreen(result);
