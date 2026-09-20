@@ -615,7 +615,13 @@ async def veto_check(req: VetoRequest) -> dict[str, Any]:
 async def raw_query(req: CoralQueryRequest) -> list[dict[str, Any]]:
     """Execute a raw Coral SQL query (SELECT only — used by the CLI and dashboard)."""
     engine = _get_engine()
-    rows = await engine.query(req.sql, req.params)
+    try:
+        rows = await engine.query(req.sql, req.params)
+    except ValueError as exc:
+        # CoralEngine._validate_sql rejects write ops / multi-statement /
+        # forbidden-keyword payloads by raising ValueError — surface that
+        # as a clean 400 instead of letting it bubble up as an opaque 500.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return rows
 
 
