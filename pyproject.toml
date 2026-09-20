@@ -34,9 +34,6 @@ dev = [
     "mypy>=1.11.0",
 ]
 
-[project.scripts]
-crowsnest-api = "crowsnest.api:main"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
