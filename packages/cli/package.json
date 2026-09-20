@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "test": "vitest run"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "typescript": "^5.5.0",
     "tsx": "^4.16.0",
     "eslint": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
     "vitest": "^2.1.0"
   }
 }
