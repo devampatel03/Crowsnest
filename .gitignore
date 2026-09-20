@@ -51,3 +51,11 @@ Thumbs.db
 # Serena tooling cache
 .serena/
 
+# Hackathon-submission-specific artifacts, not part of the maintained docs
+# set (kept on disk for history, just not tracked/cluttering `git status`).
+# See SUBMISSION.md and final.md for context if you want to revive these.
+SUBMISSION.md
+final.md
+Technical Documentation.pdf
+uv.lock
+
