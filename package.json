@@ -8,13 +8,13 @@
     "packages/cli",
     "packages/dashboard",
     "packages/vscode-extension",
-    "packages/slack-bot",
-    "packages/shared"
+    "packages/slack-bot"
   ],
   "scripts": {
-    "dev": "pnpm --parallel run dev",
-    "build": "pnpm --parallel run build",
-    "lint": "pnpm --parallel run lint",
-    "typecheck": "pnpm --parallel run typecheck"
+    "dev": "pnpm --parallel --if-present run dev",
+    "build": "pnpm --parallel --if-present run build",
+    "lint": "pnpm --parallel --if-present run lint",
+    "typecheck": "pnpm --parallel --if-present run typecheck",
+    "test": "pnpm --parallel --if-present run test"
   }
 }
