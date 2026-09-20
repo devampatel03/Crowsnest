@@ -36,10 +36,14 @@ def build_graph(
         coral_engine=coral_engine,
         anthropic_api_key=anthropic_api_key,
     )
+    triager = partial(
+        triage_node,
+        coral_engine=coral_engine,
+    )
 
     graph.add_node("detection_planner", planner)
     graph.add_node("investigation", investigator)
-    graph.add_node("triage", triage_node)
+    graph.add_node("triage", triager)
     graph.add_node("remediation", remediation_node)
 
     graph.set_entry_point("detection_planner")

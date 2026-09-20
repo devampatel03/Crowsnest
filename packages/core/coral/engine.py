@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import threading
 from contextlib import contextmanager
 from datetime import datetime
@@ -70,7 +71,7 @@ class CoralEngine:
                 )
 
     def _validate_sql(self, sql: str) -> None:
-        """Reject any SQL that isn't a pure SELECT."""
+        """Reject any SQL that isn't a single, pure SELECT statement."""
         # Strip comments
         lines = []
         for line in sql.splitlines():
@@ -84,17 +85,39 @@ class CoralEngine:
             if line_content:
                 lines.append(line_content)
         cleaned_sql = "\n".join(lines)
-        
+
         # Strip block comments /* ... */
-        import re
         cleaned_sql = re.sub(r'/\*.*?\*/', '', cleaned_sql, flags=re.DOTALL)
-        
-        upper = cleaned_sql.upper().split()
-        first_token = next((t for t in upper if t.strip()), "")
+
+        stripped = cleaned_sql.strip()
+
+        # Reject multi-statement SQL outright. Agent-issued queries must never be
+        # allowed to chain a second statement (e.g. "SELECT 1;DROP TABLE x") —
+        # DuckDB will happily execute semicolon-separated multi-statement strings,
+        # so any semicolon that isn't just trailing whitespace/the final terminator
+        # is treated as an attempted bypass. We do this by stripping any single
+        # trailing semicolon (with trailing whitespace) and then checking for any
+        # semicolon still remaining, ignoring semicolons that appear inside single
+        # quoted string literals.
+        without_trailing = re.sub(r";\s*$", "", stripped)
+        if _contains_unquoted_char(without_trailing, ";"):
+            raise ValueError(
+                "Multi-statement SQL is not allowed (semicolon-separated statements detected)"
+            )
+
+        # Word-boundary regex check against the *entire* uppercased string — this
+        # is defense-in-depth on top of the semicolon ban above, and it is robust
+        # to punctuation-adjacent keywords (e.g. "1;DROP" or "1,DROP(") that a
+        # naive `.split()` token-equality check would miss, since `.split()` only
+        # produces tokens split on whitespace and would never match a keyword that
+        # is glued to adjacent punctuation.
+        upper = without_trailing.upper()
+        tokens = upper.split()
+        first_token = next((t for t in tokens if t.strip()), "")
         if first_token not in ("SELECT", "WITH", "EXPLAIN"):
             raise ValueError(f"Only SELECT queries are allowed; got: {first_token!r}")
         for kw in _FORBIDDEN_KEYWORDS:
-            if kw in upper:
+            if re.search(rf"\b{kw}\b", upper):
                 raise ValueError(f"Forbidden keyword in query: {kw}")
 
     def _sync_query(self, sql: str, params: dict[str, Any]) -> list[dict[str, Any]]:
@@ -240,20 +263,70 @@ class CoralEngine:
         return counts
 
 
+def _contains_unquoted_char(sql: str, ch: str) -> bool:
+    """
+    Return True if `ch` appears outside of a single-quoted string literal.
+
+    Handles doubled single-quotes ('') as the SQL-standard escaped-quote
+    sequence so we don't falsely think we've exited a string literal.
+    """
+    in_string = False
+    i = 0
+    n = len(sql)
+    while i < n:
+        c = sql[i]
+        if in_string:
+            if c == "'":
+                # Doubled quote inside a string literal is an escaped quote.
+                if i + 1 < n and sql[i + 1] == "'":
+                    i += 2
+                    continue
+                in_string = False
+            i += 1
+            continue
+        if c == "'":
+            in_string = True
+            i += 1
+            continue
+        if c == ch:
+            return True
+        i += 1
+    return False
+
+
 def _replace_named_params(sql: str, params: dict[str, Any]) -> str:
-    """Replace :name placeholders with literal values (safe for DuckDB)."""
+    """
+    Replace :name placeholders with literal values (safe for DuckDB).
+
+    Only primitive scalar types (str, bool, int, float, datetime, None) are
+    accepted. Anything else (list, dict, set, custom objects, ...) raises a
+    TypeError instead of being silently `str()`-interpolated — a bare
+    `str(val)` on a list/dict previously produced malformed (and
+    attacker-influenceable) SQL rather than a clear error.
+    """
     # Sort by length descending so :pkg_10 is replaced before :pkg_1
     for key in sorted(params.keys(), key=len, reverse=True):
         val = params[key]
         placeholder = f":{key}"
-        if placeholder in sql:
-            if isinstance(val, str):
-                escaped = val.replace("'", "''")
-                sql = sql.replace(placeholder, f"'{escaped}'")
-            elif val is None:
-                sql = sql.replace(placeholder, "NULL")
-            else:
-                sql = sql.replace(placeholder, str(val))
+        if placeholder not in sql:
+            continue
+        if isinstance(val, str):
+            escaped = val.replace("'", "''")
+            sql = sql.replace(placeholder, f"'{escaped}'")
+        elif val is None:
+            sql = sql.replace(placeholder, "NULL")
+        elif isinstance(val, bool):
+            sql = sql.replace(placeholder, "TRUE" if val else "FALSE")
+        elif isinstance(val, (int, float)):
+            sql = sql.replace(placeholder, repr(val))
+        elif isinstance(val, datetime):
+            sql = sql.replace(placeholder, f"'{val.isoformat()}'")
+        else:
+            raise TypeError(
+                f"Unsupported param type for {key!r}: {type(val).__name__}. "
+                "Only str, bool, int, float, datetime, and None are allowed "
+                "as :named SQL parameters."
+            )
     return sql
 
 

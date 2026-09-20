@@ -202,12 +202,18 @@ async def _seed_maintainer_data(engine: Any) -> None:
 
 async def _raw_insert_npm_maintainers(engine: Any, records: list[dict]) -> None:
     """
-    Insert npm_maintainer rows using raw SQL to avoid ON CONFLICT issues
-    (npm_maintainers has no PRIMARY KEY so engine.ingest()'s upsert fails).
-    We use a SELECT-based existence check per login instead.
-    """
-    import asyncio
+    Insert npm_maintainer rows to avoid ON CONFLICT issues (npm_maintainers has
+    no PRIMARY KEY so engine.ingest()'s upsert fails). We use a SELECT-based
+    existence check per login instead.
 
+    NOTE: this previously reached into `engine._get_connection()` and called
+    `conn.executemany(...)` directly, bypassing CoralEngine's asyncio.Lock
+    write-serialization entirely. That could race with any other concurrent
+    write (e.g. a scan's `ingest()`/`execute()` call) against the single
+    shared DuckDB connection. It now goes through the public, lock-protected
+    `engine.execute()` method instead, one row per call, using the same
+    :name-style parameter substitution as every other write path.
+    """
     # Check which logins are already present
     existing_rows = await engine.query(
         "SELECT DISTINCT maintainer_login FROM npm_maintainers"
@@ -219,21 +225,21 @@ async def _raw_insert_npm_maintainers(engine: Any, records: list[dict]) -> None:
     if not new_records:
         return
 
-    # Use the engine's internal connection via executor for raw INSERT
-    def _do_insert() -> None:
-        conn = engine._get_connection()
-        sql = (
-            "INSERT INTO npm_maintainers (package, maintainer_login, action, ts, performed_by) "
-            "VALUES (?, ?, ?, ?, ?)"
+    sql = (
+        "INSERT INTO npm_maintainers (package, maintainer_login, action, ts, performed_by) "
+        "VALUES (:package, :maintainer_login, :action, :ts, :performed_by)"
+    )
+    for r in new_records:
+        await engine.execute(
+            sql,
+            {
+                "package": r["package"],
+                "maintainer_login": r["maintainer_login"],
+                "action": r["action"],
+                "ts": r["ts"],
+                "performed_by": r.get("performed_by"),
+            },
         )
-        vals = [
-            (r["package"], r["maintainer_login"], r["action"], r["ts"], r.get("performed_by"))
-            for r in new_records
-        ]
-        conn.executemany(sql, vals)
-
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, _do_insert)
 
 
 # Allow importing Any before full type resolution
