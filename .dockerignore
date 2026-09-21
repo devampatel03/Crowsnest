@@ -1,0 +1,17 @@
+.venv-claude
+.venv
+node_modules
+**/node_modules
+.git
+.next
+**/.next
+dist
+**/dist
+out
+**/out
+crowsnest.duckdb*
+crowsnest_temp.duckdb*
+snapshots
+.pytest_cache
+.serena
+*.tsbuildinfo

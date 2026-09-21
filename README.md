@@ -156,6 +156,32 @@ Four feeds, all federated through Coral.
 
 ## Setup
 
+### Fastest path: Docker
+
+Requires Docker + Docker Compose, nothing else installed on your machine.
+
+```bash
+cp .env.example .env          # fill in keys later if you want them — everything degrades gracefully without them
+docker compose -f infra/docker-compose.yml up --build
+```
+
+Backend on `http://localhost:8000`, dashboard on `http://localhost:3000`.
+That's it — no Python/Node version juggling, no manual venv, no separate
+`npm install` per package. `docker compose ... down` to stop.
+
+### Fastest path without Docker: one script
+
+```bash
+git clone <this-repo-url> crowsnest && cd crowsnest
+./scripts/bootstrap.sh
+```
+
+Sets up the Python venv and installs all JS workspace deps in one shot.
+You still start each service yourself afterward (see below) — the script
+only handles installation, not running.
+
+### Manual setup
+
 Requirements: Python 3.12+, Node 18+, pnpm or npm.
 
 ### 1. Environment
