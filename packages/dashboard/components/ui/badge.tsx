@@ -31,11 +31,11 @@ interface BadgeProps {
 
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   const variants = {
-    default: 'bg-slate-800 text-slate-300 border-slate-700',
-    success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    warning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    danger: 'bg-red-500/20 text-red-400 border-red-500/30',
-    dim: 'bg-slate-900 text-slate-500 border-slate-800',
+    default: 'bg-surface-2 text-text-secondary border-border',
+    success: 'bg-success/10 text-success border-success/30',
+    warning: 'bg-severity-medium-bg text-severity-medium border-severity-medium-border',
+    danger: 'bg-severity-critical-bg text-severity-critical border-severity-critical-border',
+    dim: 'bg-surface text-text-muted border-border-soft',
   };
 
   return (

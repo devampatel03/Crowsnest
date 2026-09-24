@@ -3,6 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import type { Incident } from '@/lib/types';
 import { format, subHours, startOfHour } from 'date-fns';
+import { chartColors } from '@/lib/chart-colors';
 
 interface ThreatTimelineProps {
   incidents: Incident[];
@@ -35,18 +36,18 @@ export function ThreatTimeline({ incidents }: ThreatTimelineProps) {
       <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
         <XAxis
           dataKey="time"
-          tick={{ fill: '#475569', fontSize: 10 }}
+          tick={{ fill: chartColors.axis, fontSize: 10, fontFamily: 'var(--font-mono)' }}
           tickLine={false}
           interval={5}
         />
-        <YAxis tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} />
+        <YAxis tick={{ fill: chartColors.axis, fontSize: 10, fontFamily: 'var(--font-mono)' }} tickLine={false} />
         <Tooltip
-          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 6 }}
-          labelStyle={{ color: '#94a3b8' }}
+          contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: 6 }}
+          labelStyle={{ color: chartColors.axis }}
         />
-        <Line type="monotone" dataKey="CRITICAL" stroke="#ef4444" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="HIGH" stroke="#f97316" strokeWidth={1.5} dot={false} />
-        <Line type="monotone" dataKey="MEDIUM" stroke="#fbbf24" strokeWidth={1} dot={false} />
+        <Line type="monotone" dataKey="CRITICAL" stroke={chartColors.critical} strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="HIGH" stroke={chartColors.high} strokeWidth={1.5} dot={false} />
+        <Line type="monotone" dataKey="MEDIUM" stroke={chartColors.medium} strokeWidth={1} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
