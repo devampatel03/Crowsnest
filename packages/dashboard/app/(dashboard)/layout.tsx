@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Anchor, Eye, Package, ScrollText, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TopoBackground } from '@/components/decor/topo-lines';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const navItems = [
   { href: '/horizon', label: 'Horizon', icon: Eye, description: 'Live threats' },
@@ -16,22 +18,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-[#0f172a] border-r border-slate-800 flex flex-col">
+      <aside className="relative w-56 flex-shrink-0 bg-surface border-r border-border flex flex-col overflow-hidden">
+        <TopoBackground className="text-primary opacity-60" />
         {/* Logo */}
-        <div className="p-4 border-b border-slate-800">
+        <div className="relative p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Anchor className="w-6 h-6 text-cyan-400" />
+            <Anchor className="w-6 h-6 text-primary" />
             <div>
-              <div className="font-bold text-cyan-400 text-sm tracking-wider">CROWSNEST</div>
-              <div className="text-xs text-slate-500">supply chain sentinel</div>
+              <div className="font-sans font-bold tracking-wider text-primary text-sm">CROWSNEST</div>
+              <div className="text-xs text-text-muted">supply chain sentinel</div>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="relative flex-1 p-3 space-y-1">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
@@ -41,14 +45,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                   active
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800',
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-2',
                 )}
               >
                 <item.icon className="w-4 h-4" />
                 <div>
                   <div className="font-medium">{item.label}</div>
-                  <div className="text-xs text-slate-500">{item.description}</div>
+                  <div className="text-xs text-text-muted">{item.description}</div>
                 </div>
               </Link>
             );
@@ -56,16 +60,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-800">
-          <div className="text-xs text-slate-600">Powered by CoralDB</div>
-          <div className="text-xs text-slate-600">© 2026 Crowsnest</div>
+        <div className="relative p-3 border-t border-border">
+          <div className="text-xs text-text-muted">Powered by CoralDB</div>
+          <div className="text-xs text-text-muted">© 2026 Crowsnest</div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto bg-[#020817]">
+      <main className="flex-1 overflow-auto bg-background">
         {children}
       </main>
     </div>
+    </TooltipProvider>
   );
 }
