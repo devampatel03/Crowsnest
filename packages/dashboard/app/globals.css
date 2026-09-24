@@ -3,17 +3,58 @@
 @tailwind utilities;
 
 :root {
-  --bg: #020817;
-  --surface: #0f172a;
-  --surface-2: #1e293b;
-  --primary: #22d3ee;
-  --danger: #ef4444;
+  /* base / surface */
+  --cn-background: #05070f;
+  --cn-surface: #0b1120;
+  --cn-surface-2: #131b2e;
+  --cn-surface-3: #1c2740;
+  --cn-border: #223049;
+  --cn-border-soft: #182238;
+
+  /* text */
+  --cn-text-primary: #e7ecf7;
+  --cn-text-secondary: #9aa8c7;
+  --cn-text-muted: #8492b0; /* lightened from #5b6b8c — original failed WCAG AA (3.5:1); this hits ~5.5-6:1 on navy-800/900 */
+
+  /* accent */
+  --cn-primary: #35e6d6;
+  --cn-primary-400: #35e6d6;
+  --cn-primary-500: #17c9bb;
+  --cn-primary-300: #7ff2e6;
+  --cn-accent: #ffb020;
+  --cn-accent-400: #ffb020;
+  --cn-accent-500: #e0940a;
+  --cn-accent-300: #ffd580;
+
+  /* severity */
+  --cn-severity-critical: #ff4d5e;
+  --cn-severity-critical-bg: rgba(255, 77, 94, 0.12);
+  --cn-severity-critical-border: rgba(255, 77, 94, 0.45);
+  --cn-severity-high: #ff8a3d;
+  --cn-severity-high-bg: rgba(255, 138, 61, 0.12);
+  --cn-severity-high-border: rgba(255, 138, 61, 0.45);
+  --cn-severity-medium: #ffb020;
+  --cn-severity-medium-bg: rgba(255, 176, 32, 0.12);
+  --cn-severity-medium-border: rgba(255, 176, 32, 0.45);
+  --cn-severity-low: #35e6d6;
+  --cn-severity-low-bg: rgba(53, 230, 214, 0.12);
+  --cn-severity-low-border: rgba(53, 230, 214, 0.45);
+
+  /* status */
+  --cn-success: #2fe6a6;
+
+  /* legacy aliases (kept for any raw CSS still referencing old names) */
+  --bg: var(--cn-background);
+  --surface: var(--cn-surface);
+  --surface-2: var(--cn-surface-2);
+  --primary: var(--cn-primary);
+  --danger: var(--cn-severity-critical);
 }
 
 body {
-  background-color: var(--bg);
-  color: #e2e8f0;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background-color: var(--cn-background);
+  color: var(--cn-text-primary);
+  font-family: var(--font-sans);
 }
 
 /* Custom scrollbar */
@@ -31,16 +72,6 @@ body {
   background: #475569;
 }
 
-/* Glowing borders for critical alerts */
-.alert-critical {
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-  border-color: #ef4444;
-}
-.alert-high {
-  box-shadow: 0 0 8px rgba(249, 115, 22, 0.3);
-  border-color: #f97316;
-}
-
 /* Live dot pulse */
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -48,6 +79,35 @@ body {
 }
 .live-dot {
   animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Radar sweep rotation (applied by later agent) */
+@keyframes radar-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Sonar ping expand-fade (applied by later agent) */
+@keyframes sonar-ping {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.sonar-ping {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sonar-ping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  animation: sonar-ping 2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep, .sonar-ping::after, .live-dot::after { animation: none !important; }
 }
 
 /* Firehose scroll */
