@@ -9,10 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 
 export function severityConfig(s: Severity): { label: string; color: string; bg: string; border: string } {
   const map: Record<Severity, { label: string; color: string; bg: string; border: string }> = {
-    CRITICAL: { label: 'CRITICAL', color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500' },
-    HIGH: { label: 'HIGH', color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500' },
-    MEDIUM: { label: 'MEDIUM', color: 'text-amber-400', bg: 'bg-amber-500/20', border: 'border-amber-500' },
-    LOW: { label: 'LOW', color: 'text-cyan-400', bg: 'bg-cyan-500/20', border: 'border-cyan-500' },
+    CRITICAL: { label: 'CRITICAL', color: 'text-severity-critical', bg: 'bg-severity-critical-bg', border: 'border-severity-critical-border' },
+    HIGH: { label: 'HIGH', color: 'text-severity-high', bg: 'bg-severity-high-bg', border: 'border-severity-high-border' },
+    MEDIUM: { label: 'MEDIUM', color: 'text-severity-medium', bg: 'bg-severity-medium-bg', border: 'border-severity-medium-border' },
+    LOW: { label: 'LOW', color: 'text-severity-low', bg: 'bg-severity-low-bg', border: 'border-severity-low-border' },
   };
   return map[s] || map.LOW;
 }
