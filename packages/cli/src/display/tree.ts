@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { theme } from './theme.js';
 
 export interface TreeNode {
   label: string;
@@ -12,7 +12,7 @@ export function renderTree(node: TreeNode, prefix = '', isLast = true): string {
 
   let output = prefix + connector + node.label;
   if (node.detail) {
-    output += chalk.dim(` ${node.detail}`);
+    output += theme.muted(` ${node.detail}`);
   }
   output += '\n';
 
@@ -32,20 +32,20 @@ export function renderBlastRadiusTree(
   projects: string[],
 ): string {
   const root: TreeNode = {
-    label: chalk.bold(maintainer),
+    label: theme.brand(maintainer),
     children: [
       {
-        label: chalk.yellow(`direct packages (${packages.length})`),
+        label: theme.status.warning(`direct packages (${packages.length})`),
         children: packages.slice(0, 5).map((p) => ({ label: p })),
       },
       {
-        label: chalk.dim(`projects exposed (${projects.length})`),
+        label: theme.muted(`projects exposed (${projects.length})`),
         children: projects.slice(0, 5).map((p) => ({ label: p })),
       },
     ],
   };
 
-  let output = chalk.cyan('Blast radius for: ') + chalk.bold(maintainer) + '\n';
+  let output = theme.brand('Blast radius for: ') + theme.brand(maintainer) + '\n';
   if (root.children) {
     root.children.forEach((child, i) => {
       const last = i === root.children!.length - 1;
