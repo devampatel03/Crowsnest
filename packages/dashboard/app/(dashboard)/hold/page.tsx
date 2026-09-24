@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
-import { Search, Package, Lock, Eye } from 'lucide-react';
+import { Search, Package } from 'lucide-react';
 import { fetchLockfiles } from '@/lib/api';
 import type { LockfileEntry } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatRow } from '@/components/ui/stat-row';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export default function HoldPage() {
   const [search, setSearch] = useState('');
@@ -29,63 +34,60 @@ export default function HoldPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-100">Hold</h1>
-        <p className="text-sm text-slate-500">Your complete dependency inventory with security annotations</p>
-      </div>
+      <PageHeader
+        title="Hold"
+        description="Your complete dependency inventory with security annotations"
+      />
 
       {/* Summary stats */}
-      <div className="flex gap-6">
-        <div>
-          <div className="text-2xl font-bold text-slate-100">{filtered.length.toLocaleString()}</div>
-          <div className="text-xs text-slate-500">total packages</div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-cyan-400">{directCount}</div>
-          <div className="text-xs text-slate-500">direct</div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-slate-400">{transitiveCount}</div>
-          <div className="text-xs text-slate-500">transitive</div>
-        </div>
-      </div>
+      <StatRow
+        stats={[
+          { label: 'total packages', value: filtered.length.toLocaleString() },
+          { label: 'direct', value: directCount, tone: 'low' },
+          { label: 'transitive', value: transitiveCount },
+        ]}
+      />
 
       {/* Filters */}
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <input
             type="text"
             placeholder="Search packages..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-3 py-2 bg-surface-2 border border-border rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
-        <select
-          value={ecosystemFilter}
-          onChange={(e) => setEcosystemFilter(e.target.value)}
-          className="px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 focus:outline-none focus:border-cyan-500"
+        <Select
+          value={ecosystemFilter || 'all'}
+          onValueChange={(value) => setEcosystemFilter(value === 'all' ? '' : value)}
         >
-          <option value="">All ecosystems</option>
-          {ecosystems.map((e) => (
-            <option key={e} value={e}>{e}</option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All ecosystems" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All ecosystems</SelectItem>
+            {ecosystems.map((e) => (
+              <SelectItem key={e} value={e}>{e}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
         <PageSpinner />
       ) : error ? (
         <Card>
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-text-muted">
             <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <div className="text-sm text-red-400 mb-2">Failed to load package inventory</div>
-            <div className="text-xs text-slate-600 mb-4">The backend may be busy. Wait a moment and retry.</div>
+            <div className="text-sm text-severity-critical mb-2">Failed to load package inventory</div>
+            <div className="text-xs text-text-muted mb-4">The backend may be busy. Wait a moment and retry.</div>
             <button
               onClick={() => mutate()}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded transition-colors"
+              className="px-3 py-1.5 bg-surface-2 hover:bg-surface-3 text-text-secondary text-xs rounded-lg transition-colors"
             >
               Retry
             </button>
@@ -94,26 +96,26 @@ export default function HoldPage() {
       ) : (
         <Card>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-slate-500 border-b border-slate-800">
-                  <th className="text-left pb-2 font-normal">Package</th>
-                  <th className="text-left pb-2 font-normal">Version</th>
-                  <th className="text-left pb-2 font-normal">Ecosystem</th>
-                  <th className="text-left pb-2 font-normal">Type</th>
-                  <th className="text-left pb-2 font-normal">Project</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Package</TableHead>
+                  <TableHead>Version</TableHead>
+                  <TableHead>Ecosystem</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Project</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filtered.slice(0, 200).map((pkg, i) => (
                   <LockfileRow key={`${pkg.project_path}-${pkg.package}-${i}`} entry={pkg} />
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {filtered.length > 200 && (
-            <div className="mt-3 text-xs text-slate-500 text-center">
+            <div className="mt-3 text-xs text-text-muted text-center">
               Showing 200 of {filtered.length.toLocaleString()} packages
             </div>
           )}
@@ -127,25 +129,32 @@ function LockfileRow({ entry }: { entry: LockfileEntry }) {
   const isDirect = entry.declared_in === 'direct';
 
   return (
-    <tr className="hover:bg-slate-900/50 transition-colors">
-      <td className="py-2">
+    <TableRow>
+      <TableCell>
         <div className="flex items-center gap-2">
-          <Package className="w-3 h-3 text-slate-600 flex-shrink-0" />
-          <span className={`font-mono text-xs ${isDirect ? 'text-slate-200' : 'text-slate-400'}`}>
+          <Package className="w-3 h-3 text-text-muted flex-shrink-0" />
+          <span className={`font-mono text-xs ${isDirect ? 'text-text-primary' : 'text-text-secondary'}`}>
             {entry.package}
           </span>
         </div>
-      </td>
-      <td className="py-2 font-mono text-xs text-slate-400">{entry.version}</td>
-      <td className="py-2">
+      </TableCell>
+      <TableCell className="font-mono text-xs text-text-secondary">{entry.version}</TableCell>
+      <TableCell>
         <Badge variant="dim">{entry.ecosystem}</Badge>
-      </td>
-      <td className="py-2">
+      </TableCell>
+      <TableCell>
         <Badge variant={isDirect ? 'default' : 'dim'}>
           {isDirect ? 'direct' : 'transitive'}
         </Badge>
-      </td>
-      <td className="py-2 text-xs text-slate-500 max-w-xs truncate">{entry.project_path}</td>
-    </tr>
+      </TableCell>
+      <TableCell className="text-xs text-text-muted max-w-xs truncate">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="block truncate cursor-default">{entry.project_path}</span>
+          </TooltipTrigger>
+          <TooltipContent side="top">{entry.project_path}</TooltipContent>
+        </Tooltip>
+      </TableCell>
+    </TableRow>
   );
 }
