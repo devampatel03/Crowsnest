@@ -8,33 +8,58 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#020817',   // slate-950 — deep maritime black
-        'surface': '#0f172a',    // slate-900
-        'surface-2': '#1e293b',  // slate-800
+        background: '#05070f',
+        surface: '#0b1120',
+        'surface-2': '#131b2e',
+        'surface-3': '#1c2740',
+        border: {
+          DEFAULT: '#223049',
+          soft: '#182238',
+        },
+        'text-primary': '#e7ecf7',
+        'text-secondary': '#9aa8c7',
+        'text-muted': '#8492b0',
         primary: {
-          DEFAULT: '#22d3ee',    // cyan-400
-          dark: '#0891b2',       // cyan-600
+          DEFAULT: '#35e6d6',
+          400: '#35e6d6',
+          500: '#17c9bb',
+          300: '#7ff2e6',
         },
-        danger: {
-          DEFAULT: '#ef4444',    // red-500
-          dark: '#dc2626',       // red-600
+        accent: {
+          DEFAULT: '#ffb020',
+          400: '#ffb020',
+          500: '#e0940a',
+          300: '#ffd580',
         },
-        warning: {
-          DEFAULT: '#fbbf24',    // amber-400
+        severity: {
+          critical: '#ff4d5e',
+          'critical-bg': 'rgba(255,77,94,0.12)',
+          'critical-border': 'rgba(255,77,94,0.45)',
+          high: '#ff8a3d',
+          'high-bg': 'rgba(255,138,61,0.12)',
+          'high-border': 'rgba(255,138,61,0.45)',
+          medium: '#ffb020',
+          'medium-bg': 'rgba(255,176,32,0.12)',
+          'medium-border': 'rgba(255,176,32,0.45)',
+          low: '#35e6d6',
+          'low-bg': 'rgba(53,230,214,0.12)',
+          'low-border': 'rgba(53,230,214,0.45)',
         },
-        success: {
-          DEFAULT: '#34d399',    // emerald-400
-        },
+        success: '#2fe6a6',
       },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
+      fontFamily: {
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular'],
       },
-      keyframes: {
-        glow: {
-          '0%': { boxShadow: '0 0 5px rgba(239, 68, 68, 0.3)' },
-          '100%': { boxShadow: '0 0 20px rgba(239, 68, 68, 0.8)' },
-        },
+      borderRadius: {
+        lg: '10px',
+        xl: '14px',
+      },
+      boxShadow: {
+        panel: '0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -12px rgba(0,0,0,0.6)',
+        'beacon-glow': '0 0 0 1px rgba(255,176,32,0.4), 0 0 24px 0 rgba(255,176,32,0.25)',
+        'cyan-glow': '0 0 0 1px rgba(53,230,214,0.35), 0 0 20px 0 rgba(53,230,214,0.18)',
+        'critical-glow': '0 0 0 1px rgba(255,77,94,0.4), 0 0 20px 0 rgba(255,77,94,0.22)',
       },
     },
   },
