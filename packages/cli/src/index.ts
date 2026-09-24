@@ -5,7 +5,6 @@
  */
 
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { scanCommand } from './commands/scan.js';
 import { investigateCommand } from './commands/investigate.js';
 import { blastRadiusCommand } from './commands/blast-radius.js';
@@ -13,13 +12,22 @@ import { replayCommand } from './commands/replay.js';
 import { watchCommand } from './commands/watch.js';
 import { installCommand } from './commands/install.js';
 import { configGetCommand, configSetCommand } from './commands/config-cmd.js';
+import { theme } from './display/theme.js';
+import { banner } from './display/banner.js';
 
 const program = new Command();
 
 program
   .name('crowsnest')
-  .description(chalk.cyan('Supply chain forensics — see the storm before it hits your ship'))
+  .description('Supply chain forensics — see the storm before it hits your ship')
   .version('0.1.0');
+
+program.addHelpText('beforeAll', () =>
+  banner(
+    [theme.brand('CROWSNEST'), theme.muted('Supply chain forensics — see the storm before it hits your ship')],
+    { tone: 'info' },
+  ) + '\n',
+);
 
 // ── scan ──────────────────────────────────────────────────────────────────
 program
@@ -105,6 +113,6 @@ configCmd
   });
 
 program.parseAsync(process.argv).catch((err: Error) => {
-  console.error(chalk.red(`\nError: ${err.message}`));
+  console.error(theme.error(`\nError: ${err.message}`));
   process.exit(2);
 });

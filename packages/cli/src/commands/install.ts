@@ -6,11 +6,11 @@
  */
 
 import { spawn } from 'child_process';
-import chalk from 'chalk';
 import ora from 'ora';
 import { api, VetoResult } from '../api.js';
-
-const BORDER = '═'.repeat(56);
+import { theme } from '../display/theme.js';
+import { icons } from '../display/icons.js';
+import { banner } from '../display/banner.js';
 
 export interface InstallOptions {
   acknowledgeRisk?: boolean;
@@ -23,29 +23,28 @@ export async function installCommand(
   const [pkgName, version] = parsePackageSpec(packageSpec);
 
   const spinner = ora({
-    text: chalk.dim(`Checking ${pkgName} before install...`),
+    text: theme.muted(`Checking ${pkgName} before install...`),
     color: 'cyan',
   }).start();
 
   let result: VetoResult;
   try {
     result = await api.vetoCheck(pkgName, version);
-  } catch (err) {
-    spinner.fail(chalk.red('Crowsnest API unreachable — proceeding without veto check'));
-    console.log(chalk.dim('Start the API with: uvicorn packages.core.api:app --reload'));
+  } catch {
+    spinner.fail(theme.error('Crowsnest API unreachable — proceeding without veto check'));
+    console.log(theme.muted('Start the API with: uvicorn packages.core.api:app --reload'));
     await runNpmInstall(packageSpec);
     return;
   }
 
-  spinner.stop();
-
   if (result.blocked) {
+    spinner.fail(theme.status.blocked(`Blocked: ${result.package}`));
     renderBlockScreen(result);
     if (options.acknowledgeRisk) {
       const probPct = Math.round(result.probability * 100);
       console.log(
-        chalk.yellow.bold(
-          `⚠ Proceeding despite blocked risk score ${probPct}% — acknowledged via --crowsnest-acknowledge-risk`,
+        theme.status.warning(
+          `${icons.warn} Proceeding despite blocked risk score ${probPct}% — acknowledged via --crowsnest-acknowledge-risk`,
         ),
       );
       console.log();
@@ -54,6 +53,7 @@ export async function installCommand(
     }
     process.exit(3);
   } else {
+    spinner.succeed(theme.status.approved(`Approved: ${result.package}${result.version ? '@' + result.version : ''}`));
     renderApprovalScreen(result);
     await runNpmInstall(packageSpec);
   }
@@ -62,51 +62,49 @@ export async function installCommand(
 function renderBlockScreen(result: VetoResult): void {
   const probPct = Math.round(result.probability * 100);
 
-  console.log();
-  console.log(chalk.red(`[crowsnest] ${BORDER}`));
-  console.log(chalk.red.bold(`[crowsnest] ⛔ BLOCKED: ${result.package}`));
-  console.log(chalk.red(`[crowsnest] ${BORDER}`));
-  console.log();
+  const lines: string[] = [`${icons.blocked} BLOCKED: ${result.package}`, ''];
 
   for (const signal of result.signals) {
-    const emoji = signal.includes('IOC') ? '🚨' :
-                  signal.includes('hallucination') ? '🤖' :
-                  signal.includes('days ago') ? '📅' :
-                  signal.includes('downloads') ? '📉' :
-                  signal.includes('repository') ? '🔗' :
-                  signal.includes('Typosquat') ? '🎭' : '⚠️ ';
-    console.log(chalk.yellow(`[crowsnest]   ${emoji}  ${signal}`));
+    const icon = signal.includes('IOC') ? icons.critical :
+                  signal.includes('hallucination') ? icons.bot :
+                  signal.includes('days ago') ? icons.calendar :
+                  signal.includes('downloads') ? icons.trendDown :
+                  signal.includes('repository') ? icons.link :
+                  signal.includes('Typosquat') ? icons.mask : icons.warn;
+    lines.push(`  ${icon}  ${signal}`);
   }
 
-  console.log();
-  console.log(chalk.red(`[crowsnest]   Slopsquatting probability:  ${chalk.bold(probPct + '%')}`));
-  console.log();
+  lines.push('');
+  lines.push(`  Slopsquatting probability:  ${probPct}%`);
 
   if (result.override_flag) {
-    console.log(chalk.dim(`[crowsnest]   To override (risk accepted):`));
-    console.log(chalk.dim(`[crowsnest]     npm install ${result.package} ${result.override_flag}`));
+    lines.push('');
+    lines.push(`  To override (risk accepted):`);
+    lines.push(`    npm install ${result.package} ${result.override_flag}`);
   }
 
-  console.log(chalk.red(`[crowsnest] ${BORDER}`));
+  console.log();
+  console.log(banner(lines, { tone: 'blocked' }));
   console.log();
 }
 
 function renderApprovalScreen(result: VetoResult): void {
   const probPct = Math.round(result.probability * 100);
-  const riskColor = probPct < 20 ? chalk.green : probPct < 40 ? chalk.yellow : chalk.red;
 
-  console.log();
-  console.log(chalk.green(`[crowsnest] ✓ APPROVED: ${result.package}${result.version ? '@' + result.version : ''}`));
+  const lines: string[] = [`${icons.ok} APPROVED: ${result.package}${result.version ? '@' + result.version : ''}`];
 
   if (result.signals.length > 0) {
     for (const signal of result.signals) {
-      console.log(chalk.dim(`[crowsnest]   ℹ  ${signal}`));
+      lines.push(`  ${icons.info}  ${signal}`);
     }
   }
 
-  console.log(chalk.dim(`[crowsnest]   Risk score: `) + riskColor(`${probPct}%`));
+  lines.push(`  Risk score: ${probPct}%`);
+
   console.log();
-  console.log(chalk.dim('Proceeding with installation...'));
+  console.log(banner(lines, { tone: 'approved' }));
+  console.log();
+  console.log(theme.muted('Proceeding with installation...'));
 }
 
 async function runNpmInstall(packageSpec: string): Promise<void> {
