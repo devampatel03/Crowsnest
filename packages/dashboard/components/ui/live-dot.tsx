@@ -12,11 +12,19 @@ export function LiveDot({ connected, className }: LiveDotProps) {
     <span className={cn('flex items-center gap-1.5 text-xs', className)}>
       <span
         className={cn(
-          'w-2 h-2 rounded-full live-dot',
-          connected ? 'bg-emerald-400' : 'bg-red-500',
+          'relative inline-flex w-2 h-2',
+          connected ? 'text-success' : 'text-severity-critical',
         )}
-      />
-      <span className={connected ? 'text-emerald-400' : 'text-red-400'}>
+      >
+        <span
+          className={cn(
+            'w-2 h-2 rounded-full live-dot',
+            connected ? 'bg-success' : 'bg-severity-critical',
+          )}
+        />
+        <span className="sonar-ping" />
+      </span>
+      <span className={connected ? 'text-success' : 'text-severity-critical'}>
         {connected ? 'LIVE' : 'RECONNECTING'}
       </span>
     </span>

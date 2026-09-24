@@ -6,18 +6,22 @@ interface CardProps {
   glow?: 'red' | 'orange' | 'cyan' | 'none';
 }
 
+// NOTE: prop values kept as `red`/`orange`/`cyan`/`none` (rather than renaming to
+// `critical`/`amber`/`cyan`/`none`) to avoid breaking the existing call site in
+// app/(dashboard)/horizon/page.tsx (`<Card glow={glow}>` with 'red'/'orange'/'none'),
+// which is out of this agent's edit scope. Only the underlying shadow tokens changed.
 export function Card({ children, className, glow = 'none' }: CardProps) {
   const glowStyles = {
-    red: 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]',
-    orange: 'border-orange-500/40 shadow-[0_0_12px_rgba(249,115,22,0.15)]',
-    cyan: 'border-cyan-500/40 shadow-[0_0_12px_rgba(34,211,238,0.15)]',
-    none: 'border-slate-800',
+    red: 'border-severity-critical/50 shadow-critical-glow',
+    orange: 'border-accent/40 shadow-beacon-glow',
+    cyan: 'border-primary/40 shadow-cyan-glow',
+    none: '',
   };
 
   return (
     <div
       className={cn(
-        'bg-[#0f172a] border rounded-lg p-4',
+        'bg-surface border border-border rounded-xl p-4 shadow-panel',
         glowStyles[glow],
         className,
       )}
@@ -32,5 +36,5 @@ export function CardHeader({ children, className }: { children: React.ReactNode;
 }
 
 export function CardTitle({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <h3 className={cn('text-sm font-semibold text-slate-200', className)}>{children}</h3>;
+  return <h3 className={cn('text-sm font-semibold text-text-primary', className)}>{children}</h3>;
 }
