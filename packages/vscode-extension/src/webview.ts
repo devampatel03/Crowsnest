@@ -66,8 +66,8 @@ function buildHtml(result: InvestigationResult): string {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      background: #020817;
-      color: #e2e8f0;
+      background: #05070f;
+      color: #e7ecf7;
       padding: 24px;
     }
 
@@ -80,7 +80,7 @@ function buildHtml(result: InvestigationResult): string {
       gap: 16px;
       margin-bottom: 28px;
       padding-bottom: 20px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #223049;
     }
 
     .header-logo {
@@ -90,20 +90,20 @@ function buildHtml(result: InvestigationResult): string {
 
     .header-title h1 {
       font-size: 22px;
-      color: #06b6d4;
+      color: #35e6d6;
       letter-spacing: -0.5px;
     }
 
     .header-title p {
       font-size: 12px;
-      color: #64748b;
+      color: #9aa8c7;
       margin-top: 2px;
     }
 
     /* ─── Score card ────────────────────────── */
     .score-card {
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: #0b1120;
+      border: 1px solid #223049;
       border-radius: 12px;
       padding: 20px 24px;
       margin-bottom: 24px;
@@ -121,6 +121,7 @@ function buildHtml(result: InvestigationResult): string {
       justify-content: center;
       font-size: 22px;
       font-weight: 700;
+      font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
       border: 4px solid ${scoreColor};
       color: ${scoreColor};
       flex-shrink: 0;
@@ -128,7 +129,7 @@ function buildHtml(result: InvestigationResult): string {
 
     .score-details h2 {
       font-size: 16px;
-      color: #f1f5f9;
+      color: #e7ecf7;
       margin-bottom: 4px;
     }
 
@@ -145,13 +146,17 @@ function buildHtml(result: InvestigationResult): string {
 
     .score-meta {
       font-size: 12px;
-      color: #64748b;
+      color: #9aa8c7;
+    }
+
+    .score-meta strong {
+      font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
     }
 
     /* ─── Section cards ─────────────────────── */
     .section {
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: #0b1120;
+      border: 1px solid #223049;
       border-radius: 12px;
       margin-bottom: 20px;
       overflow: hidden;
@@ -159,13 +164,13 @@ function buildHtml(result: InvestigationResult): string {
 
     .section-header {
       padding: 14px 20px;
-      background: #1e293b;
+      background: #131b2e;
       display: flex;
       align-items: center;
       gap: 10px;
       font-size: 13px;
       font-weight: 600;
-      color: #94a3b8;
+      color: #9aa8c7;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -181,7 +186,7 @@ function buildHtml(result: InvestigationResult): string {
     }
 
     .kv-table tr + tr td {
-      border-top: 1px solid #1e293b;
+      border-top: 1px solid #223049;
     }
 
     .kv-table td {
@@ -190,7 +195,7 @@ function buildHtml(result: InvestigationResult): string {
     }
 
     .kv-table td:first-child {
-      color: #64748b;
+      color: #9aa8c7;
       font-size: 12px;
       width: 160px;
       padding-right: 16px;
@@ -198,8 +203,9 @@ function buildHtml(result: InvestigationResult): string {
     }
 
     .kv-table td:last-child {
-      color: #e2e8f0;
+      color: #e7ecf7;
       font-size: 13px;
+      font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
     }
 
     /* ─── Alert rows ─────────────────────────── */
@@ -208,7 +214,7 @@ function buildHtml(result: InvestigationResult): string {
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #223049;
     }
 
     .alert-row:last-child { border-bottom: none; }
@@ -224,21 +230,21 @@ function buildHtml(result: InvestigationResult): string {
       margin-top: 2px;
     }
 
-    .sev-critical { background: #7f1d1d; color: #fca5a5; }
-    .sev-high     { background: #7c2d12; color: #fdba74; }
-    .sev-medium   { background: #713f12; color: #fcd34d; }
-    .sev-low      { background: #1e3a5f; color: #93c5fd; }
+    .sev-critical { background: rgba(255, 77, 94, .12); color: #ff4d5e; border: 1px solid rgba(255, 77, 94, .45); }
+    .sev-high     { background: rgba(255, 138, 61, .12); color: #ff8a3d; border: 1px solid rgba(255, 138, 61, .45); }
+    .sev-medium   { background: rgba(255, 176, 32, .12); color: #ffb020; border: 1px solid rgba(255, 176, 32, .45); }
+    .sev-low      { background: rgba(53, 230, 214, .12); color: #35e6d6; border: 1px solid rgba(53, 230, 214, .45); }
 
     .alert-body strong {
       display: block;
       font-size: 13px;
-      color: #f1f5f9;
+      color: #e7ecf7;
       margin-bottom: 2px;
     }
 
     .alert-body span {
       font-size: 12px;
-      color: #94a3b8;
+      color: #9aa8c7;
     }
 
     /* ─── Findings list ─────────────────────── */
@@ -249,9 +255,10 @@ function buildHtml(result: InvestigationResult): string {
 
     .findings-list li {
       padding: 8px 0;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid #223049;
       font-size: 13px;
-      color: #cbd5e1;
+      color: #9aa8c7;
+      font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
       display: flex;
       gap: 10px;
     }
@@ -260,13 +267,13 @@ function buildHtml(result: InvestigationResult): string {
 
     .findings-list li::before {
       content: '→';
-      color: #06b6d4;
+      color: #35e6d6;
       flex-shrink: 0;
     }
 
     /* ─── Empty state ───────────────────────── */
     .empty {
-      color: #475569;
+      color: #5b6b8c;
       font-size: 13px;
       font-style: italic;
     }
@@ -275,19 +282,19 @@ function buildHtml(result: InvestigationResult): string {
     .footer {
       margin-top: 28px;
       padding-top: 16px;
-      border-top: 1px solid #1e293b;
+      border-top: 1px solid #223049;
       font-size: 11px;
-      color: #334155;
+      color: #5b6b8c;
       text-align: center;
     }
 
-    .cyan { color: #06b6d4; }
+    .cyan { color: #35e6d6; }
     .pill {
       display: inline-block;
-      background: #1e293b;
+      background: #131b2e;
       border-radius: 4px;
       padding: 1px 6px;
-      font-family: monospace;
+      font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
       font-size: 12px;
     }
   </style>
@@ -313,7 +320,7 @@ function buildHtml(result: InvestigationResult): string {
         Combined risk score: <strong style="color:${scoreColor}">${scorePercent}%</strong>
         &nbsp;·&nbsp; ai_authored_likelihood × slopsquat_probability
       </div>
-      ${result.summary ? `<p style="margin-top:8px;font-size:13px;color:#94a3b8">${esc(result.summary)}</p>` : ''}
+      ${result.summary ? `<p style="margin-top:8px;font-size:13px;color:#9aa8c7">${esc(result.summary)}</p>` : ''}
     </div>
   </div>
 
@@ -419,15 +426,15 @@ function esc(str: string): string {
 }
 
 function riskColor(score: number): string {
-  if (score > 0.8) { return '#ef4444'; } // red
-  if (score > 0.6) { return '#f97316'; } // orange
-  if (score > 0.4) { return '#eab308'; } // yellow
-  return '#22c55e';                       // green
+  if (score > 0.8) { return '#ff4d5e'; } // critical
+  if (score > 0.6) { return '#ff8a3d'; } // high
+  if (score > 0.4) { return '#ffb020'; } // medium
+  return '#35e6d6';                       // low
 }
 
 function riskBadge(score: number): { bg: string; fg: string } {
-  if (score > 0.8) { return { bg: '#7f1d1d', fg: '#fca5a5' }; }
-  if (score > 0.6) { return { bg: '#7c2d12', fg: '#fdba74' }; }
-  if (score > 0.4) { return { bg: '#713f12', fg: '#fcd34d' }; }
-  return { bg: '#14532d', fg: '#86efac' };
+  if (score > 0.8) { return { bg: 'rgba(255, 77, 94, .12)', fg: '#ff4d5e' }; }
+  if (score > 0.6) { return { bg: 'rgba(255, 138, 61, .12)', fg: '#ff8a3d' }; }
+  if (score > 0.4) { return { bg: 'rgba(255, 176, 32, .12)', fg: '#ffb020' }; }
+  return { bg: 'rgba(53, 230, 214, .12)', fg: '#35e6d6' };
 }
