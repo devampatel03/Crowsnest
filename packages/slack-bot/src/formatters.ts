@@ -116,6 +116,12 @@ function incidentSummaryLine(inc: Incident): string {
 /**
  * Format a completed scan result as Slack Block Kit blocks.
  */
+/** The API may send blast_radius as a count or as a list of affected projects. */
+function blastRadiusCount(value: unknown): number {
+  if (Array.isArray(value)) return value.length;
+  return typeof value === 'number' ? value : 0;
+}
+
 export function formatScanResult(
   result: ScanResult,
   projectPath: string,
@@ -177,7 +183,7 @@ export function formatScanResult(
         section(
           `${incidentSummaryLine(inc)}\n` +
           `  Confidence: ${confidenceBar(inc.confidence)} | ` +
-          `Blast radius: ${inc.blast_radius} projects` +
+          `Blast radius: ${blastRadiusCount(inc.blast_radius)} projects` +
           (inc.runtime_confirmation ? ' | ✅ Runtime confirmed' : '')
         )
       )
@@ -224,7 +230,7 @@ export function formatIncidentAlert(
     section(
       `*Packages:* ${pkgList}\n` +
       `*Confidence:* ${confidenceBar(incident.confidence)}\n` +
-      `*Blast radius:* ${incident.blast_radius} internal project(s)` +
+      `*Blast radius:* ${blastRadiusCount(incident.blast_radius)} internal project(s)` +
       (incident.runtime_confirmation ? '\n*Runtime:* ✅ Confirmed active' : '')
     ),
   ];
@@ -381,7 +387,7 @@ export function formatInvestigation(
       section(
         `*Active incident:* ${SEVERITY_EMOJI[inc.severity]} ${inc.severity} — ${pattern}\n` +
         `Confidence: ${confidenceBar(inc.confidence)} | ` +
-        `Blast radius: ${inc.blast_radius} projects\n` +
+        `Blast radius: ${blastRadiusCount(inc.blast_radius)} projects\n` +
         (inc.remediation_options[0]
           ? `*Fix:* ${typeof inc.remediation_options[0] === 'string'
               ? inc.remediation_options[0]

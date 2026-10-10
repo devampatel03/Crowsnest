@@ -53,7 +53,9 @@ export interface Incident {
 
 /** Returned from /api/scan (initiation) */
 export interface ScanInitResponse {
-  id: string;
+  /** The backend returns `scan_id`; `id` is accepted for older servers. */
+  scan_id?: string;
+  id?: string;
   status: 'pending' | 'running' | 'complete' | 'failed';
   message?: string;
 }
