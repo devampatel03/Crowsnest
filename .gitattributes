@@ -1,2 +1,15 @@
-# Auto detect text files and perform LF normalization
+# Normalise text to LF in the repo; check out native endings by default.
 * text=auto
+
+# These must be LF on every platform (shebangs, YAML tooling, Docker).
+*.sh text eol=lf
+.github/** text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile* text eol=lf
+.dockerignore text eol=lf
+*.mjs text eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
