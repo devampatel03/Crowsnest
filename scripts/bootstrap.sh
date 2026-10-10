@@ -115,7 +115,7 @@ Next steps:
   1. Fill in real API keys in .env (Anthropic, GitHub, Socket.dev, Slack — all optional).
   2. Start the backend:
        source .venv-claude/bin/activate   # Windows: .venv-claude\Scripts\activate
-       uvicorn packages.core.api:app --host 0.0.0.0 --port 8000 --reload
+       uvicorn packages.core.api:app --port 8000 --reload
   3. In another shell, start any JS package:
        cd packages/dashboard && npm run dev
 
