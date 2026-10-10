@@ -2,8 +2,16 @@
   "name": "crowsnest",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "Cross-source supply chain forensics agent — see the storm before it hits your ship",
   "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "source-map-js": ">=1.2.2",
+      "sharp": ">=0.35.5",
+      "postcss-selector-parser": ">=7.1.6"
+    }
+  },
   "workspaces": [
     "packages/cli",
     "packages/dashboard",
