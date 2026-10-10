@@ -50,7 +50,7 @@ Follow the [Quickstart](/docs/quickstart). It is three commands.
 3. **Start Crowsnest.** Leave this running.
    ```bash
    source <the environment the setup script created>/bin/activate
-   uvicorn packages.core.api:app --host 0.0.0.0 --port 8000
+   uvicorn packages.core.api:app --port 8000
    ```
    The setup script prints the name of the environment it creates. Replace the placeholder with that name.
 4. **Start the dashboard.** In a second terminal:
@@ -69,7 +69,7 @@ Use the same steps with two changes. Copy the settings file with `Copy-Item .env
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
-uvicorn packages.core.api:app --host 0.0.0.0 --port 8000
+uvicorn packages.core.api:app --port 8000
 ```
 
 Then start the dashboard as in step 4 above.

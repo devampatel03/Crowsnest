@@ -39,7 +39,7 @@ export const PRIVACY = {
   lead: 'Crowsnest runs on your machine. This page lists what leaves it, and when.',
   local: {
     title: 'What stays on your machine',
-    text: "Your lockfiles, your results and Crowsnest's own data file stay where you run it. Crowsnest has no account system.",
+    text: "Your lockfiles, your results and Crowsnest's own data file stay where you run it. Crowsnest has no account system. To remove everything it stored, stop it and delete crowsnest.duckdb and the snapshots folder.",
   },
   sendsTitle: 'What can leave your machine',
   sends: [

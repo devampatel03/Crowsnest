@@ -85,6 +85,9 @@ Crowsnest starts and works with none of these. Each one adds a little more.
 The [Configuration](packages/dashboard/content/docs/configuration.md) page lists what each key sends
 and where. Without a key, Crowsnest falls back to saved data instead of failing.
 
+Your lockfiles stay on your machine. The dashboard's `/privacy` page lists the package names that
+are looked up and where. To remove everything Crowsnest has stored, stop it and delete `crowsnest.duckdb` and the `snapshots/` folder.
+
 ## What Crowsnest does not do
 
 - It does not stop you from forcing an install. It warns; the decision stays with you.
@@ -136,7 +139,7 @@ Run the service from source:
 python -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -e .
-uvicorn packages.core.api:app --host 0.0.0.0 --port 8000 --reload
+uvicorn packages.core.api:app --port 8000 --reload
 ```
 
 Run the dashboard and its checks:
