@@ -4,7 +4,7 @@ services:
       context: ..
       dockerfile: infra/Dockerfile.api
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - crowsnest-data:/data
       - ../.env:/app/.env:ro
@@ -18,7 +18,7 @@ services:
       context: ../packages/dashboard
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://crowsnest-api:8000
     depends_on:

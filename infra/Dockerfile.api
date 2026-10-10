@@ -15,6 +15,12 @@ COPY packages/core ./packages/core
 
 RUN pip install --no-cache-dir .
 
+# Run as an unprivileged user; /data is the only writable location.
+RUN useradd --create-home --uid 10001 crowsnest \
+    && mkdir -p /data/snapshots \
+    && chown -R crowsnest:crowsnest /data
+USER crowsnest
+
 # CROWSNEST_DB_PATH / CROWSNEST_SNAPSHOT_DIR are overridden by docker-compose to
 # point at the mounted /data volume; these are just sane container defaults.
 ENV CROWSNEST_DB_PATH=/data/crowsnest.duckdb \
@@ -22,5 +28,8 @@ ENV CROWSNEST_DB_PATH=/data/crowsnest.duckdb \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)" || exit 1
 
 CMD ["uvicorn", "packages.core.api:app", "--host", "0.0.0.0", "--port", "8000"]
