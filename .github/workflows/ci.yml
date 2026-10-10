@@ -72,6 +72,11 @@ jobs:
           fi
 
       - name: Build
+        env:
+          # The dashboard refuses a CI build without a real (non-localhost) site origin,
+          # because it is baked into canonicals, the sitemap and robots.txt. This build
+          # is not deployed, so a placeholder origin is enough here.
+          NEXT_PUBLIC_SITE_URL: https://crowsnest.example
         run: |
           if [ "$pnpm_ok" = "true" ]; then
             pnpm run build
