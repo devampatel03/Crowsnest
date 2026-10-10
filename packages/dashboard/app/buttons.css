@@ -1,0 +1,438 @@
+/* ------------------------------------------------------------------------
+   Controls: the sketch button family.
+
+   Buttons are drawn the way Nib is drawn: a dark hand-wobbled outline with the
+   fill printed slightly off-register, down and to the right. Press one and the
+   fill snaps into register; hover and it lifts off the page. The arrow is a
+   beak, and a primary shivers three "ting" marks like the ones around Nib's
+   bell. Links get a pencil squiggle underline instead of a straight rule.
+
+   Layers (every .btn):
+     ::before   the fill, offset and nudged out of register
+     .btn-label the text, always above the fill
+     ::after    the outline, above everything
+   Colour comes only from the semantic tokens in globals.css. Motion is
+   transform only; reduced motion removes it.
+   ------------------------------------------------------------------------ */
+
+:root {
+  --btn-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --btn-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Two wobble shapes so a row of buttons never looks stamped. */
+  --wob-a: 0.95rem 0.5rem 0.85rem 0.55rem / 0.55rem 0.9rem 0.5rem 0.95rem;
+  --wob-b: 0.55rem 0.95rem 0.5rem 0.85rem / 0.9rem 0.5rem 0.95rem 0.55rem;
+  --btn-off: 0.1875rem;
+}
+
+/* Display sits in :where() so Tailwind utilities such as `md:hidden` can still hide a button. */
+:where(.btn) {
+  display: inline-flex;
+}
+.btn {
+  --_h: 2.75rem;
+  --_px: 1.375rem;
+  --wob: var(--wob-a);
+  --_off: var(--btn-off);
+  position: relative;
+  isolation: isolate;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: var(--_h);
+  padding: 0 var(--_px);
+  border: 0;
+  border-radius: var(--wob);
+  background: transparent;
+  color: var(--c-nib-line);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 260ms var(--btn-spring);
+}
+.btn:nth-of-type(even) {
+  --wob: var(--wob-b);
+}
+.btn-sm {
+  --_h: 2.375rem;
+  --_px: 1rem;
+  --_off: 0.125rem;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+.btn-xs {
+  --_h: 2rem;
+  --_px: 0.75rem;
+  --_off: 0.125rem;
+  font-size: 0.8125rem;
+  gap: 0.375rem;
+}
+
+/* The fill, off-register. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--wob);
+  background: var(--c-cta);
+  transform: translate(var(--_off), var(--_off)) rotate(0.5deg);
+  transition:
+    transform 260ms var(--btn-spring),
+    background-color 200ms var(--btn-ease);
+}
+/* The outline, on top, nudged the other way. */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 2px solid var(--c-nib-line);
+  border-radius: var(--wob);
+  transform: rotate(-0.35deg);
+  pointer-events: none;
+}
+
+.btn-label {
+  position: relative;
+  z-index: 1;
+}
+.btn-arrow {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  width: 1.375rem;
+  height: 0.875rem;
+  flex: none;
+  transition: transform 300ms var(--btn-spring);
+}
+.btn-arrow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---- Primary: yellow fill ----------------------------------------------- */
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  transform: translate(-0.0625rem, -0.0625rem);
+}
+.btn-primary:hover::before,
+.btn-primary:focus-visible::before {
+  transform: translate(calc(var(--_off) + 0.125rem), calc(var(--_off) + 0.125rem)) rotate(0.8deg);
+  background: var(--c-cta-hi);
+}
+.btn-primary:hover .btn-arrow,
+.btn-primary:focus-visible .btn-arrow {
+  transform: translateX(0.25rem) rotate(-6deg);
+}
+.btn-primary:active {
+  transform: translate(0.0625rem, 0.0625rem);
+  transition-duration: 80ms;
+}
+.btn-primary:active::before {
+  transform: translate(0, 0) rotate(0);
+  transition-duration: 80ms;
+}
+
+/* Ting marks: three short strokes above the label, like Nib's bell. */
+.btn-primary .btn-label::after {
+  content: '';
+  position: absolute;
+  right: -0.5rem;
+  top: -1.05rem;
+  width: 1.25rem;
+  height: 0.875rem;
+  background: var(--c-nib-line);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14'%3E%3Cpath d='M3 12 L1 6 M10 11 L10 3 M17 12 L19 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14'%3E%3Cpath d='M3 12 L1 6 M10 11 L10 3 M17 12 L19 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  opacity: 0;
+  transform: translateY(0.3rem) scale(0.6);
+  transition:
+    opacity 180ms var(--btn-ease),
+    transform 320ms var(--btn-spring);
+  pointer-events: none;
+}
+.btn-primary:hover .btn-label::after,
+.btn-primary:focus-visible .btn-label::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ---- Secondary: cream fill, yellow on hover ------------------------------ */
+.btn-secondary::before {
+  background: var(--c-surface);
+}
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  transform: translate(-0.0625rem, -0.0625rem);
+}
+.btn-secondary:hover::before,
+.btn-secondary:focus-visible::before {
+  background: var(--c-cta);
+  transform: translate(calc(var(--_off) + 0.125rem), calc(var(--_off) + 0.125rem)) rotate(0.8deg);
+}
+.btn-secondary:active {
+  transform: translate(0.0625rem, 0.0625rem);
+  transition-duration: 80ms;
+}
+.btn-secondary:active::before {
+  transform: translate(0, 0) rotate(0);
+  transition-duration: 80ms;
+}
+
+/* ---- Tertiary: a link with a pencil squiggle ----------------------------- */
+.btn-tertiary {
+  --_h: 1.5rem;
+  min-height: var(--_h);
+  padding: 0;
+  gap: 0.5rem;
+  border-radius: 0;
+  color: var(--c-brand);
+  font-weight: 600;
+}
+.btn-tertiary::before {
+  display: none;
+}
+.btn-tertiary::after {
+  inset: auto 0 -0.3rem 0;
+  height: 0.4rem;
+  z-index: 0;
+  border: 0;
+  border-radius: 0;
+  transform: none;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cpath d='M0 3 Q3 0.4 6 3 T12 3 T18 3 T24 3' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 1.25rem 100% repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cpath d='M0 3 Q3 0.4 6 3 T12 3 T18 3 T24 3' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 1.25rem 100% repeat-x;
+}
+.btn-tertiary:hover,
+.btn-tertiary:focus-visible {
+  color: var(--c-brand-hi);
+}
+.btn-tertiary:hover::after,
+.btn-tertiary:focus-visible::after {
+  animation: squiggle-run 700ms linear infinite;
+}
+.btn-tertiary:hover .btn-arrow {
+  transform: translateX(0.25rem);
+}
+@keyframes squiggle-run {
+  to {
+    -webkit-mask-position: 1.25rem 50%;
+    mask-position: 1.25rem 50%;
+  }
+}
+@media (max-width: 767px) {
+  .btn-tertiary {
+    --_h: 2.75rem;
+  }
+}
+
+/* ---- Icon ------------------------------------------------------------------ */
+.btn-icon {
+  --_h: 2.375rem;
+  --_px: 0;
+  width: 2.375rem;
+  padding: 0;
+}
+@media (max-width: 767px) {
+  .btn-icon {
+    --_h: 2.75rem;
+    width: 2.75rem;
+  }
+}
+.btn-icon[aria-pressed='true']::before {
+  background: var(--c-cta);
+}
+
+/* ---- Disabled and busy -------------------------------------------------- */
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+.btn:disabled::before,
+.btn[aria-disabled='true']::before {
+  transform: translate(var(--_off), var(--_off)) rotate(0.5deg);
+  background: var(--c-pressed);
+}
+.btn:disabled .btn-label::after {
+  display: none;
+}
+.btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* ---- Filter chip --------------------------------------------------------- */
+.chip {
+  --wob: var(--wob-b);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border-radius: var(--wob);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1;
+  color: var(--c-fg-soft);
+  background: transparent;
+  transition: transform 220ms var(--btn-spring);
+}
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--wob);
+  background: transparent;
+  transform: translate(0.125rem, 0.125rem) rotate(0.5deg);
+  transition:
+    background-color 180ms var(--btn-ease),
+    transform 220ms var(--btn-spring);
+}
+.chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--wob);
+  transform: rotate(-0.3deg);
+  pointer-events: none;
+  transition: border-color 180ms var(--btn-ease);
+}
+.chip:hover {
+  color: var(--c-fg);
+  transform: translate(-0.0625rem, -0.0625rem);
+}
+.chip:hover::after {
+  border-color: var(--c-nib-line);
+}
+.chip[aria-pressed='true'] {
+  color: var(--c-nib-line);
+  font-weight: 600;
+}
+.chip[aria-pressed='true']::before {
+  background: var(--c-cta);
+}
+.chip[aria-pressed='true']::after {
+  border: 2px solid var(--c-nib-line);
+}
+.chip:active {
+  transform: translate(0.0625rem, 0.0625rem);
+}
+@media (max-width: 767px) {
+  .chip {
+    min-height: 2.75rem;
+  }
+}
+
+/* ---- Segmented control ----------------------------------------------------- */
+.seg {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--n, 2), 1fr);
+  padding: 0.25rem;
+  border-radius: var(--wob-a);
+}
+.seg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--wob-a);
+  transform: rotate(-0.25deg);
+  pointer-events: none;
+}
+.seg-thumb {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  z-index: 0;
+  width: calc((100% - 0.5rem) / var(--n, 2));
+  border-radius: var(--wob-b);
+  background: var(--c-cta);
+  box-shadow: inset 0 0 0 2px var(--c-nib-line);
+  transform: translateX(calc(var(--i, 0) * 100%)) rotate(-0.4deg);
+  transition: transform 360ms var(--btn-spring);
+}
+.seg-opt {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  min-height: 2rem;
+  padding: 0 0.875rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  line-height: 1;
+  color: var(--c-fg-soft);
+  transition: color 200ms var(--btn-ease);
+}
+.seg-opt:hover {
+  color: var(--c-fg);
+}
+.seg-opt[aria-pressed='true'] {
+  color: var(--c-nib-line);
+  font-weight: 650;
+}
+@media (max-width: 767px) {
+  .seg-opt {
+    min-height: 2.5rem;
+  }
+}
+
+/* ---- Narrow phones: keep the site header on one line ------------------------- */
+@media (max-width: 479px) {
+  .btn-sm {
+    --_px: 0.8125rem;
+  }
+}
+
+/* Touch targets: 44px on phones for every size. */
+@media (max-width: 767px) {
+  .btn-sm,
+  .btn-xs {
+    --_h: 2.75rem;
+  }
+}
+
+/* ---- Reduced motion -------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn::before,
+  .btn-arrow,
+  .chip,
+  .chip::before,
+  .seg-thumb {
+    transition: none !important;
+  }
+  .btn:hover,
+  .btn:active,
+  .chip:hover,
+  .chip:active {
+    transform: none !important;
+  }
+  .btn-primary .btn-label::after {
+    display: none;
+  }
+  .btn-tertiary:hover::after {
+    animation: none !important;
+  }
+}

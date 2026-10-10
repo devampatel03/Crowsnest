@@ -1,0 +1,29 @@
+/* ------------------------------------------------------------------------
+   Segment bands: a full-bleed cream shade behind one part of a page.
+
+   The page content stays in its normal centred column; the band paints its
+   colour out to both edges of the window with a wide spread, and the clip
+   keeps it from leaking above or below. Tones come from the --band-* tokens
+   in globals.css: canvas (the page), sand (a step deeper), honey (a warm
+   highlight for the install step) and clay (the deepest, for the footer).
+   Colours only: no shadow is cast.
+   ------------------------------------------------------------------------ */
+.band {
+  --band: var(--band-canvas);
+  position: relative;
+  background-color: var(--band);
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
+}
+.band-canvas {
+  --band: var(--band-canvas);
+}
+.band-sand {
+  --band: var(--band-sand);
+}
+.band-honey {
+  --band: var(--band-honey);
+}
+.band-clay {
+  --band: var(--band-clay);
+}

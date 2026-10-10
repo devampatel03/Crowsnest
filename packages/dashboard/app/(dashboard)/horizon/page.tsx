@@ -1,344 +1,169 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import useSWR from 'swr';
-import { AlertTriangle, RefreshCw, Zap, Play, CheckCircle2, XCircle, Folder, Loader2 } from 'lucide-react';
-import { fetchIncidents, triggerScan } from '@/lib/api';
-import { useSSEStream } from '@/lib/sse';
-import type { Incident, SecurityEvent } from '@/lib/types';
-import { attackPatternIcon, attackPatternLabel, timeAgo, cn } from '@/lib/utils';
-import { SeverityBadge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { LiveDot } from '@/components/ui/live-dot';
-import { PageSpinner } from '@/components/ui/spinner';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatRow } from '@/components/ui/stat-row';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { PublishFirehose } from '@/components/charts/PublishFirehose';
-import { ThreatTimeline } from '@/components/charts/ThreatTimeline';
+import { useId, useMemo } from 'react';
+import { DailyCalls } from '@/components/charts/DailyCalls';
+import { CallCard } from '@/components/console/CallCard';
+import { useConsoleLive } from '@/components/console/ConsoleLiveProvider';
+import { useIncidents, useStaleMarker, useStats, useNow } from '@/components/console/data';
+import { Numerals } from '@/components/console/Numerals';
+import { DataError, toChartError } from '@/components/console/PageStates';
+import { useScan } from '@/components/console/ScanProvider';
+import { useShortcutActions } from '@/components/console/ShortcutProvider';
+import { EmptyNib, FirstRunStrip, Nib } from '@/components/mascot';
+import { Button, EmptyBlock, NibNote, Panel, PanelGrid, Skeleton, SkeletonRows, type Stat } from '@/components/system';
+import { compareCalls, countBuckets, statusSentence } from '@/lib/calls';
+import { groupCalls } from '@/lib/console/groups';
+import { horizonNote, horizonPose } from '@/lib/console/notes';
+import { useUrlState } from '@/lib/console/url-state';
+import { timeAgo } from '@/lib/time';
+import type { Incident, StatsResult } from '@/lib/types';
 
-export default function HorizonPage() {
-  const [liveEvents, setLiveEvents] = useState<SecurityEvent[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [projectPath, setProjectPath] = useState('');
-  const [scanStatus, setScanStatus] = useState<'idle' | 'triggering' | 'ingesting' | 'running' | 'complete' | 'failed'>('idle');
-  const [activeScanId, setActiveScanId] = useState<string | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [incidentsFound, setIncidentsFound] = useState<number | null>(null);
+const SHOWN = 5;
+const WEEK = 7 * 86_400_000;
 
-  const { data: incidents, isLoading, mutate } = useSWR<Incident[]>(
-    '/api/incidents',
-    () => fetchIncidents(),
-    { refreshInterval: 30000 },
-  );
-
-  const onEvent = useCallback((event: SecurityEvent) => {
-    setLiveEvents((prev) => [...prev.slice(-100), event]);
-
-    if (event.type === 'incident_detected') {
-      mutate();
-    }
-
-    if (event.type === 'scan_progress' && activeScanId && event.scan_id === activeScanId) {
-      if (event.phase === 'started') {
-        setScanStatus('ingesting');
-      } else if (event.phase === 'ingestion_complete') {
-        setScanStatus('running');
-      } else if (event.phase === 'complete') {
-        setScanStatus('complete');
-        setIncidentsFound(event.incidents_found ?? 0);
-        mutate();
-        setTimeout(() => {
-          setScanStatus('idle');
-          setActiveScanId(null);
-          setIncidentsFound(null);
-        }, 5000);
-      } else if (event.phase === 'failed') {
-        setScanStatus('failed');
-        setScanError(event.error || 'Scan failed due to an unknown error');
-      }
-    }
-  }, [activeScanId, mutate]);
-
-  const handleStartScan = async () => {
-    if (!projectPath.trim()) return;
-    setScanStatus('triggering');
-    setScanError(null);
-    setIncidentsFound(null);
-    setIsModalOpen(false);
-
-    try {
-      const res = await triggerScan(projectPath);
-      setActiveScanId(res.scan_id);
-    } catch (err: any) {
-      setScanStatus('failed');
-      setScanError(err.message || 'Failed to start scan');
-      setActiveScanId(null);
-    }
-  };
-
-  const { connected } = useSSEStream(onEvent);
-
-  const sorted = [...(incidents || [])].sort((a, b) => {
-    const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-    return order[a.severity] - order[b.severity];
+/** "was 4, a week ago": only when an older window exists. The API keeps no history, so this counts calls first seen over a week ago. */
+function baseline(list: readonly Incident[], bucket: 'hold' | 'watch', now: number): string | undefined {
+  const older = list.filter((i) => {
+    const t = Date.parse(i.detected_at);
+    return Number.isFinite(t) && now - t >= WEEK;
   });
-
-  const counts = {
-    CRITICAL: sorted.filter((i) => i.severity === 'CRITICAL').length,
-    HIGH: sorted.filter((i) => i.severity === 'HIGH').length,
-    MEDIUM: sorted.filter((i) => i.severity === 'MEDIUM').length,
-    LOW: sorted.filter((i) => i.severity === 'LOW').length,
-  };
-
-  return (
-    <div className="p-6 space-y-6">
-      <PageHeader
-        title="Horizon"
-        description="Active supply chain threats hitting your dependency graph"
-        actions={
-          <>
-            <LiveDot connected={connected} />
-            <Button variant="primary" size="sm" onClick={() => setIsModalOpen(true)}>
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Scan Project
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-1.5 py-1.5"
-              onClick={() => mutate()}
-              aria-label="Refresh incidents"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </>
-        }
-      />
-
-      {/* Scan Progress Banner */}
-      {scanStatus !== 'idle' && (
-        <Card className={cn(
-          'transition-all duration-300 border',
-          scanStatus === 'complete' ? 'border-success/30 bg-success/5 shadow-cyan-glow' :
-          scanStatus === 'failed' ? 'border-severity-critical/30 bg-severity-critical-bg shadow-critical-glow' :
-          'border-primary/30 bg-primary/5 shadow-cyan-glow'
-        )}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {(scanStatus === 'triggering' || scanStatus === 'ingesting' || scanStatus === 'running') && (
-                <Loader2 className="w-5 h-5 text-primary-400 animate-spin" />
-              )}
-              {scanStatus === 'complete' && (
-                <CheckCircle2 className="w-5 h-5 text-success" />
-              )}
-              {scanStatus === 'failed' && (
-                <XCircle className="w-5 h-5 text-severity-critical" />
-              )}
-
-              <div>
-                <h4 className="text-sm font-semibold text-text-primary">
-                  {scanStatus === 'triggering' && 'Initializing Scan...'}
-                  {scanStatus === 'ingesting' && 'Ingesting Project Lockfile...'}
-                  {scanStatus === 'running' && 'Running LangGraph Agent Team...'}
-                  {scanStatus === 'complete' && 'Scan Completed'}
-                  {scanStatus === 'failed' && 'Scan Failed'}
-                </h4>
-                <p className="text-xs text-text-muted mt-0.5">
-                  {scanStatus === 'triggering' && 'Registering scan task on the backend...'}
-                  {scanStatus === 'ingesting' && 'Parsing dependencies and syncing with local DuckDB...'}
-                  {scanStatus === 'running' && 'LLMs are executing detection plan, investigating signals, and triaging alerts...'}
-                  {scanStatus === 'complete' && `Finished audit. Detected ${incidentsFound} new incident(s).`}
-                  {scanStatus === 'failed' && (scanError || 'An error occurred during scanning.')}
-                </p>
-              </div>
-            </div>
-
-            {scanStatus === 'failed' && (
-              <Button variant="secondary" size="sm" onClick={() => setScanStatus('idle')}>
-                Close
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* Scan trigger dialog */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary-400">
-                <Play className="w-5 h-5 fill-current animate-pulse" />
-              </div>
-              <div>
-                <DialogTitle>Scan Project</DialogTitle>
-                <DialogDescription>Run a supply chain security audit on a local directory</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <label htmlFor="project-path" className="text-xs font-semibold text-text-secondary">Project Directory Path</label>
-            <div className="relative">
-              <Folder className="absolute left-3 top-2.5 w-4 h-4 text-text-muted" />
-              <input
-                id="project-path"
-                type="text"
-                value={projectPath}
-                onChange={(e) => setProjectPath(e.target.value)}
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 pl-10 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-primary-400 transition-colors"
-                placeholder="/path/to/your/project"
-              />
-            </div>
-            <p className="text-[10px] text-text-muted">
-              Note: The FastAPI backend will parse the project&apos;s lockfile, fetch metadata, and execute LLM-agent reasoning.
-            </p>
-          </div>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="ghost" size="md">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button variant="primary" size="md" onClick={handleStartScan} disabled={!projectPath.trim()}>
-              Start Scan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Severity summary bar */}
-      <div className="flex items-center gap-6">
-        <StatRow
-          stats={[
-            { label: 'CRITICAL', value: counts.CRITICAL, tone: 'critical' },
-            { label: 'HIGH', value: counts.HIGH, tone: 'high' },
-            { label: 'MEDIUM', value: counts.MEDIUM, tone: 'medium' },
-            { label: 'LOW', value: counts.LOW, tone: 'low' },
-          ]}
-        />
-        {(incidents?.length ?? 0) === 0 && !isLoading && (
-          <div className="text-success text-sm self-center">✓ No active incidents</div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-3 gap-6">
-        {/* Incident list */}
-        <div className="col-span-2 relative space-y-3">
-          <div
-            className="radar-sweep absolute inset-0 pointer-events-none overflow-hidden animate-[radar-spin_8s_linear_infinite]"
-            style={{
-              background: 'conic-gradient(from 0deg, transparent 0%, rgba(53,230,214,0.06) 8%, transparent 16%)',
-              opacity: 0.35,
-              mixBlendMode: 'screen',
-            }}
-            aria-hidden
-          />
-          {isLoading ? (
-            <PageSpinner />
-          ) : sorted.length === 0 ? (
-            <Card className="relative">
-              <div className="text-center py-8 text-text-muted">
-                <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <div>No incidents detected</div>
-                <div className="text-xs mt-1">Crowsnest is monitoring your dependency graph</div>
-              </div>
-            </Card>
-          ) : (
-            sorted.map((incident) => (
-              <IncidentCard key={incident.id} incident={incident} />
-            ))
-          )}
-        </div>
-
-        {/* Right panel */}
-        <div className="space-y-4">
-          {/* Token counter */}
-          <Card className="border-primary/20">
-            <div className="text-xs text-text-muted mb-1">CoralDB efficiency</div>
-            <div className="text-primary-400 font-mono text-sm">
-              <Zap className="w-3 h-3 inline mr-1" />
-              Cross-source JOINs in SQL
-            </div>
-            <div className="text-xs text-text-muted mt-1">
-              vs. 400× tokens with MCP tool calls
-            </div>
-          </Card>
-
-          {/* Threat timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>24h Threat Timeline</CardTitle>
-            </CardHeader>
-            <ThreatTimeline incidents={incidents || []} />
-          </Card>
-
-          {/* Live firehose */}
-          <Card>
-            <CardHeader>
-              <CardTitle>npm Publish Firehose</CardTitle>
-              <LiveDot connected={connected} />
-            </CardHeader>
-            <PublishFirehose events={liveEvents} />
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+  if (older.length === 0) return undefined;
+  return `was ${countBuckets(older)[bucket]}, a week ago`;
 }
 
-function IncidentCard({ incident }: { incident: Incident }) {
-  const glow = incident.severity === 'CRITICAL' ? 'red' :
-               incident.severity === 'HIGH' ? 'orange' : 'none';
+function packagesChecked(s: StatsResult | undefined): number | null {
+  if (!s) return null;
+  return s.total_packages ?? s.table_counts.local_lockfiles ?? null;
+}
+
+export default function HorizonPage() {
+  const inc = useIncidents();
+  const stats = useStats();
+  const stale = useStaleMarker(inc, stats);
+  const scan = useScan();
+  const live = useConsoleLive();
+  const [{ focus }] = useUrlState({ focus: '' });
+  const titleId = useId();
+  useShortcutActions({ refresh: () => (inc.retry(), stats.retry()) });
+
+  const list = inc.data;
+  const now = useNow();
+  const attention = useMemo(
+    () => (list ?? []).filter((i) => i.severity !== 'LOW').sort(compareCalls),
+    [list],
+  );
+  // Identical calls (same kind, packages and people) become one card; see lib/console/groups.ts.
+  const groups = useMemo(() => groupCalls(attention), [attention]);
+  const shown = useMemo(() => {
+    const top = groups.slice(0, SHOWN);
+    const f = focus ? groups.find((g) => g.lead.id === focus || g.others.some((o) => o.id === focus)) : undefined;
+    return f && !top.includes(f) ? [...top.slice(0, SHOWN - 1), f] : top;
+  }, [groups, focus]);
+
+  const buckets = countBuckets(list ?? []);
+  const checked = packagesChecked(stats.data);
+  const loading = inc.loading;
+  const failed = !!inc.error && !list;
+  const lastScan = stats.data?.last_scan_at;
+  const loaded = !!list && !!stats.data;
+  // A scan exists if the API says so, or if it holds packages or calls. Only an empty store is "never scanned".
+  const scanned = !!lastScan || (checked ?? 0) > 0 || (list ?? []).length > 0;
+  const firstRun = loaded && !scanned;
+  const holdShowing = attention.some((i) => i.severity === 'CRITICAL' || i.severity === 'HIGH');
+  const noteState = { loaded: !!list && (!!stats.data || !!inc.data), scanned, hold: buckets.hold, watch: buckets.watch };
+  const note = horizonNote(noteState);
+  const pose = horizonPose(noteState);
+
+  const items: Stat[] = [
+    { id: 'hold', label: 'Hold', value: list ? buckets.hold : null, baseline: list ? baseline(list, 'hold', now) : undefined, hold: buckets.hold > 0 },
+    { id: 'watch', label: 'Watch', value: list ? buckets.watch : null, baseline: list ? baseline(list, 'watch', now) : undefined },
+    { id: 'checked', label: 'Packages checked', value: checked },
+  ];
+
+  const clearLine =
+    checked && checked > 0
+      ? `Nib checked ${checked.toLocaleString('en-US')} packages${lastScan ? ` ${timeAgo(lastScan, now)}` : ''} and found nothing to hold.`
+      : 'Crowsnest has nothing to report yet.';
+
+  const headline = !list
+    ? null
+    : attention.length > 0
+      ? statusSentence(attention.length)
+      : scanned
+        ? 'All quiet from up here.'
+        : 'No project scanned yet.';
 
   return (
-    <Card glow={glow} className="relative">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="text-xl mt-0.5">{attackPatternIcon(incident.attack_pattern)}</div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <SeverityBadge severity={incident.severity} />
-              <span className="text-sm font-medium text-text-primary">
-                {attackPatternLabel(incident.attack_pattern)}
-              </span>
-              {incident.runtime_confirmation && (
-                <span className="text-xs bg-severity-critical-bg text-severity-critical border border-severity-critical-border px-1.5 py-0.5 rounded">
-                  RUNTIME CONFIRMED
-                </span>
-              )}
+    <div className="pt-s4">
+      <PanelGrid lines>
+        <section aria-labelledby={titleId} className="relative col-span-12 flex min-w-0 flex-col gap-s3 bg-surface p-s4">
+          {pose ? (
+            <div className="pointer-events-none absolute right-s4 top-s3" data-status-nib={pose}>
+              <Nib pose={pose} size={96} animate={pose === 'perch'} className="max-md:h-auto max-md:w-16" />
             </div>
-            <div className="text-xs text-text-secondary space-x-2">
-              <span>{incident.packages.slice(0, 3).join(', ')}{incident.packages.length > 3 ? ` +${incident.packages.length - 3}` : ''}</span>
-              <span className="text-text-muted">·</span>
-              <span>{(incident.blast_radius || []).length} project(s)</span>
-              <span className="text-text-muted">·</span>
-              <span>{Math.round(incident.confidence * 100)}% confidence</span>
-            </div>
+          ) : null}
+          <h1 id={titleId} className={`m-0 min-h-[1.05em] text-display-m text-fg${pose ? ' pr-[4.5rem] md:pr-[7rem]' : ''}`}>
+            {headline ? (
+              headline
+            ) : failed ? (
+              'Crowsnest is not reachable.'
+            ) : (
+              <>
+                <span className="sr-only">What needs your attention</span>
+                <Skeleton className="h-10" width="55%" />
+              </>
+            )}
+          </h1>
+          <div className="min-h-[1.625rem]" title={note ? "Nib's note" : undefined}>
+            {note ? <NibNote size="m">{note}</NibNote> : null}
           </div>
-        </div>
-        <div className="text-xs text-text-muted whitespace-nowrap">
-          {timeAgo(incident.detected_at)}
-        </div>
-      </div>
+          {list && attention.length === 0 && scanned ? <p className="m-0 text-body-s text-fg-soft">{clearLine}</p> : null}
+          <Numerals items={items} />
+        </section>
 
-      {incident.remediation_options.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-border-soft">
-          <div className="text-xs text-text-muted mb-1">Recommended action:</div>
-          <div className="text-xs text-text-secondary">{incident.remediation_options[0]}</div>
-        </div>
-      )}
-    </Card>
+        {firstRun ? (
+          <section aria-label="Getting started" className="col-span-12 flex min-w-0 flex-col items-start gap-s4 bg-surface p-s4" data-first-run>
+            <FirstRunStrip animate className="w-full" />
+            <Button variant="tertiary" onClick={scan.openDialog}>
+              Scan a project
+            </Button>
+          </section>
+        ) : (
+          <>
+            <Panel label="Needs your attention" className="col-span-12 min-h-[20rem] lg:col-span-7" stale={stale} meta={<Button variant="tertiary" href="/log">See all in Log</Button>}>
+              {loading ? (
+                <SkeletonRows rows={3} rowHeight={96} label="Loading calls." />
+              ) : failed ? (
+                <DataError error={inc.error} onRetry={inc.retry} />
+              ) : shown.length === 0 ? (
+                <EmptyBlock sentence="Calls that need you will show up here." />
+              ) : (
+                <ul className="m-0 flex list-none flex-col gap-s3 p-0">
+                  {shown.map((g) => (
+                    <li key={g.lead.id} className="min-w-0">
+                      <CallCard incident={g.lead} now={now} defaultOpen={!!focus && (g.lead.id === focus || g.others.some((o) => o.id === focus))} alsoCount={g.others.length} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
+            <Panel label="Last 30 days" className="col-span-12 min-h-[20rem] lg:col-span-5" stale={stale}>
+              <DailyCalls
+                incidents={list ?? []}
+                loading={loading}
+                error={failed ? toChartError(inc.error) : null}
+                onRetry={inc.retry}
+                live={live.status === 'live'}
+                emptyAdornment={
+                  // Hold showing anywhere on the page: plain sentence only, no Nib line.
+                  holdShowing ? undefined : <EmptyNib size={80} text="A quiet month." />
+                }
+              />
+            </Panel>
+          </>
+        )}
+      </PanelGrid>
+    </div>
   );
 }

@@ -15,3 +15,31 @@ globalThis.ResizeObserver = globalThis.ResizeObserver || (ResizeObserverStub as 
 if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// jsdom implements neither IntersectionObserver (Motion's `whileInView`,
+// used by the landing page's Reveal component) nor matchMedia (Motion's
+// `useReducedMotion`). Stub both so the landing-page smoke test can mount.
+class IntersectionObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+
+globalThis.IntersectionObserver =
+  globalThis.IntersectionObserver || (IntersectionObserverStub as unknown as typeof IntersectionObserver);
+
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }) as unknown as MediaQueryList;
+}

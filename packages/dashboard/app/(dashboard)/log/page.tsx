@@ -1,180 +1,134 @@
 'use client';
 
-import { useState } from 'react';
-import useSWR from 'swr';
-import { Clock, RotateCcw, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
-import { fetchIncidents, replayIncident } from '@/lib/api';
-import type { Incident } from '@/lib/types';
-import { attackPatternIcon, attackPatternLabel, cn, severityConfig, timeAgo } from '@/lib/utils';
-import { Badge, SeverityBadge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { PageSpinner } from '@/components/ui/spinner';
-import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
-import { ToastProvider, useToast } from '@/components/ui/toast-provider';
+import { useMemo, useRef } from 'react';
+import { DailyCalls } from '@/components/charts/DailyCalls';
+import { CallRow } from '@/components/console/CallCard';
+import { ConsolePageHead } from '@/components/console/ConsolePageHead';
+import { useIncidents, useStaleMarker, useNow } from '@/components/console/data';
+import { Cameo, DataError } from '@/components/console/PageStates';
+import { useConsoleLive } from '@/components/console/ConsoleLiveProvider';
+import { useScan } from '@/components/console/ScanProvider';
+import { useShortcutActions } from '@/components/console/ShortcutProvider';
+import { Button, Panel, PanelGrid, Rope, SkeletonRows, TextInput, ToggleChip } from '@/components/system';
+import { filtersActive, filterLog, groupByDate, LOG_DEFAULTS, LOG_PAGE_SIZE, newestFirst, pageCount, pageOf, validateRange } from '@/lib/console/log';
+import { LOG_NOTE } from '@/lib/console/notes';
+import { useUrlState } from '@/lib/console/url-state';
+
+const LEVELS = [
+  { id: 'hold', label: 'Hold' },
+  { id: 'watch', label: 'Watch' },
+  { id: 'note', label: 'Note' },
+] as const;
 
 export default function LogPage() {
-  return (
-    <ToastProvider>
-      <LogPageContent />
-    </ToastProvider>
-  );
-}
+  const inc = useIncidents();
+  const stale = useStaleMarker(inc);
+  const scan = useScan();
+  const live = useConsoleLive();
+  const [f, update, reset] = useUrlState({ ...LOG_DEFAULTS });
+  const search = useRef<HTMLInputElement>(null);
+  useShortcutActions({ refresh: inc.retry, focusFilter: () => search.current?.focus() });
 
-function LogPageContent() {
-  const { toast } = useToast();
-  const { data: incidents, isLoading } = useSWR<Incident[]>(
-    '/api/incidents',
-    () => fetchIncidents(),
-    { refreshInterval: 60000 },
-  );
+  const all = inc.data;
+  const rows = useMemo(() => newestFirst(filterLog(all ?? [], f)), [all, f]);
+  const page = pageOf(f.page, rows.length);
+  const pages = pageCount(rows.length);
+  const visible = rows.slice((page - 1) * LOG_PAGE_SIZE, page * LOG_PAGE_SIZE);
+  const on = new Set(f.v.split(',').filter(Boolean));
+  const rangeError = validateRange(f.from, f.to);
+  const now = useNow();
+  const groups = useMemo(() => groupByDate(visible, now), [visible, now]);
+  const recent = (all ?? []).some((i) => now - (Date.parse(i.detected_at) || 0) <= 30 * 86_400_000);
 
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [replaying, setReplaying] = useState<string | null>(null);
-
-  const handleReplay = async (incident: Incident) => {
-    setReplaying(incident.id);
-    try {
-      await replayIncident(incident.attack_pattern);
-      toast({
-        message: `Replay complete for: ${attackPatternLabel(incident.attack_pattern)}`,
-        tone: 'success',
-      });
-    } catch (err) {
-      toast({
-        message: `Replay failed: ${err instanceof Error ? err.message : String(err)}`,
-        tone: 'error',
-      });
-    } finally {
-      setReplaying(null);
-    }
+  const toggle = (id: string, pressed: boolean) => {
+    const next = new Set(on);
+    if (pressed) next.add(id);
+    else next.delete(id);
+    update({ v: LEVELS.filter((l) => next.has(l.id)).map((l) => l.id).join(','), page: '1' });
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      <PageHeader title="Log" description="Incident history and Time Machine replay" />
-
-      {isLoading ? (
-        <PageSpinner />
-      ) : !incidents || incidents.length === 0 ? (
-        <Card>
-          <div className="text-center py-12 text-text-muted">
-            <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <div>No incidents in history</div>
-            <div className="text-xs mt-1">Incidents detected by Crowsnest will appear here</div>
-          </div>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {incidents.map((incident) => (
-            <IncidentLogEntry
-              key={incident.id}
-              incident={incident}
-              expanded={expanded === incident.id}
-              onToggle={() => setExpanded(expanded === incident.id ? null : incident.id)}
-              onReplay={handleReplay}
-              isReplaying={replaying === incident.id}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface IncidentLogEntryProps {
-  incident: Incident;
-  expanded: boolean;
-  onToggle: () => void;
-  onReplay: (incident: Incident) => void;
-  isReplaying: boolean;
-}
-
-function IncidentLogEntry({ incident, expanded, onToggle, onReplay, isReplaying }: IncidentLogEntryProps) {
-  const config = severityConfig(incident.severity);
+  const failed = !!inc.error && !all;
 
   return (
-    <Card className={cn('cursor-pointer transition-colors hover:brightness-110', config.bg, config.border)}>
-      <div className="flex items-center justify-between" onClick={onToggle}>
-        <div className="flex items-center gap-3">
-          <span className="text-lg">{attackPatternIcon(incident.attack_pattern)}</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <SeverityBadge severity={incident.severity} />
-              <span className="text-sm font-medium text-text-primary">
-                {attackPatternLabel(incident.attack_pattern)}
-              </span>
+    <>
+      <ConsolePageHead title="Everything Crowsnest has called" note={LOG_NOTE} />
+      <PanelGrid lines>
+        <Panel label="Calls" className="col-span-12 min-h-[26.25rem]" stale={stale} meta={all ? <span className="label">{rows.length.toLocaleString('en-US')} shown</span> : null}>
+          {all && recent ? (
+            <div className="mb-s4" data-log-spark>
+              <DailyCalls incidents={all} variant="spark" height={48} live={live.status === 'live'} />
             </div>
-            <div className="text-xs text-text-muted mt-0.5">
-              {incident.packages.slice(0, 3).join(', ')} · {timeAgo(incident.detected_at)}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onReplay(incident); }}
-            disabled={isReplaying}
-          >
-            {isReplaying ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <RotateCcw className="w-3 h-3" />
-            )}
-            {isReplaying ? 'Replaying...' : 'Replay'}
-          </Button>
-          {expanded ? (
-            <ChevronDown className="w-4 h-4 text-text-secondary" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-text-secondary" />
-          )}
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="mt-4 pt-4 border-t border-border space-y-3">
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <div className="text-text-muted mb-1">Packages</div>
-              <div className="space-y-0.5">
-                {incident.packages.map((p) => (
-                  <div key={p} className="font-mono text-text-primary">{p}</div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="text-text-muted mb-1">Blast radius ({incident.blast_radius.length})</div>
-              <div className="space-y-0.5">
-                {incident.blast_radius.slice(0, 5).map((b, i) => (
-                  <div key={i} className="text-text-secondary truncate">
-                    {b.package} in {b.project_path.split('/').slice(-1)[0]}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="text-text-muted text-xs mb-1">Remediation options</div>
-            <ol className="space-y-0.5 text-xs text-text-secondary">
-              {incident.remediation_options.map((r, i) => (
-                <li key={i}>{i + 1}. {r}</li>
+          ) : null}
+          <div className="mb-s4 flex flex-wrap items-end gap-x-s4 gap-y-s3">
+            <div role="group" aria-label="Seriousness" className="flex flex-wrap gap-s2">
+              {LEVELS.map((l) => (
+                <ToggleChip key={l.id} pressed={on.has(l.id)} onPressedChange={(p) => toggle(l.id, p)}>
+                  {l.label}
+                </ToggleChip>
               ))}
-            </ol>
+            </div>
+            <div className="w-full min-w-0 md:w-64">
+              <TextInput id="log-search" label="Search calls" shortcut="/" inputRef={search} value={f.q} onChange={(q) => update({ q, page: '1' })} placeholder="Package or what happened" />
+            </div>
+            <div className="w-[calc(50%-0.375rem)] min-w-0 md:w-40">
+              <TextInput id="log-from" label="From" type="date" value={f.from} onChange={(from) => update({ from, page: '1' })} error={rangeError ?? undefined} />
+            </div>
+            <div className="w-[calc(50%-0.375rem)] min-w-0 md:w-40">
+              <TextInput id="log-to" label="To" type="date" value={f.to} onChange={(to) => update({ to, page: '1' })} />
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Badge variant={incident.runtime_confirmation ? 'danger' : 'dim'}>
-              {incident.runtime_confirmation ? '⚡ Runtime confirmed' : '○ Not runtime confirmed'}
-            </Badge>
-            <Badge variant="default">
-              {Math.round(incident.confidence * 100)}% confidence
-            </Badge>
-          </div>
-        </div>
-      )}
-    </Card>
+          {inc.loading ? (
+            <SkeletonRows rows={6} label="Loading calls." />
+          ) : failed ? (
+            <DataError error={inc.error} onRetry={inc.retry} />
+          ) : (all ?? []).length === 0 ? (
+            <Cameo pose="quiet" line="Nothing logged yet.">
+              <p className="m-0 text-body-s text-fg-soft">Scan a project to start.</p>
+              <Button onClick={scan.openDialog}>Scan a project</Button>
+            </Cameo>
+          ) : rows.length === 0 ? (
+            <Cameo pose="quiet" line="Nothing logged here. Clear the filters and I'll look again.">
+              {filtersActive(f) ? (
+                <Button variant="tertiary" arrow={false} onClick={reset}>
+                  Clear filters
+                </Button>
+              ) : null}
+            </Cameo>
+          ) : (
+            <>
+              <div className="relative pl-[1.75rem]" data-rope-timeline>
+                <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-[0.5rem] w-0">
+                  <Rope />
+                </div>
+                {groups.map((g) => (
+                  <section key={g.group} aria-label={g.group} className="mb-s3 last:mb-0">
+                    <h3 className="m-0 pb-s1 pt-s1 text-h3 text-fg">{g.group}</h3>
+                    <ul className="m-0 list-none p-0">
+                      {g.items.map((i) => (
+                        <CallRow key={i.id} incident={i} now={now} knot />
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+              {pages > 1 ? (
+                <nav aria-label="Pages" className="mt-s4 flex flex-wrap items-center gap-s4">
+                  <Button variant="secondary" arrow={false} disabled={page <= 1} onClick={() => update({ page: String(page - 1) })}>
+                    Previous
+                  </Button>
+                  <span className="text-body-s text-fg-soft" aria-live="polite">
+                    Page {page}
+                  </span>
+                  <Button variant="secondary" arrow={false} disabled={page >= pages} onClick={() => update({ page: String(page + 1) })}>
+                    Next
+                  </Button>
+                </nav>
+              ) : null}
+            </>
+          )}
+        </Panel>
+      </PanelGrid>
+    </>
   );
 }
