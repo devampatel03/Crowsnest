@@ -10,15 +10,14 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 from anthropic import AsyncAnthropic
-from langchain_core.tools import tool
 
 from ..coral.engine import CoralEngine
-from ..queries.templates import QueryLibrary
+from ..queries.templates import DEFAULT_PARAMS, QueryLibrary
 from .state import AlertObject, AttackPattern, BlastRadiusEntry, CrowsnestState, Severity
 
 log = structlog.get_logger(__name__)
@@ -263,7 +262,7 @@ def _synthesize_incidents(query_name: str, rows: list[dict[str, Any]]) -> list[A
         runtime_confirmation=runtime_confirmed,
         remediation_options=_default_remediations(pattern),
         raw_findings=rows[:10],
-        detected_at=datetime.now(timezone.utc).isoformat(),
+        detected_at=datetime.now(UTC).isoformat(),
     )]
 
 
@@ -364,7 +363,7 @@ def _dict_to_alert(d: dict[str, Any], raw: list[dict[str, Any]]) -> AlertObject:
         runtime_confirmation=bool(d.get("runtime_confirmation", False)),
         remediation_options=d.get("remediation_options", _default_remediations(pattern)),
         raw_findings=raw[:10],
-        detected_at=datetime.now(timezone.utc).isoformat(),
+        detected_at=datetime.now(UTC).isoformat(),
     )
 
 
@@ -441,14 +440,4 @@ def _default_remediations(pattern: AttackPattern) -> list[str]:
 
 
 def _default_params(query_name: str) -> dict[str, Any]:
-    defaults: dict[str, dict[str, Any]] = {
-        "XZ_PATTERN": {"lookback_new_days": "180"},
-        "SHAI_HULUD": {"lookback_days": "7"},
-        "SLOPSQUATTING": {
-            "min_ai_likelihood": 0.7,
-            "max_age_days": "120",
-            "max_downloads": 5000,
-        },
-        "SLEEPER_DEPENDENCY": {"lookback_days": "30"},
-    }
-    return defaults.get(query_name, {})
+    return dict(DEFAULT_PARAMS.get(query_name, {}))

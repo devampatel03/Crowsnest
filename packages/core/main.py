@@ -1,6 +1,7 @@
 """Crowsnest API entry point."""
 
 import uvicorn
+
 from .config import get_settings
 
 

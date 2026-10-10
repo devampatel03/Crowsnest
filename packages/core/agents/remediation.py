@@ -13,8 +13,7 @@ Complex cases fall back to claude-haiku-4-5.
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -47,7 +46,7 @@ def _generate_draft(incident: AlertObject) -> RemediationDraft:
     confidence_pct = int(incident["confidence"] * 100)
     blast_count = len(incident.get("blast_radius", []))
     runtime = incident.get("runtime_confirmation", False)
-    ts = incident.get("detected_at", datetime.now(timezone.utc).isoformat())
+    ts = incident.get("detected_at", datetime.now(UTC).isoformat())
 
     pkg_list = "\n".join(f"  - {p}" for p in packages[:10])
     blast_list = "\n".join(

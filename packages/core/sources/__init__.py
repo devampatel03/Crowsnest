@@ -1,12 +1,12 @@
 from .base import DataSource
-from .npm import NpmRegistrySource
 from .github import GitHubSource
-from .osv import OSVSource
-from .socket import SocketSource
-from .sigstore import SigstoreRekorSource
-from .pypi import PyPISource
-from .lockfile import LockfileSource
 from .ingestion import IngestorService
+from .lockfile import LockfileSource
+from .npm import NpmRegistrySource
+from .osv import OSVSource
+from .pypi import PyPISource
+from .sigstore import SigstoreRekorSource
+from .socket import SocketSource
 
 __all__ = [
     "DataSource",

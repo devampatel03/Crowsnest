@@ -8,7 +8,6 @@ timestamp) and emits a prioritised ordered list of query names to run.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from typing import Any
 
 import structlog
@@ -81,6 +80,8 @@ async def detection_planner_node(
         # Strip markdown code fences if present
         text = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         queries = json.loads(text)
+        if not isinstance(queries, list):
+            raise ValueError("planner response must be a JSON list of query names")
         # Validate — only return names that actually exist
         valid_queries = [q for q in queries if q in _ALL_QUERIES]
 
