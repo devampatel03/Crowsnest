@@ -548,9 +548,26 @@ ORDER BY risk_score DESC, packages_in_graph DESC
         if name not in cls._REGISTRY:
             raise KeyError(f"Unknown query: {name!r}. Available: {cls.list_queries()}")
         sql = cls._REGISTRY[name]
-        if params:
-            sql = _safe_substitute(sql, params)
+        merged = {**DEFAULT_PARAMS.get(name, {}), **(params or {})}
+        if merged:
+            sql = _safe_substitute(sql, merged)
+        leftover = re.findall(r"\{[a-z_]+\}", sql)
+        if leftover:
+            raise ValueError(f"Query {name!r} has unfilled parameters: {sorted(set(leftover))}")
         return sql.strip()
+
+
+# Defaults for {placeholder} parameters, so every caller renders a runnable query.
+DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
+    "XZ_PATTERN": {"lookback_new_days": "180"},
+    "SHAI_HULUD": {"lookback_days": "7"},
+    "SLOPSQUATTING": {
+        "min_ai_likelihood": 0.7,
+        "max_age_days": "120",
+        "max_downloads": 5000,
+    },
+    "SLEEPER_DEPENDENCY": {"lookback_days": "30"},
+}
 
 
 # ── helpers ────────────────────────────────────────────────────────────────

@@ -3,23 +3,28 @@ name = "crowsnest-core"
 version = "0.1.0"
 description = "Crowsnest core agent orchestration and data federation layer"
 requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "langgraph>=0.2.0",
-    "langchain-anthropic>=0.3.0",
+    "langchain-anthropic>=1.4.6",
     "langchain-core>=0.3.0",
+    "langgraph-sdk>=0.4.4",
+    "langsmith>=0.8.18",
     "anthropic>=0.104.0",
     "duckdb>=1.1.0",
     "httpx>=0.27.0",
+    "urllib3>=2.8.0",
+    "starlette>=1.3.1",
     "pydantic>=2.8.0",
-    "pydantic-settings>=2.4.0",
+    "pydantic-settings>=2.14.2",
     "python-dotenv>=1.0.0",
-    "anyio>=4.4.0",
+    "anyio>=4.14.2",
     "structlog>=24.4.0",
     "rich>=13.7.0",
     "packaging>=24.1",
-    "gitpython>=3.1.43",
+    "gitpython>=3.1.60",
     "tree-sitter>=0.23.0",
     "aiofiles>=24.1.0",
     "sse-starlette>=2.1.0",
@@ -30,6 +35,7 @@ dependencies = [
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
     "httpx>=0.27.0",
     "ruff>=0.6.0",
     "mypy>=1.11.0",
@@ -46,12 +52,60 @@ packages = ["packages/core"]
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+# Deliberately small: correctness (E,F), import order (I), bugbear (B), pyupgrade (UP), bandit (S).
+# E501 is off: there is no Python formatter gate yet, so long lines are not a defect.
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = [
+    "E501",  # no Python formatter gate yet
+    "S608",  # SQL is built from validated templates / engine-internal identifiers; _validate_sql guards agent SQL
+    "S311",  # random is used for demo/seed data and jitter, never for secrets
+    "S110",  # deliberate graceful degradation; tighten when logging is added
+    "S112",
+    "S105",  # false positive: template name OIDC_TOKEN_MISUSE
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Baseline debt, one-off findings in production code. Fix and delete the entry; do not add new ones.
+"packages/core/api.py" = ["B905"]
+"packages/core/coral/engine.py" = ["B905"]
+"packages/core/db/seed.py" = ["S101", "E402"]
+"packages/core/sources/ingestion.py" = ["F841"]
+"packages/core/sources/lockfile.py" = ["B005", "E741"]
+"packages/core/tests/**" = ["S101", "S105", "S106", "S108", "B017"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = false
 ignore_missing_imports = true
+explicit_package_bases = true
+namespace_packages = true
+files = ["packages/core"]
+exclude = ["packages/core/tests/"]
+# The Anthropic SDK returns a union of content-block types; `.text` is guarded at runtime.
+disable_error_code = ["union-attr"]
+
+# Baseline debt: 11 pre-existing findings, listed per module so new modules and all
+# other error codes stay checked. Fix and shrink this list; do not grow it.
+[[tool.mypy.overrides]]
+module = [
+    "packages.core.sources.lockfile",
+    "packages.core.coral.engine",
+    "packages.core.agents.triage",
+    "packages.core.agents.remediation",
+    "packages.core.agents.investigation",
+    "packages.core.api",
+]
+disable_error_code = ["assignment", "arg-type", "typeddict-item", "misc", "var-annotated", "has-type"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages/core/tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["packages/core"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 55  # measured 62% on 2026-10-10; sources/* adapters are the main gap

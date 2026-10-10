@@ -1,4 +1,4 @@
 from .graph import build_graph
-from .state import CrowsnestState, AlertObject
+from .state import AlertObject, CrowsnestState
 
 __all__ = ["build_graph", "CrowsnestState", "AlertObject"]
