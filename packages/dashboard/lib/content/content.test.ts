@@ -165,3 +165,10 @@ describe('landing data', () => {
     }
   });
 });
+
+describe('line endings', () => {
+  it('extractSteps reads numbered steps from a CRLF body', () => {
+    const steps = extractSteps('Intro.\r\n\r\n1. **Get the code.**\r\n2. **Start it.** Run it.\r\n');
+    expect(steps.map((s) => s.name)).toEqual(['Get the code', 'Start it']);
+  });
+});

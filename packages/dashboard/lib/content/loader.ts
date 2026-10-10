@@ -100,7 +100,8 @@ export function loadSection<S extends ContentSection>(section: S, root = CONTENT
     const fallbackSlug = rel.replace(EXT, '').replace(/\/index$/, '');
     let parsed: matter.GrayMatterFile<string>;
     try {
-      parsed = matter(fs.readFileSync(full, 'utf8'));
+      // Windows checkouts may have CRLF endings; the body parsers split on LF.
+      parsed = matter(fs.readFileSync(full, 'utf8').replace(/\r\n?/g, '\n'));
     } catch (err) {
       problems.push({ file, message: `unreadable frontmatter: ${(err as Error).message}` });
       continue;
