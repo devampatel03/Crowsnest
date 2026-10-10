@@ -2,117 +2,532 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------------
+   Crowsnest "Paper" tokens. One fixed light theme across the whole platform:
+   warm cream paper, graphite-brown ink, one signal yellow. There is no dark
+   surface and no switch. Raw tokens first, then a semantic layer (--c-*) that
+   components use exclusively.
+
+   Segments of a page get their own cream shade through the --band-* tokens
+   (see .band in the components layer): canvas, sand, honey and clay.
+   ------------------------------------------------------------------------ */
 :root {
-  /* base / surface */
-  --cn-background: #05070f;
-  --cn-surface: #0b1120;
-  --cn-surface-2: #131b2e;
-  --cn-surface-3: #1c2740;
-  --cn-border: #223049;
-  --cn-border-soft: #182238;
+  /* Paper */
+  --paper: #f7f1e3;
+  --paper-2: #efe6d0;
+  --paper-3: #e4d8bb;
+  --paper-white: #fffbf0;
+  --edge: rgba(26, 22, 8, 0.15);
+  --edge-strong: rgba(26, 22, 8, 0.3);
+  --field: #776f55;
+  --ink: #1a1608;
+  --ink-soft: #453f2c;
+  --ink-mute: #5c5642;
+  --beam: #7a5500;
+  --beam-hi: #5f4200;
+  --on-beam: #fffbf0;
+  --hold: #b3261e;
+  --watch: #a33e00;
+  --clear: #1f6b4a;
+  --backdrop: rgba(26, 22, 8, 0.5);
 
-  /* text */
-  --cn-text-primary: #e7ecf7;
-  --cn-text-secondary: #9aa8c7;
-  --cn-text-muted: #8492b0; /* lightened from #5b6b8c — original failed WCAG AA (3.5:1); this hits ~5.5-6:1 on navy-800/900 */
+  /* Signal yellow: primary buttons, the mascot, highlights. */
+  --cta: #f7c948;
+  --cta-hi: #ffd96b;
+  --cta-lo: #e6b52c;
+  --on-cta: #1a1608;
+  --nib-fill: #f2c53d;
+  --nib-ink: #1a1608;
 
-  /* accent */
-  --cn-primary: #35e6d6;
-  --cn-primary-400: #35e6d6;
-  --cn-primary-500: #17c9bb;
-  --cn-primary-300: #7ff2e6;
-  --cn-accent: #ffb020;
-  --cn-accent-400: #ffb020;
-  --cn-accent-500: #e0940a;
-  --cn-accent-300: #ffd580;
+  /* Segment shades. */
+  --band-canvas: #f7f1e3;
+  --band-sand: #f0e5c9;
+  --band-honey: #fbeebb;
+  --band-clay: #e7d8b2;
 
-  /* severity */
-  --cn-severity-critical: #ff4d5e;
-  --cn-severity-critical-bg: rgba(255, 77, 94, 0.12);
-  --cn-severity-critical-border: rgba(255, 77, 94, 0.45);
-  --cn-severity-high: #ff8a3d;
-  --cn-severity-high-bg: rgba(255, 138, 61, 0.12);
-  --cn-severity-high-border: rgba(255, 138, 61, 0.45);
-  --cn-severity-medium: #ffb020;
-  --cn-severity-medium-bg: rgba(255, 176, 32, 0.12);
-  --cn-severity-medium-border: rgba(255, 176, 32, 0.45);
-  --cn-severity-low: #35e6d6;
-  --cn-severity-low-bg: rgba(53, 230, 214, 0.12);
-  --cn-severity-low-border: rgba(53, 230, 214, 0.45);
+  /* Spacing steps (--s-1 .. --s-8) and the radius pair. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1.25rem;
+  --s-5: 2rem;
+  --s-6: 3.25rem;
+  --s-7: 5.25rem;
+  --s-8: 8.5rem;
+  --r-ctl: 0.375rem;
+  --r-panel: 0.75rem;
 
-  /* status */
-  --cn-success: #2fe6a6;
+  --ease-lookout: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --area-top: 0.26;
+  --area-bottom: 0.02;
+  --stroke-chart: 2.25px;
+  --stroke-line: 1.5px;
+  --stroke-nib: 2.25;
 
-  /* legacy aliases (kept for any raw CSS still referencing old names) */
-  --bg: var(--cn-background);
-  --surface: var(--cn-surface);
-  --surface-2: var(--cn-surface-2);
-  --primary: var(--cn-primary);
-  --danger: var(--cn-severity-critical);
+  /* Semantic layer */
+  --c-canvas: var(--paper);
+  --c-surface: var(--paper-white);
+  --c-raised: var(--paper-2);
+  --c-pressed: var(--paper-3);
+  --c-input: var(--paper-white);
+  --c-fg: var(--ink);
+  --c-fg-soft: var(--ink-soft);
+  --c-fg-mute: var(--ink-mute);
+  --c-line: var(--edge);
+  --c-line-strong: var(--edge-strong);
+  --c-field: var(--field);
+  --c-brand: var(--beam);
+  --c-brand-hi: var(--beam-hi);
+  --c-on-brand: var(--on-beam);
+  --c-hold: var(--hold);
+  --c-watch: var(--watch);
+  --c-clear: var(--clear);
+  --c-diff-add: rgba(31, 107, 74, 0.12);
+  --c-backdrop: var(--backdrop);
+  --c-nib-line: var(--nib-ink);
+  --c-nib-fill: var(--nib-fill);
+  --c-cta: var(--cta);
+  --c-cta-hi: var(--cta-hi);
+  --c-cta-lo: var(--cta-lo);
+  --c-on-cta: var(--on-cta);
+  --c-rope: #b8893a;
+  --c-rope-dark: #6e4d16;
+  color-scheme: light;
 }
 
-body {
-  background-color: var(--cn-background);
-  color: var(--cn-text-primary);
-  font-family: var(--font-sans);
+/* A surface wrapper paints itself so a portal or nested surface reads correctly. */
+[data-surface] {
+  background-color: var(--c-canvas);
+  color: var(--c-fg);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--surface);
-}
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+html {
+  background-color: var(--paper);
 }
 
-/* Live dot pulse */
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+/* Interface scale. Sizes are in rem, so these steps scale the whole product
+   (type, spacing, widths, controls) together on larger screens. Phones and
+   small tablets stay at 100%. */
+@media (min-width: 1024px) {
+  html {
+    font-size: 106.25%;
+  }
 }
-.live-dot {
-  animation: live-pulse 2s ease-in-out infinite;
+@media (min-width: 1280px) {
+  html {
+    font-size: 112.5%;
+  }
 }
-
-/* Radar sweep rotation (applied by later agent) */
-@keyframes radar-spin {
-  to { transform: rotate(360deg); }
+@media (min-width: 1600px) {
+  html {
+    font-size: 118.75%;
+  }
 }
-
-/* Sonar ping expand-fade (applied by later agent) */
-@keyframes sonar-ping {
-  0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(2.4); opacity: 0; }
-}
-
-.sonar-ping {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.sonar-ping::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid currentColor;
-  animation: sonar-ping 2s ease-out infinite;
+@media (min-width: 1920px) {
+  html {
+    font-size: 125%;
+  }
 }
 
+@layer base {
+  /* No visible scrollbars anywhere; scrolling still works with wheel, touch, keys and drag. */
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 4.75rem;
+  }
+  body {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
+    background-color: var(--c-canvas);
+    color: var(--c-fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Columns of numbers are tabular (DM Mono); stat numerals are lining. */
+  code,
+  kbd,
+  pre,
+  samp,
+  table,
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* Focus ring: 2px beam, 2px offset (brand on Fog). */
+  :focus-visible {
+    outline: 2px solid var(--c-brand);
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--c-brand);
+    color: var(--c-on-brand);
+  }
+
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  /* Type roles from the brief. Sentence case everywhere, no uppercase labels. */
+  .label {
+    @apply font-sans text-label text-fg-mute;
+  }
+  .code {
+    @apply font-mono text-code;
+  }
+  .stat-xl {
+    @apply font-display text-stat-xl;
+    font-variant-numeric: lining-nums;
+  }
+  /* Console numerals: Instrument Sans, tabular, semibold (the serif has one weight). */
+  .stat-l {
+    @apply font-sans text-stat-l font-semibold tabular-nums;
+  }
+  .stat-m {
+    @apply font-mono text-stat-m tabular-nums;
+  }
+  .bearing {
+    @apply font-mono text-bearing text-fg-mute;
+  }
+
+  /* Nib voice (v3): the handwriting face. Comic captions, speech bubbles,
+     Nib's note, sign-offs, ONLY. Never nav, buttons, tables, dialogs, toasts,
+     Calls, docs body or headings. 1.0625rem is the floor. */
+  .nib-voice {
+    font-family: var(--font-hand), ui-rounded, cursive;
+    font-size: 1.3125rem;
+    line-height: 1.25;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--c-fg-soft);
+  }
+  .nib-voice-s {
+    font-size: 1.0625rem;
+    line-height: 1.3;
+  }
+
+  /* Skip link: first focusable element on every page. */
+  .skip-link {
+    @apply absolute left-s2 top-s2 z-[100] -translate-y-[200%] rounded-ctl border border-field bg-canvas px-s3 py-s2 font-sans text-label text-fg;
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* Answer-first lead: italic display serif, one per article. */
+  .answer-box {
+    @apply font-display text-lead italic text-fg;
+    border-left: 1px solid var(--c-line-strong);
+    padding-left: var(--s-3);
+  }
+
+  /* Skeleton: ruled lines at row height with a 1.2s opacity pulse. */
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.2s ease-in-out infinite;
+  }
+
+  /* Indeterminate hairline progress (scan dialog). Transform only. */
+  .hairline-progress {
+    position: relative;
+    height: 1px;
+    overflow: hidden;
+    background-color: var(--c-line-strong);
+  }
+  .hairline-progress::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background-color: var(--c-brand);
+    animation: hairline-run 1.4s var(--ease-lookout) infinite;
+  }
+
+  /* Gauge: notch fill left to right, 120ms stagger, 420ms total. The fill is
+     a ::after scaled from the bottom so only transform animates. */
+  .gauge-notch {
+    position: relative;
+    display: block;
+    width: 0.25rem;
+    height: 0.875rem;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+  }
+  .gauge-notch[data-filled='true']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: currentColor;
+    transform-origin: bottom;
+  }
+  .gauge-animate .gauge-notch[data-filled='true']::after {
+    animation: notch-fill 180ms var(--ease-lookout) backwards;
+    animation-delay: calc(var(--i, 0) * 120ms);
+  }
+
+  /* Horizon hero line: one beam sweep, once, 1400ms; sighted marks brighten
+     as the beam passes (delay = position * 1400ms). Final state is lit. */
+  .horizon-sweep {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-right: 1px solid var(--c-brand);
+    animation: beam-sweep 1400ms ease-in-out both;
+  }
+  .horizon-mark-sighted {
+    animation: mark-light 360ms var(--ease-lookout) backwards;
+    animation-delay: calc(var(--p, 0) * 1400ms);
+  }
+
+  /* Dialog, toast and live-row entrances. Opacity and translate only. */
+  .overlay-in {
+    animation: fade-in 200ms var(--ease-lookout);
+  }
+  .dialog-in {
+    animation: rise-in 200ms var(--ease-lookout);
+  }
+  .toast-in {
+    animation: rise-in 200ms var(--ease-lookout);
+  }
+  .row-in {
+    animation: rise-in 200ms var(--ease-lookout);
+  }
+  .reveal-in {
+    animation: rise-in 700ms var(--ease-lookout) backwards;
+  }
+
+  /* Draw-on (v3). Elements carrying data-draw hold SVG paths classed
+     .sketch-path. Default: draws on mount. MotionGate marks below-the-fold
+     ones data-draw=pending (held undrawn) and flips them to run when 25%
+     visible, once. Without JS nothing is ever pending, so all is drawn. The
+     dash is set only inside the keyframes, so the settled state is solid. */
+  [data-draw]:not([data-draw='pending']) .sketch-path {
+    animation: draw-on var(--draw-ms, 520ms) var(--ease-lookout) calc(var(--draw-i, 0) * 120ms) backwards;
+  }
+  [data-draw='pending'] .sketch-path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  /* Sketch sky (hero backdrop): two drifting stroke layers, seamless at 2x
+     width, capped at 18% of the hero, faded out by an alpha mask. */
+  .sky {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 18%;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+  .sky-layer {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: 200%;
+    animation: sky-drift var(--sky-ms, 140s) linear infinite;
+  }
+  .sky-layer > svg {
+    width: 50%;
+    height: 100%;
+  }
+
+  /* Rope Rule marker: rides the rope with scroll (--rope-p, 0..1). */
+  .rope-marker {
+    position: absolute;
+    left: 0;
+    /* The marker's top follows the progress and it slides up by that same fraction of its own
+       height, so the climber never hangs past either end of the rope. */
+    top: calc(var(--rope-p, 0) * 100%);
+    transform: translate(calc(-50% + var(--sway-x, 0px)), calc(var(--rope-p, 0) * -100%));
+    z-index: 2;
+  }
+  .rope-marker-h {
+    position: absolute;
+    top: 0.25rem;
+    left: calc(var(--rope-p, 0) * 100%);
+    transform: translateX(-50%);
+    transition: left 400ms var(--ease-lookout);
+  }
+  .rope-marker[data-ring='true'],
+  .rope-marker-h[data-ring='true'] {
+    animation: rope-ring 600ms var(--ease-spring) 1;
+  }
+}
+
+/* Things that ride the swaying rope (see Rope.tsx). */
+[data-follow] {
+  transform: translateX(var(--sway-x, 0px));
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes hairline-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@keyframes notch-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes beam-sweep {
+  0% {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+@keyframes mark-light {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes draw-on {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes sky-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes rope-ring {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  30% {
+    rotate: -14deg;
+  }
+  65% {
+    rotate: 10deg;
+  }
+}
+
+/* Ambient loops pause when the block is offscreen (data-inview=false, set by
+   MotionGate) or the tab is hidden (html[data-motion=off]). */
+[data-ambient][data-inview='false'] *,
+[data-ambient][data-inview='false'],
+html[data-motion='off'] [data-ambient] *,
+html[data-motion='off'] [data-ambient] {
+  animation-play-state: paused !important;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion: final state immediately. No sweep line, marks lit, gauge
+   filled, nothing pulses. */
 @media (prefers-reduced-motion: reduce) {
-  .radar-sweep, .sonar-ping::after, .live-dot::after { animation: none !important; }
-}
-
-/* Firehose scroll */
-.firehose-container {
-  overflow-y: auto;
-  height: 200px;
-  scroll-behavior: smooth;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton-pulse,
+  .overlay-in,
+  .dialog-in,
+  .toast-in,
+  .row-in,
+  .reveal-in,
+  .horizon-mark-sighted,
+  .gauge-animate .gauge-notch::after {
+    animation: none !important;
+  }
+  .horizon-sweep {
+    display: none !important;
+  }
+  /* v3: every draw-on fully drawn, sky static, crow snaps and does not ring. */
+  [data-draw] .sketch-path,
+  [data-draw='pending'] .sketch-path {
+    animation: none !important;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .sky-layer {
+    animation: none !important;
+    transform: none !important;
+  }
+  .rope-marker,
+  .rope-marker-h {
+    transition: none !important;
+    animation: none !important;
+  }
+  .hairline-progress::after {
+    animation: none !important;
+    width: 100%;
+    opacity: 0.5;
+  }
 }

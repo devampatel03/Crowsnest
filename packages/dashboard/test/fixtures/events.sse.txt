@@ -1,0 +1,86 @@
+data: {"type": "connected", "timestamp": "2026-10-06T23:11:56.802855+00:00"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:01.686219+00:00", "package": "ua-parser-js", "version": "1.0.38", "probability": 0.8, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:05.985405+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:13.502381+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:21.123939+00:00", "package": "colors", "version": "1.4.1", "probability": 0.22, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:25.904221+00:00", "package": "lodash", "version": "4.17.22", "probability": 0.05, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:32.304774+00:00", "package": "lodash", "version": "4.17.22", "probability": 0.05, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:40.312620+00:00", "package": "webpack", "version": "5.91.0", "probability": 0.07, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:44.297224+00:00", "package": "typescript", "version": "5.4.5", "probability": 0.03, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:51.445466+00:00", "package": "typescript", "version": "5.4.5", "probability": 0.03, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:08:58.353435+00:00", "package": "express", "version": "4.18.3", "probability": 0.08, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:05.077518+00:00", "package": "webpack", "version": "5.91.0", "probability": 0.07, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:10.262059+00:00", "package": "ua-parser-js", "version": "1.0.38", "probability": 0.8, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:14.412594+00:00", "package": "colors", "version": "1.4.1", "probability": 0.22, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:17.854512+00:00", "package": "express", "version": "4.18.3", "probability": 0.08, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:25.861137+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:29.612582+00:00", "package": "webpack", "version": "5.91.0", "probability": 0.07, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:36.247074+00:00", "package": "lodash", "version": "4.17.22", "probability": 0.05, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:43.691840+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:50.818620+00:00", "package": "axios", "version": "1.6.8", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:09:55.724885+00:00", "package": "ua-parser-js", "version": "1.0.38", "probability": 0.8, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:02.595196+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:07.546320+00:00", "package": "webpack", "version": "5.91.0", "probability": 0.07, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:14.793098+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:20.245558+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:25.070154+00:00", "package": "eslint", "version": "8.57.0", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:30.263518+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:37.651579+00:00", "package": "eslint", "version": "8.57.0", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:44.888848+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:50.538348+00:00", "package": "axios", "version": "1.6.8", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:10:53.606084+00:00", "package": "lodash", "version": "4.17.22", "probability": 0.05, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:01.554368+00:00", "package": "express", "version": "4.18.3", "probability": 0.08, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:04.694872+00:00", "package": "axios", "version": "1.6.8", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:10.252392+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:16.881848+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:22.082023+00:00", "package": "react", "version": "18.2.1", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:25.610049+00:00", "package": "react", "version": "18.2.1", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:33.425339+00:00", "package": "react", "version": "18.2.1", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:40.986307+00:00", "package": "eslint", "version": "8.57.0", "probability": 0.06, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:47.288264+00:00", "package": "event-stream", "version": "4.0.1", "probability": 0.65, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:51.334904+00:00", "package": "node-fetch", "version": "3.3.2", "probability": 0.15, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:11:56.575837+00:00", "package": "prettier", "version": "3.2.5", "probability": 0.04, "registry": "npm"}
+
+data: {"type": "publish_event", "timestamp": "2026-10-06T23:12:00.051353+00:00", "package": "colors", "version": "1.4.1", "probability": 0.22, "registry": "npm"}
+

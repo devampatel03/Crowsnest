@@ -1,11 +1,4 @@
-export const chartColors = {
-  critical: '#ff4d5e',
-  high: '#ff8a3d',
-  medium: '#ffb020',
-  low: '#35e6d6',
-  success: '#2fe6a6',
-  grid: '#223049',
-  axis: '#5b6b8c',
-  tooltipBg: '#131b2e',
-  tooltipBorder: '#283656',
-};
+// Re-export of the shared chart theme (01-brief 8c). The v6 hex palette is gone;
+// values are CSS variables so Night and Paper both work.
+export { chartTheme, tickStyle, neutralTints } from '@/components/charts/theme';
+export type { ChartTheme } from '@/components/charts/theme';

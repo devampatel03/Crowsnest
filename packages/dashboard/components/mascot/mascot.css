@@ -1,0 +1,167 @@
+/* Nib. Self-contained. Colours come from design tokens with fallbacks so the
+   art also works before the tokens land. Animation lives only inside the
+   no-preference block, so reduced motion shows the static pose by design. */
+.nib,
+.nib-panel {
+  --_line: var(--c-nib-line, #1a1608);
+  --_fill: var(--c-nib-fill, var(--nib-fill, #f2c53d));
+  --_fg: #fffaf0; /* eye whites: the body is yellow on both surfaces */
+  --_mute: var(--c-fg-mute, #9b9992);
+  --_amber: #d98a14; /* beak and bobble */
+  --_beam: var(--c-brand, #f7c948);
+  --_hold: var(--c-hold, #ff6b5e);
+  --_clear: var(--c-clear, #5ccf9b);
+  display: block;
+  color: var(--_line);
+}
+/* Default size from the component, in rem. :where() keeps this at zero specificity so layout rules win. */
+:where(svg.nib) {
+  width: var(--nib-w);
+  height: var(--nib-h);
+}
+.nib {
+  flex: none;
+  overflow: visible;
+}
+.nib-panel {
+  width: 100%;
+  height: auto;
+}
+:is(.nib, .nib-panel) .l {
+  fill: none;
+  stroke: var(--_line);
+  stroke-width: var(--nib-sw, 2.25);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:is(.nib, .nib-panel) .f { fill: var(--_fill); stroke: none; }
+:is(.nib, .nib-panel) .b { fill: var(--_amber); stroke: none; }
+:is(.nib, .nib-panel) .e { fill: var(--_fg); stroke: none; }
+:is(.nib, .nib-panel) .p { fill: var(--c-nib-line, #1a1608); stroke: none; }
+:is(.nib, .nib-panel) .l.mute { stroke: var(--_mute); }
+:is(.nib, .nib-panel) .l.hold { stroke: var(--_hold); }
+:is(.nib, .nib-panel) .l.clear { stroke: var(--_clear); }
+:is(.nib, .nib-panel) .l.beam { stroke: var(--_beam); }
+:is(.nib, .nib-panel) .beam.fl { fill: var(--_beam); stroke: none; }
+:is(.nib, .nib-panel) .frame {
+  fill: none;
+  stroke: var(--c-line-strong, #4a4a52);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:is(.nib, .nib-panel) .frame.heavy { stroke-width: 4; stroke: var(--_line); }
+:is(.nib, .nib-panel) .ground { fill: none; stroke: var(--c-line-strong, #4a4a52); stroke-width: 2.25; stroke-linecap: round; }
+
+.nib-strip { margin: 0; }
+.nib-strip ol { display: grid; gap: 3.25rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+.nib-strip li { margin: 0; min-width: 0; }
+.nib-strip .cap {
+  margin: 0.625rem 2px 0;
+  font-family: var(--font-hand), ui-rounded, cursive;
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  color: var(--c-fg, inherit);
+}
+@media (min-width: 900px) {
+  .nib-strip.landing ol { grid-template-columns: repeat(12, 1fr); gap: 2.25rem 1.25rem; }
+  .nib-strip.landing li:nth-child(1) { grid-column: span 7; }
+  .nib-strip.landing li:nth-child(2) { grid-column: span 5; }
+  .nib-strip.landing li:nth-child(n + 3) { grid-column: span 4; }
+  .nib-strip.first-run ol { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+}
+
+.nib-state { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem 1.75rem; }
+.nib-state > p {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--font-hand), ui-rounded, cursive;
+  font-size: 1.1875rem;
+  line-height: 1.35;
+  color: var(--c-fg, inherit);
+}
+
+/* Transform pivots for the animation hooks (static, harmless). */
+.nib [class^='nib-'], .nib [class*=' nib-'], .nib .steam, .nib-panel [class^='nib-'], .nib-panel [class*=' nib-'] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+:is(.nib, .nib-panel) .nib-head { transform-origin: 50% 95%; }
+:is(.nib, .nib-panel) .nib-bell { transform-origin: 50% 0; }
+:is(.nib, .nib-panel) .nib-bobble { transform-origin: 50% 100%; }
+:is(.nib, .nib-panel) .nib-wing { transform-origin: 15% 90%; }
+:is(.nib, .nib-panel) .nib-glass { transform-origin: 0 50%; }
+:is(.nib, .nib-panel) .nib-body { transform-origin: 50% 100%; }
+:is(.nib, .nib-panel) .steam { stroke-dasharray: 3 7; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Ambient loops (max three on screen): blink, breathe, plus one pose loop. */
+  .nib[data-ambient] .nib-eyes { animation: nib-blink 6s infinite; }
+  .nib[data-ambient] .nib-body { animation: nib-breathe 4s ease-in-out infinite; }
+  .nib[data-ambient][data-pose='spy'] .nib-glass,
+  .nib[data-ambient][data-pose='squint'] .nib-glass { animation: nib-sweep 3.2s cubic-bezier(0.22, 0.61, 0.36, 1) infinite alternate; }
+  .nib[data-ambient][data-pose='quiet'] .steam { animation: nib-steam 3s linear infinite; }
+  .nib[data-ambient][data-pose='lantern'] .nib-lantern { animation: nib-flicker 3s ease-in-out infinite; }
+  /* One-shots on mount. */
+  .nib[data-ambient][data-pose='ring'] .nib-bell { animation: nib-swing 600ms cubic-bezier(0.34, 1.56, 0.64, 1) 3; }
+  .nib[data-ambient][data-pose='wave'] .nib-wing { animation: nib-flap 900ms cubic-bezier(0.22, 0.61, 0.36, 1) 2; }
+  .nib[data-ambient][data-pose='wave'] .nib-bobble { animation: nib-bob 900ms ease-in-out 2; }
+
+  /* Comic panels: draw-on once (MotionGate flips data-draw pending -> run). */
+  .nib-panel .frame { stroke-dasharray: 1; }
+  [data-draw]:not([data-draw='pending']) .nib-panel .frame { animation: nib-draw 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+  [data-draw='pending'] .nib-panel .frame { stroke-dashoffset: 1; }
+  [data-draw]:not([data-draw='pending']) .nib-panel .nib-bell { animation: nib-swing 600ms cubic-bezier(0.34, 1.56, 0.64, 1) 3 both; }
+  [data-draw]:not([data-draw='pending']) .nib-panel .nib-glass { animation: nib-pulse 900ms ease-out 1 both; }
+  /* Nib on the rope: limbs swap hand over hand while the page scrolls (see NibClimber). */
+  [data-climb] .nib-climber .nib-climb-arm-a { animation: climb-arm-a 620ms ease-in-out infinite; }
+  [data-climb] .nib-climber .nib-climb-arm-b { animation: climb-arm-b 620ms ease-in-out infinite; }
+  [data-climb] .nib-climber .nib-climb-foot-a { animation: climb-foot-a 620ms ease-in-out infinite; }
+  [data-climb] .nib-climber .nib-climb-foot-b { animation: climb-foot-b 620ms ease-in-out infinite; }
+  [data-climb] .nib-climber .nib-climb-body { animation: climb-body 310ms ease-in-out infinite; }
+  [data-climb='up'] .nib-climber :is(.nib-climb-arm, .nib-climb-foot) { animation-direction: reverse; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nib-panel .frame { stroke-dasharray: none; stroke-dashoffset: 0; }
+}
+@keyframes nib-blink { 0%, 96%, 100% { transform: scaleY(1); } 98% { transform: scaleY(0.1); } }
+@keyframes nib-breathe { 50% { transform: scaleY(1.015); } }
+@keyframes nib-sweep { from { transform: rotate(-4deg); } to { transform: rotate(5deg); } }
+@keyframes nib-swing { 30% { transform: rotate(-14deg); } 65% { transform: rotate(10deg); } }
+@keyframes nib-bob { 50% { transform: rotate(10deg); } }
+@keyframes nib-flap { 40% { transform: rotate(-10deg); } 70% { transform: rotate(4deg); } }
+@keyframes nib-flicker { 40% { opacity: 0.85; } 60% { opacity: 1; } }
+@keyframes nib-steam { to { stroke-dashoffset: -20; } }
+@keyframes nib-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes nib-pulse { 40% { opacity: 0.55; } }
+
+.nib-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.nib-strip { position: relative; }
+
+/* Nib on the rope (NibClimber). Idle: hangs still. While the page scrolls the Rope
+   sets data-climb="down" | "up" on the marker holding this art, and the limbs swap
+   hand over hand. Reversing the animation climbs the other way. */
+.nib-climb-arm {
+  transform-box: fill-box;
+  transform-origin: 50% 100%; /* the shoulder: the wing stretches and shortens from here */
+}
+.nib-climb-foot,
+.nib-climb-body {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+@keyframes climb-arm-a { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.68); } }
+@keyframes climb-arm-b { 0%, 100% { transform: scaleY(0.68); } 50% { transform: scaleY(1); } }
+@keyframes climb-foot-a { 0%, 100% { transform: translateY(3px); } 50% { transform: translateY(-4px); } }
+@keyframes climb-foot-b { 0%, 100% { transform: translateY(-4px); } 50% { transform: translateY(3px); } }
+@keyframes climb-body { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
