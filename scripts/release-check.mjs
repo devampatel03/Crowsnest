@@ -35,7 +35,7 @@ const log = readFileSync(resolve(root, 'CHANGELOG.md'), 'utf8').split('\r\n').jo
 const lines = log.split('\n');
 const isHeading = (l) => l.startsWith('## ');
 // "## [0.1.0] - date" or "## 0.1.0": strip the optional bracket, then require the version to end there.
-const headingVersion = (l) => l.slice(3).replace('[', '');
+const headingVersion = (l) => (l.startsWith('## [') ? l.slice(4) : l.slice(3));
 const start = lines.findIndex((l) => {
   if (!isHeading(l)) return false;
   const h = headingVersion(l);
