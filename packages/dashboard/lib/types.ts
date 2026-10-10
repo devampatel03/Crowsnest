@@ -13,41 +13,49 @@ export type AttackPattern =
   | 'oidc_misuse'
   | 'abandoned_popular';
 
+/**
+ * Every type below describes the NORMALISED shape: what `lib/api.ts` hands to
+ * the UI after coercing numeric strings and defaulting missing fields. The raw
+ * wire shape is never typed, so a render path cannot depend on it.
+ */
+
 export interface BlastRadiusEntry {
   project_path: string;
   package: string;
   version: string;
   declared_in: string;
   runtime_confirmed: boolean;
+  compromised_root?: string;
+  parent_chain?: string[];
+  last_runtime_load?: string | null;
 }
 
 export interface Incident {
   id: string;
-  attack_pattern: AttackPattern;
+  /** Unknown keys from a newer backend are kept as strings; calls.ts has a fallback headline. */
+  attack_pattern: AttackPattern | (string & {});
   confidence: number;
   severity: Severity;
   packages: string[];
   blast_radius: BlastRadiusEntry[];
   runtime_confirmation: boolean;
   remediation_options: string[];
+  /** ISO string; '' when the backend sent nothing parseable. */
   detected_at: string;
   raw_findings: Record<string, unknown>[];
 }
 
+/** An event on /api/events. Only the fields the console reads are typed. */
 export interface SecurityEvent {
-  type: 'publish_event' | 'incident_detected' | 'scan_progress' | 'firehose' | 'connected';
+  type: string;
   timestamp: string;
-  data?: Record<string, unknown>;
-  package?: string;
-  version?: string;
-  probability?: number;
+  id?: string;
   severity?: Severity;
-  attack_pattern?: AttackPattern;
+  attack_pattern?: string;
   packages?: string[];
   scan_id?: string;
   phase?: string;
   incidents_found?: number;
-  token_usage?: number;
   error?: string;
 }
 
@@ -59,6 +67,7 @@ export interface MaintainerScore {
   repos_touched: number;
   days_on_platform: number;
   ioc_flagged: boolean;
+  /** Always a finite number from 0 to 1 (the wire sends "1.00"). */
   risk_score: number;
 }
 
@@ -80,7 +89,6 @@ export interface ScanStatus {
   finished_at?: string;
   project_path: string;
   incidents: Incident[];
-  token_usage: number;
   error?: string;
 }
 
@@ -97,5 +105,20 @@ export interface StatsResult {
   table_counts: Record<string, number>;
   total_incidents: number;
   active_scans: number;
-  snapshots: Array<{ name: string; created_at: string | null }>;
+  total_packages: number | null;
+  total_maintainers: number | null;
+  active_incidents: Record<Severity, number>;
+  last_scan_at: string | null;
+  last_scan_project: string | null;
+}
+
+export interface VetoResult {
+  blocked: boolean;
+  package: string;
+  version: string | null;
+  /** 0 to 1. */
+  probability: number;
+  signals: string[];
+  reason: string;
+  override_flag: string | null;
 }

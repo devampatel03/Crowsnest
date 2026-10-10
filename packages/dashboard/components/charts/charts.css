@@ -1,0 +1,93 @@
+/* Chart motion and fills (v3). Imported by DailyCalls / Heartbeat. Only transform, opacity and clip-path animate. */
+
+/* One-time swell on mount: rises from the baseline while a clip wipes in left to right. */
+.cn-swell {
+  transform-origin: 50% 100%;
+  animation:
+    cn-swell 700ms var(--ease-lookout, cubic-bezier(0.22, 0.61, 0.36, 1)) both,
+    cn-wipe 900ms var(--ease-lookout, cubic-bezier(0.22, 0.61, 0.36, 1)) backwards;
+}
+@keyframes cn-swell {
+  from {
+    transform: scaleY(0.04);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes cn-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 -1.5rem 0 0);
+  }
+}
+
+/* Live head: a solid dot plus a stroke-only ring that grows and fades. No blur glow. */
+.cn-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cn-ripple 2000ms ease-out infinite;
+}
+@keyframes cn-ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.cn-ring-static {
+  opacity: 0.55;
+}
+
+.cn-stop-top {
+  stop-opacity: var(--area-top, 0.26);
+}
+.cn-stop-bottom {
+  stop-opacity: var(--area-bottom, 0.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-swell {
+    animation: none;
+  }
+  .cn-ripple {
+    animation: none;
+    transform: scale(1.8);
+    opacity: 0.45;
+  }
+}
+
+/* Forced colours: a flat 12% fill, not a gradient. */
+@media (forced-colors: active) {
+  .cn-stop-top,
+  .cn-stop-bottom {
+    stop-opacity: 0.12;
+  }
+}
+
+/* The knot of a rope row eases to its place on mount only. */
+.cn-knot-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cn-knot 380ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+@keyframes cn-knot {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cn-knot-in {
+    animation: none;
+  }
+}
