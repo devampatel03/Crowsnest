@@ -39,7 +39,7 @@ integration instead.
 ## Development quickstart
 
 Full setup (env vars, backend, dashboard, Slack bot, VS Code extension) is
-in the root [README.md](README.md#setup) and [setup.md](setup.md). This
+in the [README](README.md#quickstart). This
 section is about the day-to-day dev loop once you're set up.
 
 ### Running each package
