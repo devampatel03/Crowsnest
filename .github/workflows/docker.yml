@@ -37,6 +37,8 @@ jobs:
         with:
           dockerfile: ${{ matrix.dockerfile }}
           failure-threshold: warning
+          # DL3008: pinning apt package versions breaks as soon as the distro rotates them; the base image tag is what we pin.
+          ignore: DL3008
 
   build-scan:
     name: Build and scan (${{ matrix.name }})
@@ -63,7 +65,7 @@ jobs:
           tags: crowsnest-${{ matrix.name }}:ci
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
-      - uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # 0.28.0
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: crowsnest-${{ matrix.name }}:ci
           severity: CRITICAL,HIGH
