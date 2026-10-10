@@ -2,6 +2,22 @@
 node_modules/
 /packages/*/node_modules/
 
+# Local AI-assistant, planning and review material: kept on disk, never published
+.claude/
+CLAUDE.md
+AGENTS.md
+MEMORY.md
+REVIEW.md
+RUNNING_AND_TESTING.md
+setup.md
+implementation-plan.md
+crowsnest_comprehensive_architecture.md
+Technical Documentation.pdf
+/docs/
+screenshots/
+images-ss/
+fix-screenshots/
+
 # Build outputs
 dist/
 build/
@@ -28,6 +44,8 @@ venv/
 crowsnest.duckdb*
 crowsnest_temp.duckdb*
 snapshots/
+
+
 
 # Environment files
 .env
@@ -56,6 +74,15 @@ Thumbs.db
 # See SUBMISSION.md and final.md for context if you want to revive these.
 SUBMISSION.md
 final.md
-Technical Documentation.pdf
 uv.lock
 
+
+# per-builder Next output folders (NEXT_DIST_DIR)
+/packages/*/.next-*/
+
+# Local tool output
+.coverage
+coverage.xml
+htmlcov/
+packages/dashboard/.claude/
+.claude/qa-team/runs/*/artifacts/*.json
