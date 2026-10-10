@@ -164,7 +164,7 @@ export interface StepSource {
  * sentence or clause, so both mirror what the page shows.
  */
 export function extractSteps(body: string): StepSource[] {
-  const lines = body.split('\n');
+  const lines = body.split(/\r?\n/);
   const items: string[] = [];
   let inFence = false;
   let started = false;
