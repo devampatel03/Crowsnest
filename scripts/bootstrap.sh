@@ -112,7 +112,7 @@ info "Bootstrap complete."
 cat <<'EOF'
 
 Next steps:
-  1. Fill in real API keys in .env (Anthropic, GitHub, Socket.dev, Slack — all optional, see setup.md).
+  1. Fill in real API keys in .env (Anthropic, GitHub, Socket.dev, Slack — all optional).
   2. Start the backend:
        source .venv-claude/bin/activate   # Windows: .venv-claude\Scripts\activate
        uvicorn packages.core.api:app --host 0.0.0.0 --port 8000 --reload

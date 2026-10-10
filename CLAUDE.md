@@ -71,5 +71,3 @@ slack-bot, shared) — they do **not** touch `packages/core`.
   `taskkill /PID <pid> /F`; macOS/Linux: `lsof -i :8000` then `kill <pid>`).
 - Missing API keys (Socket.dev, GitHub, Anthropic) degrade gracefully to
   cached/seeded data — don't assume a scan failure means a bug.
-- Reference docs: `crowsnest_comprehensive_architecture.md` (deep dive),
-  `setup.md` (step-by-step local setup).
