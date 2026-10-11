@@ -4,16 +4,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install build tools needed by a couple of native deps (duckdb, tree-sitter).
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+# No compiler is installed: the dependencies ship wheels for python:3.12-slim. (build-essential pulled in
+# about 300 MB of OS packages, and a failed or killed apt step blocked the whole image.)
+# Pick up Debian security fixes published after the base image was built.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only what the editable install needs first, to keep layer caching useful.
+# Copy only what the install needs first, to keep layer caching useful.
 COPY pyproject.toml ./
 COPY packages/core ./packages/core
+# Seed data (known IOCs and hallucination patterns). db/seed.py reads it from <repo>/coral-config; without
+# it the IOC and slopsquatting detections run with no data.
+COPY coral-config ./coral-config
 
-RUN pip install --no-cache-dir .
+# A long timeout and extra retries keep the build alive on a slow or flaky connection.
+RUN pip install --no-cache-dir --default-timeout=120 --retries=10 .
 
 # Run as an unprivileged user; /data is the only writable location.
 RUN useradd --create-home --uid 10001 crowsnest \

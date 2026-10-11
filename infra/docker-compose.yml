@@ -19,10 +19,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "127.0.0.1:3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://crowsnest-api:8000
+    # NEXT_PUBLIC_API_URL is read when the image is built (Next.js inlines it into the browser code), so it
+    # cannot be set here. The default, http://localhost:8000, is the published API port, which is what a
+    # browser on this machine needs. A different address needs an ARG/ENV in the dashboard Dockerfile.
     depends_on:
-      - crowsnest-api
+      crowsnest-api:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
