@@ -70,6 +70,10 @@ export interface StatsResult {
 // CrowsnestClient
 // ─────────────────────────────────────────────
 
+/** Whole-request deadline, and the largest response body we will read (the API's answers are a few KB). */
+const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RESPONSE_BYTES = 1024 * 1024;
+
 export class CrowsnestClient {
   private apiUrl: string;
 
@@ -116,24 +120,49 @@ export class CrowsnestClient {
             'Accept': 'application/json',
             ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
           },
-          timeout: 8000,
+          timeout: REQUEST_TIMEOUT_MS,
+        };
+
+        // `timeout` above only fires when the socket is idle, so a server that keeps sending a byte now and then
+        // would hold the request open for ever. This deadline covers the whole request.
+        const deadline = setTimeout(() => req.destroy(), REQUEST_TIMEOUT_MS);
+        const done = (value: T | null): void => {
+          clearTimeout(deadline);
+          resolve(value);
         };
 
         const req = lib.request(options, (res) => {
+          // An error status is a failed lookup, not a result: never show it as "clean".
+          if ((res.statusCode ?? 0) >= 400) {
+            res.resume();
+            done(null);
+            return;
+          }
           const chunks: Buffer[] = [];
-          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          let size = 0;
+          res.on('data', (chunk: Buffer) => {
+            size += chunk.length;
+            if (size > MAX_RESPONSE_BYTES) {
+              req.destroy();
+              done(null);
+              return;
+            }
+            chunks.push(chunk);
+          });
           res.on('end', () => {
             try {
               const raw = Buffer.concat(chunks).toString('utf-8');
-              resolve(JSON.parse(raw) as T);
+              done(JSON.parse(raw) as T);
             } catch {
-              resolve(null);
+              done(null);
             }
           });
+          res.on('error', () => done(null));
+          res.on('aborted', () => done(null));
         });
 
-        req.on('error', () => resolve(null));
-        req.on('timeout', () => { req.destroy(); resolve(null); });
+        req.on('error', () => done(null));
+        req.on('timeout', () => { req.destroy(); done(null); });
 
         if (payload) {
           req.write(payload);
