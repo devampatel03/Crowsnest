@@ -198,6 +198,46 @@ class TestInvestigationNode:
         assert out["incidents"][0]["confidence"] == 0.95
 
 
+class TestMaintainerReputationNeedsEvidence:
+    """A maintainer with no GitHub data scores 0.65 from missing data alone. That must not be a Hold."""
+
+    unknown = {"login": "jdalton", "packages_list": ["lodash"], "risk_score": 0.65, "ioc_flagged": False}
+
+    def test_significant_rows_drops_unknown_maintainers(self):
+        rows = [self.unknown, {**self.unknown, "login": "wesleytodd", "risk_score": 0.3}]
+        assert investigation._significant_rows("MAINTAINER_REPUTATION", rows) == []
+
+    def test_significant_rows_keeps_high_scores_and_ioc_hits(self):
+        high = {**self.unknown, "risk_score": 0.8}
+        ioc = {**self.unknown, "risk_score": 1.0, "ioc_flagged": True}
+        assert investigation._significant_rows("MAINTAINER_REPUTATION", [self.unknown, high, ioc]) == [high, ioc]
+
+    def test_threshold_is_inclusive(self):
+        edge = {**self.unknown, "risk_score": 0.7}
+        assert investigation._significant_rows("MAINTAINER_REPUTATION", [edge]) == [edge]
+
+    def test_other_queries_are_not_filtered(self):
+        rows = [{"package": "evil"}]
+        assert investigation._significant_rows("IOC_MATCH", rows) == rows
+
+    @pytest.mark.asyncio
+    async def test_clean_project_without_keys_gets_no_incident(self):
+        eng = MagicMock()
+        eng.query = AsyncMock(return_value=[self.unknown])
+        out = await investigation.investigation_node(
+            state(pending_queries=["MAINTAINER_REPUTATION"]), coral_engine=eng, anthropic_api_key="")
+        assert out["incidents"] == []
+        assert out["query_results"]["MAINTAINER_REPUTATION"] == [self.unknown]  # the scores are still reported
+
+    @pytest.mark.asyncio
+    async def test_flagged_maintainer_still_becomes_an_incident(self):
+        eng = MagicMock()
+        eng.query = AsyncMock(return_value=[{**self.unknown, "risk_score": 1.0, "ioc_flagged": True}])
+        out = await investigation.investigation_node(
+            state(pending_queries=["MAINTAINER_REPUTATION"]), coral_engine=eng, anthropic_api_key="")
+        assert [i["attack_pattern"] for i in out["incidents"]] == ["maintainer_takeover"]
+
+
 class TestSynthesis:
     def test_empty_rows(self):
         assert investigation._synthesize_incidents("IOC_MATCH", []) == []
