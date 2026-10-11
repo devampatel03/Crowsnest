@@ -229,6 +229,33 @@ class TestScan:
     def test_scan_missing_project_path_is_422(self, api_client):
         assert api_client.post("/api/scan", json={}).status_code == 422
 
+    def test_scan_rejects_a_folder_that_does_not_exist(self, api_client, tmp_path):
+        r = api_client.post("/api/scan", json={"project_path": str(tmp_path / "nope")})
+        assert r.status_code == 400 and "does not exist" in r.json()["detail"]
+
+    def test_scan_rejects_a_file_path(self, api_client, tmp_path):
+        f = tmp_path / "package-lock.json"
+        f.write_text("{}")
+        r = api_client.post("/api/scan", json={"project_path": str(f)})
+        assert r.status_code == 400 and "not a directory" in r.json()["detail"]
+
+    def test_scan_rejects_a_folder_without_a_lockfile(self, api_client, tmp_path):
+        r = api_client.post("/api/scan", json={"project_path": str(tmp_path)})
+        assert r.status_code == 400 and "No supported lockfile" in r.json()["detail"]
+
+    def test_scan_rejects_a_missing_explicit_lockfile(self, api_client, tmp_path):
+        r = api_client.post(
+            "/api/scan", json={"project_path": str(tmp_path), "lockfile_path": str(tmp_path / "x.lock")}
+        )
+        assert r.status_code == 400 and "lockfile does not exist" in r.json()["detail"]
+
+    def test_scan_rejection_does_not_register_a_scan(self, api_client, tmp_path):
+        from packages.core import api
+
+        before = len(api._scan_store)
+        api_client.post("/api/scan", json={"project_path": str(tmp_path / "nope")})
+        assert len(api._scan_store) == before
+
     def _wait(self, client, scan_id):
         # Each request yields to the app's event loop, so the background task progresses.
         for _ in range(2000):

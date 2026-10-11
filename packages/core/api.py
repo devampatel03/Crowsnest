@@ -13,6 +13,7 @@ import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import structlog
@@ -182,9 +183,30 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
 
 
+_LOCKFILE_NAMES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "Cargo.lock", "go.sum")
+
+
+def _check_scan_target(req: ScanRequest) -> None:
+    """Reject a scan that cannot read anything, instead of reporting a clean or unrelated result."""
+    folder = Path(req.project_path)
+    if not folder.exists():
+        raise HTTPException(status_code=400, detail="That folder does not exist.")
+    if not folder.is_dir():
+        raise HTTPException(status_code=400, detail="That path is not a directory.")
+    if req.lockfile_path:
+        if not Path(req.lockfile_path).is_file():
+            raise HTTPException(status_code=400, detail="That lockfile does not exist.")
+    elif not any((folder / name).is_file() for name in _LOCKFILE_NAMES):
+        raise HTTPException(
+            status_code=400,
+            detail="No supported lockfile in that folder (" + ", ".join(_LOCKFILE_NAMES) + ").",
+        )
+
+
 @app.post("/api/scan")
 async def trigger_scan(req: ScanRequest) -> dict[str, str]:
     """Kick off a full supply-chain scan asynchronously."""
+    _check_scan_target(req)
     scan_id = str(uuid.uuid4())
     _scan_store[scan_id] = {
         "id": scan_id,

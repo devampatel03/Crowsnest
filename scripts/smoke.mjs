@@ -8,7 +8,7 @@
 //
 // Exits non-zero if any check fails. Always stops what it started.
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -142,8 +142,19 @@ async function apiChecks() {
     const o = r.headers.get('access-control-allow-origin'); const c = r.headers.get('access-control-allow-credentials');
     expect(!(o && c === 'true'), `allow-origin=${o} allow-credentials=${c}`);
   });
-  await check('POST /api/scan on a missing path ends in a clean status', async () => {
-    const { scan_id } = await (await post('/api/scan', { project_path: join(tmpdir(), 'crowsnest-no-such-dir') })).json();
+  await check('POST /api/scan on a missing folder is rejected with a plain 400', async () => {
+    const r = await post('/api/scan', { project_path: join(tmpdir(), 'crowsnest-no-such-dir') });
+    expect(r.status === 400, `status ${r.status}`);
+    expect(/does not exist/.test((await r.json()).detail || ''), 'no plain reason in the response');
+  });
+  await check('POST /api/scan on a folder without a lockfile is rejected', async () => {
+    const r = await post('/api/scan', { project_path: tmpdir() });
+    expect(r.status === 400, `status ${r.status}`);
+  });
+  await check('POST /api/scan on a folder with a lockfile ends in a clean status', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'crowsnest-smoke-'));
+    writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({ name: 'smoke', lockfileVersion: 3, packages: {} }));
+    const { scan_id } = await (await post('/api/scan', { project_path: dir })).json();
     let s;
     for (let i = 0; i < 60; i++) {
       s = await (await fetch(`${api}/api/scan/${scan_id}/status`)).json();

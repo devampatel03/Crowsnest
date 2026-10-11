@@ -112,8 +112,15 @@ export function ScanProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'accepted', scanId: res.scan_id });
         toast({ message: 'Scan started.', id: 'scan', icon: <NibMini size={20} /> });
       } catch (e) {
-        toast({ message: "Couldn't start the scan. Is Crowsnest running?", tone: 'error', id: 'scan', icon: <Nib pose="oops" size={28} /> });
-        dispatch({ type: 'start-failed', error: isUnreachable(e) ? describeError(e) : plainScanReason(e instanceof Error ? e.message : '') });
+        // "Is Crowsnest running?" only makes sense when the service could not be reached at all.
+        const unreachable = isUnreachable(e);
+        toast({
+          message: unreachable ? "Couldn't start the scan. Is Crowsnest running?" : "Couldn't start the scan.",
+          tone: 'error',
+          id: 'scan',
+          icon: <Nib pose="oops" size={28} />,
+        });
+        dispatch({ type: 'start-failed', error: unreachable ? describeError(e) : plainScanReason(e instanceof Error ? e.message : '') });
       }
     },
     [toast],
