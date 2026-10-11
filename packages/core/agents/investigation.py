@@ -104,6 +104,7 @@ async def investigation_node(
 
         rows = await coral_engine.query(sql)
         query_results[query_name] = rows
+        rows = _significant_rows(query_name, rows)
 
         if not rows:
             continue
@@ -140,6 +141,23 @@ async def investigation_node(
         "incidents": incidents,
         "token_usage": total_tokens,
     }
+
+
+# MAINTAINER_REPUTATION returns one scored row per maintainer in the dependency graph, not only the risky
+# ones. With no GitHub data a maintainer scores 0.65 ("account age unknown", "no signed commits", "no recent
+# commits"), which is missing data rather than evidence. Only positive evidence becomes an incident.
+_MAINTAINER_RISK_THRESHOLD = 0.7
+
+
+def _significant_rows(query_name: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop rows that are only a score table entry, so a clean project does not get an incident."""
+    if query_name != "MAINTAINER_REPUTATION":
+        return rows
+    return [
+        r
+        for r in rows
+        if r.get("ioc_flagged") or float(r.get("risk_score") or 0) >= _MAINTAINER_RISK_THRESHOLD
+    ]
 
 
 async def _classify_findings(
