@@ -42,7 +42,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.6",
     "jsdom": "^25.0.1",
-    "postcss": "^8.4.40",
+    "postcss": "^8.5.29",
     "typescript": "^5.5.0",
     "vitest": "^2.1.0"
   }
