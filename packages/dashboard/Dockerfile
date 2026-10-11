@@ -1,6 +1,6 @@
 # Crowsnest Next.js dashboard.
 # Build context is packages/dashboard (see infra/docker-compose.yml).
-FROM node:20-slim AS build
+FROM node:25-slim AS build
 
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
@@ -11,7 +11,7 @@ RUN npm run build
 # The runtime image only needs production dependencies.
 RUN npm prune --omit=dev
 
-FROM node:20-slim AS runner
+FROM node:25-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # Pick up Debian security fixes published after the base image was built, and drop npm: the server
