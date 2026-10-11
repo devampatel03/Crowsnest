@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DM_Mono, Instrument_Sans, Instrument_Serif, Patrick_Hand } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { LANDING_DESCRIPTION } from '@/lib/seo/landing';
 import { rootMetadata } from '@/lib/seo/metadata';
 import { MotionGate } from '@/components/system/MotionGate';
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MotionGate />
         <SmoothScroll />
         {children}
+        <Analytics />
       </body>
     </html>
   );
