@@ -152,7 +152,7 @@ export class CrowsnestClient {
    * Returns null if the API is unreachable or returns an error.
    */
   async vetoCheck(packageName: string, version?: string): Promise<VetoResult | null> {
-    const body: Record<string, string> = { package_name: packageName };
+    const body: Record<string, string> = { package: packageName };
     if (version) {
       body['version'] = version;
     }
@@ -167,7 +167,7 @@ export class CrowsnestClient {
       packageName,
       version,
       probability: this.asNumber(raw['probability'] ?? raw['risk_score'], 0),
-      vetoed: Boolean(raw['vetoed'] ?? raw['veto']),
+      vetoed: Boolean(raw['blocked'] ?? raw['vetoed'] ?? raw['veto']),
       signals: this.asStringArray(raw['signals'] ?? raw['reasons']),
       aiAuthoredLikelihood: this.asNumber(raw['ai_authored_likelihood'], 0),
       slopsquatProbability: this.asNumber(raw['slopsquat_probability'], 0),
@@ -180,7 +180,7 @@ export class CrowsnestClient {
    */
   async investigatePackage(packageName: string): Promise<InvestigationResult | null> {
     const raw = await this.request<Record<string, unknown>>('POST', '/api/investigate', {
-      package_name: packageName,
+      package: packageName,
     });
     if (!raw) {
       return null;
@@ -237,14 +237,25 @@ export class CrowsnestClient {
     }
 
     return {
-      activeIncidents: this.asNumber(raw['active_incidents'] ?? raw['incidents'], 0),
-      packagesScanned: this.asNumber(raw['packages_scanned'] ?? raw['scanned'], 0),
+      activeIncidents: this.countIncidents(raw['active_incidents'] ?? raw['incidents']),
+      packagesScanned: this.asNumber(raw['packages_scanned'] ?? raw['total_packages'] ?? raw['scanned'], 0),
       packagesVetoed: this.asNumber(raw['packages_vetoed'] ?? raw['vetoed'], 0),
       apiHealthy: true,
     };
   }
 
   // ─── Private coercion helpers ───────────────
+
+  /** The API reports incidents as {CRITICAL, HIGH, MEDIUM, LOW} counts; older servers sent a number. */
+  private countIncidents(value: unknown): number {
+    if (value && typeof value === 'object') {
+      return Object.values(value as Record<string, unknown>).reduce<number>(
+        (sum, n) => sum + this.asNumber(n, 0),
+        0
+      );
+    }
+    return this.asNumber(value, 0);
+  }
 
   private asNumber(value: unknown, fallback: number): number {
     const n = Number(value);

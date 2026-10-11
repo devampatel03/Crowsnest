@@ -16,5 +16,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
+    // These tests render whole console pages in jsdom. They take ~0.5 s on an idle machine but
+    // several seconds on a loaded CI runner, so the 5 s default makes them flaky.
+    testTimeout: 20_000,
   },
 });

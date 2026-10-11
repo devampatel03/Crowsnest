@@ -215,8 +215,17 @@ describe('illustrated states', () => {
 
 describe('Log: rope timeline', () => {
   const day = 86_400_000;
+  // "Today" is a local calendar day, so pin the clock to midday: "2 hours ago" must not land on
+  // yesterday when the suite happens to run just after midnight. Only Date is faked, so findBy* still polls.
+  const noon = new Date(2026, 9, 10, 12, 0, 0).getTime();
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'], now: noon });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   const at = (ms: number) => new Date(Date.now() - ms).toISOString();
-  const calls = [
+  const makeCalls = () => [
     { ...inc[2], id: 'a', detected_at: at(2 * 3600_000), raw_findings: [{ login: 'p1' }] },
     { ...inc[2], id: 'b', detected_at: at(3 * day), raw_findings: [{ login: 'p2' }] },
     { ...inc[2], id: 'c', detected_at: at(40 * day), raw_findings: [{ login: 'p3' }] },
@@ -225,7 +234,7 @@ describe('Log: rope timeline', () => {
   it('groups newest first under Today, This week and Earlier with one knot per call', async () => {
     path = '/log';
     window.history.replaceState(null, '', '/log');
-    stubApi({ incidents: calls });
+    stubApi({ incidents: makeCalls() });
     render(<LogPage />, { wrapper: Harness });
     await screen.findByRole('heading', { level: 3, name: 'Today' });
     const heads = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
@@ -245,7 +254,7 @@ describe('Log: rope timeline', () => {
     expect(await screen.findByText('Nothing logged yet.')).toBeInTheDocument();
     expect(document.querySelector('svg[data-pose="quiet"]')).not.toBeNull();
     unmount();
-    stubApi({ incidents: calls });
+    stubApi({ incidents: makeCalls() });
     render(<LogPage />, { wrapper: Harness });
     await screen.findByRole('heading', { level: 3, name: 'Today' });
     fireEvent.change(screen.getByLabelText('Search calls'), { target: { value: 'zzzzzz' } });

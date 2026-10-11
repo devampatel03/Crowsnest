@@ -9,10 +9,9 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
-import json
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -123,7 +122,7 @@ class GitHubSource(DataSource):
 
     async def fetch_commits(self, org: str, repo: str, since_days: int = 90) -> list[dict[str, Any]]:
         from datetime import timedelta
-        since = (datetime.now(timezone.utc) - timedelta(days=since_days)).isoformat()
+        since = (datetime.now(UTC) - timedelta(days=since_days)).isoformat()
 
         async with self._client() as client:
             raw = await self._paginate(

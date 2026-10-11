@@ -120,7 +120,10 @@ export class CrowsnestApiClient {
       }
     );
 
-    const scanId = init.id;
+    const scanId = init.scan_id ?? init.id;
+    if (!scanId) {
+      throw new Error('Crowsnest API did not return a scan id');
+    }
 
     // 2. Poll until complete or timeout
     const deadline = Date.now() + SCAN_TIMEOUT_MS;

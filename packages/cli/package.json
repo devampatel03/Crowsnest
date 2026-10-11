@@ -1,6 +1,7 @@
 {
   "name": "@crowsnest/cli",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "description": "Crowsnest supply chain security CLI",
   "type": "module",
   "bin": {

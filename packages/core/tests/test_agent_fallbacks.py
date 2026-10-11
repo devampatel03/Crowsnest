@@ -7,8 +7,7 @@ Tests for the deterministic fallback paths of the LangGraph agent nodes:
   is provided or the LLM classification call raises).
 
 These fallbacks are what keep Crowsnest scans working when Socket.dev,
-GitHub, or Anthropic API keys are missing/misbehaving (see CLAUDE.md
-"Conventions & gotchas").
+GitHub, or Anthropic API keys are missing/misbehaving.
 """
 
 from __future__ import annotations
@@ -20,7 +19,6 @@ import pytest
 from packages.core.agents.detection_planner import _default_queries, detection_planner_node
 from packages.core.agents.investigation import _synthesize_incidents
 from packages.core.queries.templates import QueryLibrary
-
 
 # ── detection_planner._default_queries ──────────────────────────────────────
 

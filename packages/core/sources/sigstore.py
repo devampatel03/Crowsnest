@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -94,7 +94,7 @@ class SigstoreRekorSource(DataSource):
 
         return {
             "log_index": entry_data.get("logIndex", 0),
-            "integrated_time": datetime.fromtimestamp(integrated_time, tz=timezone.utc) if integrated_time else None,
+            "integrated_time": datetime.fromtimestamp(integrated_time, tz=UTC) if integrated_time else None,
             "subject": subject,
             "public_key": _extract_public_key(spec),
             "x509_chain": None,
