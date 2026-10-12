@@ -10,6 +10,8 @@ const DEV_FALLBACK = 'http://localhost:3000';
 
 const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
 
+const VERCEL_HOST = /^https?:\/\/[^/]+\.vercel\.app(\/|$)/i;
+
 /**
  * Vercel exposes its production domain as a bare hostname in VERCEL_PROJECT_PRODUCTION_URL (for example
  * `crowsnest.vercel.app`, or a custom domain once one is attached). It is used only when
@@ -31,6 +33,13 @@ export function resolveSiteUrl(env: Record<string, string | undefined>): string 
   if (raw && mustBeSet && LOCAL_HOST.test(raw)) {
     throw new Error(
       `[crowsnest] NEXT_PUBLIC_SITE_URL is ${raw}, a localhost origin. A CI or production build would bake it into canonicals, the sitemap, robots.txt and JSON-LD. Set it to the production origin.`,
+    );
+  }
+  // Only an explicit value is rejected: the zero-config fallback above may legitimately be a vercel.app host.
+  const explicit = env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit && env.VERCEL_ENV === 'production' && !isTest && VERCEL_HOST.test(explicit)) {
+    throw new Error(
+      `[crowsnest] NEXT_PUBLIC_SITE_URL is ${explicit}, a vercel.app address. A production build would make search engines index that host instead of the custom domain. Set it to the custom domain.`,
     );
   }
   if (raw) return raw.replace(/\/+$/, '');

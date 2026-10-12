@@ -62,7 +62,7 @@ describe('llms.txt and llms-full.txt', () => {
       expect(t).toContain('not on npm');
       expect(t).toContain('not on the Marketplace');
       expect(t).toContain('Known fault in 0.1.0');
-      expect(t).toContain('no analytics');
+      expect(t).toContain('Vercel Web Analytics');
       expect(t).not.toMatch(/hackathon|npm install -g/i);
     }
   });

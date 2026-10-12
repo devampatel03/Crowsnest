@@ -75,7 +75,7 @@ export const PRIVACY = {
   },
   site: {
     title: 'This website',
-    text: 'This website runs no analytics and sets no cookies.',
+    text: 'This website counts page views with Vercel Web Analytics. It sets no cookies and does not follow you from site to site. Crowsnest itself, on your machine, has no analytics.',
   },
   contact: {
     title: 'Questions',
