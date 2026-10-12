@@ -48,7 +48,7 @@ const FACTS: string[] = [
   'Requirements: Docker, or Python 3.12+ and Node 18+. Crowsnest listens on port 8000 and the dashboard on port 3000.',
   'Slack has four commands: `/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius` and `/crowsnest-status`. It posts only the most serious calls to `#security` by default.',
   'VS Code covers JavaScript, TypeScript, JSX, TSX and Python. It warns from risk 0.5 by default (`crowsnest.riskThreshold`), waits 1 second after typing and remembers a result for 5 minutes.',
-  'Lockfiles and results stay on your machine. Optional calls to Anthropic, Socket and GitHub happen only when you set a key. Crowsnest sends no usage data to its authors. The website runs no analytics and sets no cookies.',
+  'Lockfiles and results stay on your machine. Optional calls to Anthropic, Socket and GitHub happen only when you set a key. Crowsnest sends no usage data to its authors. The website counts page views with Vercel Web Analytics and sets no cookies; the tool on your machine has no analytics.',
 ];
 
 function faqSection(): string {
