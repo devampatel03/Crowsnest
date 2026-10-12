@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { ReactNode } from 'react';
 import { NibMini } from '@/components/mascot';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -8,7 +9,12 @@ import { organization, website } from '@/lib/seo/jsonld';
 import { SiteFooter } from './SiteFooter';
 import { SiteHeader } from './SiteHeader';
 
-/** Public shell: skip link, header, main, footer and the sitewide JSON-LD. */
+/**
+ * Public shell: skip link, header, main, footer and the sitewide JSON-LD.
+ * Vercel Web Analytics is mounted here, not in the root layout, so the console
+ * (which people run themselves) never loads it. It sets no cookies; the
+ * privacy page says so.
+ */
 export function SiteFrame({
   children,
   skipToDocsNav = false,
@@ -40,6 +46,7 @@ export function SiteFrame({
         </div>
         <SiteFooter lastUpdated={siteLastUpdated()} quiet={quiet} />
       </div>
+      <Analytics />
     </Surface>
   );
 }
