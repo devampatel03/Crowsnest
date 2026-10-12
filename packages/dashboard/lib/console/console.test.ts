@@ -152,6 +152,8 @@ describe('scan lifecycle shows no phases', () => {
   });
   it('failures become plain reasons', () => {
     expect(plainScanReason('No such file or directory: /x')).toMatch(/can't find that folder/);
+    expect(plainScanReason('{"detail":"That folder does not exist."}')).toMatch(/can't find that folder/);
+    expect(plainScanReason('{"detail":"No supported lockfile in that folder (go.sum)."}')).toMatch(/no lockfile Crowsnest can read/);
     expect(plainScanReason('Traceback (most recent call last)')).toBe('Check the folder and try again.');
   });
 });

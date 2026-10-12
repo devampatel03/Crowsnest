@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -75,7 +75,7 @@ def _dedup_key(incident: AlertObject) -> str:
 
 
 async def _load_persisted_dedup_index(
-    coral_engine: "CoralEngine",
+    coral_engine: CoralEngine,
 ) -> dict[str, AlertObject]:
     """
     Query `crowsnest_incidents` for incidents detected within the 7-day dedup
@@ -95,7 +95,7 @@ async def _load_persisted_dedup_index(
         log.warning("triage.persisted_history_query_failed", error=str(exc))
         return index
 
-    cutoff = datetime.now(timezone.utc) - _DEDUP_WINDOW
+    cutoff = datetime.now(UTC) - _DEDUP_WINDOW
     for row in rows:
         try:
             persisted: AlertObject = json.loads(row["data"])
@@ -110,7 +110,7 @@ async def _load_persisted_dedup_index(
         except ValueError:
             continue
         if detected_at.tzinfo is None:
-            detected_at = detected_at.replace(tzinfo=timezone.utc)
+            detected_at = detected_at.replace(tzinfo=UTC)
         if detected_at < cutoff:
             continue  # outside the 7-day window — do not dedup against it
 
@@ -123,7 +123,7 @@ async def _load_persisted_dedup_index(
 
 async def triage_node(
     state: CrowsnestState,
-    coral_engine: "CoralEngine | None" = None,
+    coral_engine: CoralEngine | None = None,
     **_kwargs: Any,
 ) -> dict[str, Any]:
     """LangGraph node: deduplicate and re-score incidents."""

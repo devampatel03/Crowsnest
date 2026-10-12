@@ -8,7 +8,7 @@ Gracefully returns empty if no API key is configured.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -90,7 +90,7 @@ class SocketSource(DataSource):
                 "alert_type": alert_type,
                 "severity": _infer_severity(alert_type, alert),
                 "description": alert.get("message", ""),
-                "first_seen": datetime.now(timezone.utc),
+                "first_seen": datetime.now(UTC),
             })
 
         return alerts

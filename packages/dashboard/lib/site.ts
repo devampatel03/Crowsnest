@@ -12,8 +12,19 @@ const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
 
 const VERCEL_HOST = /^https?:\/\/[^/]+\.vercel\.app(\/|$)/i;
 
+/**
+ * Vercel exposes its production domain as a bare hostname in VERCEL_PROJECT_PRODUCTION_URL (for example
+ * `crowsnest.vercel.app`, or a custom domain once one is attached). It is used only when
+ * NEXT_PUBLIC_SITE_URL is not set, so a Vercel deploy works without extra configuration and an explicit
+ * value still wins. Previews use it too: their canonicals should point at production, not at a preview URL.
+ */
+function vercelProductionOrigin(env: Record<string, string | undefined>): string | undefined {
+  const host = env.VERCEL_PROJECT_PRODUCTION_URL?.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  return host ? `https://${host}` : undefined;
+}
+
 export function resolveSiteUrl(env: Record<string, string | undefined>): string {
-  const raw = env.NEXT_PUBLIC_SITE_URL?.trim();
+  const raw = env.NEXT_PUBLIC_SITE_URL?.trim() || vercelProductionOrigin(env);
   const isTest = env.NODE_ENV === 'test' || env.VITEST !== undefined;
   const mustBeSet =
     !isTest &&
@@ -24,9 +35,11 @@ export function resolveSiteUrl(env: Record<string, string | undefined>): string 
       `[crowsnest] NEXT_PUBLIC_SITE_URL is ${raw}, a localhost origin. A CI or production build would bake it into canonicals, the sitemap, robots.txt and JSON-LD. Set it to the production origin.`,
     );
   }
-  if (raw && env.VERCEL_ENV === 'production' && !isTest && VERCEL_HOST.test(raw)) {
+  // Only an explicit value is rejected: the zero-config fallback above may legitimately be a vercel.app host.
+  const explicit = env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit && env.VERCEL_ENV === 'production' && !isTest && VERCEL_HOST.test(explicit)) {
     throw new Error(
-      `[crowsnest] NEXT_PUBLIC_SITE_URL is ${raw}, a vercel.app address. A production build would make search engines index that host instead of the custom domain. Set it to the custom domain.`,
+      `[crowsnest] NEXT_PUBLIC_SITE_URL is ${explicit}, a vercel.app address. A production build would make search engines index that host instead of the custom domain. Set it to the custom domain.`,
     );
   }
   if (raw) return raw.replace(/\/+$/, '');

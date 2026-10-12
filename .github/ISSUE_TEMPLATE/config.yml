@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/devampatel03/Crowsnest/security/advisories/new
+    about: Please do not open a public issue for a vulnerability.
+  - name: Read the documentation
+    url: https://github.com/devampatel03/Crowsnest/tree/main/packages/dashboard/content/docs
+    about: Setup, command line, configuration and troubleshooting guides.

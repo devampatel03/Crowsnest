@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import re
 import threading
-from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -25,11 +23,26 @@ log = structlog.get_logger(__name__)
 # DuckDB concurrency: We use a single shared connection and serialize access via asyncio.Lock.
 # This prevents deadlocks since DuckDB allows only one read/write connection to a file.
 
-# SQL validation: only SELECT statements allowed from agents
+# SQL validation: agent- and API-issued queries must be a single SELECT (see _validate_sql).
+# Table functions that read from outside the database are denied by name; only these
+# generators are allowed in FROM position.
 _FORBIDDEN_KEYWORDS = {
     "INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER",
-    "TRUNCATE", "REPLACE", "MERGE", "EXEC", "EXECUTE",
+    "TRUNCATE", "MERGE", "EXEC", "EXECUTE",
 }
+_ALLOWED_TABLE_FUNCTIONS = {"unnest", "generate_series", "range"}
+# Scalar/table functions that read files, the environment, other databases or run nested SQL.
+_DENIED_FUNCTION_RE = re.compile(
+    r"^(read_.*|.*_scan|glob|getenv|current_setting|query|query_table|sniff_csv|"
+    r"parquet_.*|duckdb_.*|pragma_.*|which_secret|load_extension|install_extension|"
+    r"write_.*|copy_.*|enable_.*|disable_.*)$",
+    re.IGNORECASE,
+)
+_ALLOWED_SCHEMAS = {"main", "information_schema"}
+_PLAIN_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_validator_local = threading.local()
+_INGEST_CHUNK = 250
+_SNAPSHOT_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 class CoralEngine:
@@ -71,58 +84,35 @@ class CoralEngine:
                 )
 
     def _validate_sql(self, sql: str) -> None:
-        """Reject any SQL that isn't a single, pure SELECT statement."""
-        # Strip comments
-        lines = []
-        for line in sql.splitlines():
-            line_content = line.strip()
-            if line_content.startswith("--"):
-                continue
-            # Strip inline -- comments
-            if "--" in line_content:
-                # Be careful not to split inside strings, but simple split works for these templates
-                line_content = line_content.split("--")[0].strip()
-            if line_content:
-                lines.append(line_content)
-        cleaned_sql = "\n".join(lines)
+        """Reject any SQL that isn't a single, pure SELECT that cannot touch files or the host.
 
-        # Strip block comments /* ... */
-        cleaned_sql = re.sub(r'/\*.*?\*/', '', cleaned_sql, flags=re.DOTALL)
-
-        stripped = cleaned_sql.strip()
-
-        # Reject multi-statement SQL outright. Agent-issued queries must never be
-        # allowed to chain a second statement (e.g. "SELECT 1;DROP TABLE x") —
-        # DuckDB will happily execute semicolon-separated multi-statement strings,
-        # so any semicolon that isn't just trailing whitespace/the final terminator
-        # is treated as an attempted bypass. We do this by stripping any single
-        # trailing semicolon (with trailing whitespace) and then checking for any
-        # semicolon still remaining, ignoring semicolons that appear inside single
-        # quoted string literals.
-        without_trailing = re.sub(r";\s*$", "", stripped)
-        if _contains_unquoted_char(without_trailing, ";"):
-            raise ValueError(
-                "Multi-statement SQL is not allowed (semicolon-separated statements detected)"
-            )
-
-        # Word-boundary regex check against the *entire* uppercased string — this
-        # is defense-in-depth on top of the semicolon ban above, and it is robust
-        # to punctuation-adjacent keywords (e.g. "1;DROP" or "1,DROP(") that a
-        # naive `.split()` token-equality check would miss, since `.split()` only
-        # produces tokens split on whitespace and would never match a keyword that
-        # is glued to adjacent punctuation.
-        upper = without_trailing.upper()
-        tokens = upper.split()
-        first_token = next((t for t in tokens if t.strip()), "")
-        if first_token not in ("SELECT", "WITH", "EXPLAIN"):
-            raise ValueError(f"Only SELECT queries are allowed; got: {first_token!r}")
+        Validation parses the statement with DuckDB's own parser instead of pattern-matching
+        text, so comments, string literals and quoting tricks cannot hide a second statement
+        or a file-reading table function. Callers must pass the final SQL (after any :named
+        parameters were substituted).
+        """
+        try:
+            row = _validator_connection().execute("SELECT json_serialize_sql(?)", [sql]).fetchone()
+            tree = json.loads(row[0]) if row else {}
+        except (duckdb.Error, ValueError) as exc:
+            raise ValueError(f"Query could not be parsed: {exc}") from exc
+        if tree.get("error"):
+            message = str(tree.get("error_message") or "")
+            if "Only SELECT" in message:
+                raise ValueError("Only a single SELECT query is allowed (multi-statement or non-SELECT SQL)")
+            raise ValueError(f"Query could not be parsed: {message}")
+        statements = tree.get("statements") or []
+        if len(statements) != 1:
+            raise ValueError("Exactly one SELECT statement is required")
+        _reject_unsafe_nodes(tree)
+        # Defense in depth: write/DDL keywords are refused outside string literals and comments.
         for kw in _FORBIDDEN_KEYWORDS:
-            if re.search(rf"\b{kw}\b", upper):
+            if re.search(rf"\b{kw}\b", _strip_literals_and_comments(sql).upper()):
                 raise ValueError(f"Forbidden keyword in query: {kw}")
 
     def _sync_query(self, sql: str, params: dict[str, Any]) -> list[dict[str, Any]]:
-        self._validate_sql(sql)
         prepared = _replace_named_params(sql, params)
+        self._validate_sql(prepared)
         try:
             with self._get_connection().cursor() as conn:
                 rel = conn.execute(prepared)
@@ -147,32 +137,49 @@ class CoralEngine:
         if not records:
             return 0
         cols = list(records[0].keys())
-        placeholders = ", ".join(["?" for _ in cols])
+        for ident in (table, *cols):
+            if not _PLAIN_IDENTIFIER_RE.match(ident):
+                raise ValueError(f"Invalid SQL identifier: {ident!r}")
         col_list = ", ".join(cols)
         # Build the ON CONFLICT update clause (update all non-key columns)
         update_clause = ", ".join(f"{c} = excluded.{c}" for c in cols)
-        sql = (
-            f"INSERT INTO {table} ({col_list}) VALUES ({placeholders}) "
-            f"ON CONFLICT DO UPDATE SET {update_clause}"
-        )
-        values = [[_coerce(r.get(c)) for c in cols] for r in records]
-        try:
-            with self._get_connection().cursor() as conn:
-                conn.executemany(sql, values)
-                log.info("coral.ingest", table=table, count=len(records))
-                return len(records)
-        except duckdb.Error as exc:
-            log.error("coral.ingest_error", table=table, error=str(exc))
-            # Try row-by-row to isolate bad records
+        with self._get_connection().cursor() as conn:
+            types = dict(conn.execute(
+                "SELECT column_name, data_type FROM information_schema.columns "
+                "WHERE table_name = ?", [table],
+            ).fetchall())
+            missing = [c for c in cols if c not in types]
+            if missing:
+                log.error("coral.ingest_error", table=table, error=f"unknown column(s) {missing}")
+                return 0
+            # Each chunk travels as ONE JSON parameter and is converted to typed rows by DuckDB.
+            # Binding thousands of individual parameters is orders of magnitude slower.
+            shape = "[{" + ",".join(f'"{c}":"{types[c]}"' for c in cols) + "}]"
+            sql = (
+                f"INSERT INTO {table} ({col_list}) "
+                f"SELECT {col_list} FROM (SELECT unnest(from_json(?, ?), recursive := true)) "
+                f"ON CONFLICT DO UPDATE SET {update_clause}"
+            )
+            payload = [{c: _coerce_for(types[c], r.get(c)) for c in cols} for r in records]
             inserted = 0
-            with self._get_connection().cursor() as conn:
-                for row_vals in values:
+            # A failing chunk (e.g. duplicate keys inside one statement) is retried row by row
+            # so one bad record cannot drop its neighbours.
+            for start in range(0, len(payload), _INGEST_CHUNK):
+                chunk = payload[start:start + _INGEST_CHUNK]
+                try:
+                    conn.execute(sql, [json.dumps(chunk), shape])
+                    inserted += len(chunk)
+                    continue
+                except duckdb.Error as exc:
+                    log.warning("coral.ingest_chunk_retry", table=table, error=str(exc))
+                for row in chunk:
                     try:
-                        conn.execute(sql, row_vals)
+                        conn.execute(sql, [json.dumps([row]), shape])
                         inserted += 1
                     except duckdb.Error:
                         pass
-            return inserted
+        log.info("coral.ingest", table=table, count=inserted)
+        return inserted
 
     async def ingest(self, table: str, records: list[dict[str, Any]]) -> int:
         """Upsert records into a Coral table. Returns count inserted."""
@@ -202,9 +209,18 @@ class CoralEngine:
                 None, self._sync_execute, sql, params or {}
             )
 
+    def _snapshot_path(self, name: str) -> Path:
+        """Resolve a snapshot name to a directory strictly inside snapshot_dir."""
+        if not _SNAPSHOT_NAME_RE.match(name) or name in (".", ".."):
+            raise ValueError(f"Invalid snapshot name: {name!r}")
+        path = (self.snapshot_dir / name).resolve()
+        if self.snapshot_dir.resolve() not in path.parents:
+            raise ValueError(f"Invalid snapshot name: {name!r}")
+        return path
+
     def _sync_snapshot(self, name: str) -> str:
         conn = self._get_connection()
-        path = self.snapshot_dir / name
+        path = self._snapshot_path(name)
         path.mkdir(parents=True, exist_ok=True)
         conn.execute(f"EXPORT DATABASE '{path}' (FORMAT PARQUET, COMPRESSION ZSTD)")
         meta_path = path / "snapshot_meta.json"
@@ -226,7 +242,7 @@ class CoralEngine:
         )
 
     def _sync_restore_snapshot(self, name: str) -> None:
-        path = self.snapshot_dir / name
+        path = self._snapshot_path(name)
         if not path.exists():
             raise FileNotFoundError(f"Snapshot not found: {name}")
         conn = self._get_connection()
@@ -261,6 +277,82 @@ class CoralEngine:
             rows = await self.query(f"SELECT COUNT(*) AS n FROM {t}")
             counts[t] = rows[0]["n"] if rows else 0
         return counts
+
+
+def _strip_literals_and_comments(sql: str) -> str:
+    """Blank out '...' / "..." literals and -- / /* */ comments so keyword checks see only code."""
+    out: list[str] = []
+    i, n = 0, len(sql)
+    while i < n:
+        c = sql[i]
+        if c in ("'", '"'):
+            j = i + 1
+            while j < n:
+                if sql[j] == c:
+                    if j + 1 < n and sql[j + 1] == c:
+                        j += 2
+                        continue
+                    break
+                j += 1
+            out.append(" ")
+            i = j + 1
+        elif sql.startswith("--", i):
+            j = sql.find("\n", i)
+            i = n if j == -1 else j
+            out.append(" ")
+        elif sql.startswith("/*", i):
+            j = sql.find("*/", i + 2)
+            i = n if j == -1 else j + 2
+            out.append(" ")
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _validator_connection() -> duckdb.DuckDBPyConnection:
+    """Per-thread in-memory connection used only to parse SQL (never to run it)."""
+    conn = getattr(_validator_local, "conn", None)
+    if conn is None:
+        conn = duckdb.connect(database=":memory:")
+        conn.execute("SET enable_external_access = false")
+        _validator_local.conn = conn
+    return conn
+
+
+def _reject_unsafe_nodes(node: Any) -> None:
+    """Walk a serialized DuckDB AST and raise ValueError on file/host access."""
+    if isinstance(node, list):
+        for item in node:
+            _reject_unsafe_nodes(item)
+        return
+    if not isinstance(node, dict):
+        return
+    node_type = node.get("type")
+    if node_type == "TABLE_FUNCTION":
+        func = node.get("function") or {}
+        name = str(func.get("function_name", ""))
+        if name.lower() not in _ALLOWED_TABLE_FUNCTIONS:
+            raise ValueError(f"Table function not allowed in queries: {name!r}")
+    elif node_type == "BASE_TABLE":
+        # DuckDB turns an unknown "name.csv" into a file read (a "replacement scan"), and the
+        # parser sees it as schema "name", table "csv". So only the schemas that really exist
+        # here are accepted, and no catalog qualifier at all; quoted paths fail the identifier test.
+        table = str(node.get("table_name") or "")
+        schema = str(node.get("schema_name") or "")
+        catalog = str(node.get("catalog_name") or "")
+        if (
+            not _PLAIN_IDENTIFIER_RE.match(table)
+            or catalog
+            or (schema and schema.lower() not in _ALLOWED_SCHEMAS)
+        ):
+            raise ValueError(f"Table reference not allowed in queries: {catalog}.{schema}.{table}".replace("..", "."))
+    name = node.get("function_name")
+    if isinstance(name, str) and _DENIED_FUNCTION_RE.match(name):
+        raise ValueError(f"Function not allowed in queries: {name!r}")
+    for value in node.values():
+        if isinstance(value, (dict, list)):
+            _reject_unsafe_nodes(value)
 
 
 def _contains_unquoted_char(sql: str, ch: str) -> bool:
@@ -337,6 +429,13 @@ def _coerce(val: Any) -> Any:
     if isinstance(val, datetime):
         return val.isoformat()
     return val
+
+
+def _coerce_for(data_type: str, val: Any) -> Any:
+    """Coerce a Python value for a column of the given DuckDB type (lists stay lists for arrays)."""
+    if isinstance(val, (list, tuple)) and data_type.endswith("[]"):
+        return [None if v is None else str(v) for v in val]
+    return _coerce(val)
 
 
 _SCHEMA_DDL = """

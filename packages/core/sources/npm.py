@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 import structlog
@@ -199,7 +200,7 @@ class NpmRegistrySource(DataSource):
                             "type": "publish_event",
                             "package": name,
                             "seq": seq,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         }
 
                 await asyncio.sleep(1)

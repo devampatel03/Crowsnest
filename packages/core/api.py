@@ -10,9 +10,11 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import Any, AsyncIterator
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import structlog
 from fastapi import FastAPI, HTTPException, Query
@@ -115,8 +117,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[o.strip() for o in get_settings().crowsnest_cors_origins.split(",") if o.strip()],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -167,7 +169,7 @@ def _get_engine() -> CoralEngine:
 
 
 async def _push_event(event_type: str, data: dict[str, Any]) -> None:
-    event = {"type": event_type, "timestamp": datetime.now(timezone.utc).isoformat(), **data}
+    event = {"type": event_type, "timestamp": datetime.now(UTC).isoformat(), **data}
     try:
         _event_queue.put_nowait(event)
     except asyncio.QueueFull:
@@ -181,14 +183,35 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
 
 
+_LOCKFILE_NAMES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "Cargo.lock", "go.sum")
+
+
+def _check_scan_target(req: ScanRequest) -> None:
+    """Reject a scan that cannot read anything, instead of reporting a clean or unrelated result."""
+    folder = Path(req.project_path)
+    if not folder.exists():
+        raise HTTPException(status_code=400, detail="That folder does not exist.")
+    if not folder.is_dir():
+        raise HTTPException(status_code=400, detail="That path is not a directory.")
+    if req.lockfile_path:
+        if not Path(req.lockfile_path).is_file():
+            raise HTTPException(status_code=400, detail="That lockfile does not exist.")
+    elif not any((folder / name).is_file() for name in _LOCKFILE_NAMES):
+        raise HTTPException(
+            status_code=400,
+            detail="No supported lockfile in that folder (" + ", ".join(_LOCKFILE_NAMES) + ").",
+        )
+
+
 @app.post("/api/scan")
 async def trigger_scan(req: ScanRequest) -> dict[str, str]:
     """Kick off a full supply-chain scan asynchronously."""
+    _check_scan_target(req)
     scan_id = str(uuid.uuid4())
     _scan_store[scan_id] = {
         "id": scan_id,
         "status": "pending",
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
         "project_path": req.project_path,
         "incidents": [],
         "token_usage": 0,
@@ -262,7 +285,7 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, api_key: str) -> None:
 
         _scan_store[scan_id].update({
             "status": "complete",
-            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "finished_at": datetime.now(UTC).isoformat(),
             "incidents": new_incidents,
             "token_usage": result.get("token_usage", 0),
             "remediation_drafts": result.get("remediation_drafts", []),
@@ -288,7 +311,7 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, api_key: str) -> None:
         _scan_store[scan_id].update({
             "status": "failed",
             "error": str(exc),
-            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "finished_at": datetime.now(UTC).isoformat(),
         })
         await _push_event("scan_progress", {"scan_id": scan_id, "phase": "failed", "error": str(exc)})
 
@@ -305,13 +328,13 @@ async def event_stream() -> StreamingResponse:
     """SSE stream: npm publish firehose + scan progress + incident alerts."""
     async def generator() -> AsyncIterator[str]:
         # Send current connection event
-        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(timezone.utc).isoformat()})}\n\n"
+        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now(UTC).isoformat()})}\n\n"
 
         while True:
             try:
                 event = await asyncio.wait_for(_event_queue.get(), timeout=30.0)
                 yield f"data: {json.dumps(event, default=str)}\n\n"
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 yield ": keepalive\n\n"
             except Exception:
                 break
@@ -365,8 +388,8 @@ async def investigate(req: InvestigateRequest) -> dict[str, Any]:
 async def blast_radius(req: BlastRadiusRequest) -> dict[str, Any]:
     """Compute blast radius if a specific maintainer is compromised."""
     engine = _get_engine()
-    sql = QueryLibrary.get("BLAST_RADIUS", {"compromised_maintainer": req.maintainer})
-    rows = await engine.query(sql)
+    sql = QueryLibrary.get("BLAST_RADIUS")
+    rows = await engine.query(sql, {"compromised_maintainer": req.maintainer})
 
     projects = list({r.get("our_project", "") for r in rows if r.get("our_project")})
     packages = list({r.get("compromised_root", "") for r in rows if r.get("compromised_root")})
@@ -530,13 +553,13 @@ async def veto_check(req: VetoRequest) -> dict[str, Any]:
         repo_url = pkg_data.get("repo_url", "")
 
         if created_at:
-            from datetime import datetime, timezone
+            from datetime import datetime
             try:
                 if isinstance(created_at, str):
                     created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                 else:
-                    created_dt = created_at.replace(tzinfo=timezone.utc) if created_at.tzinfo is None else created_at
-                age_days = (datetime.now(timezone.utc) - created_dt).days
+                    created_dt = created_at.replace(tzinfo=UTC) if created_at.tzinfo is None else created_at
+                age_days = (datetime.now(UTC) - created_dt).days
                 if age_days < 30:
                     probability += 0.4
                     signals.append(f"Package registered {age_days} days ago (< 30 days)")
@@ -607,7 +630,7 @@ async def veto_check(req: VetoRequest) -> dict[str, Any]:
         "probability": round(probability, 2),
         "signals": signals,
         "reason": signals[0] if signals else "No specific signals detected",
-        "override_flag": f"--crowsnest-acknowledge-risk" if blocked else None,
+        "override_flag": "--crowsnest-acknowledge-risk" if blocked else None,
     }
 
 
@@ -617,7 +640,7 @@ async def raw_query(req: CoralQueryRequest) -> list[dict[str, Any]]:
     engine = _get_engine()
     try:
         rows = await engine.query(req.sql, req.params)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         # CoralEngine._validate_sql rejects write ops / multi-statement /
         # forbidden-keyword payloads by raising ValueError — surface that
         # as a clean 400 instead of letting it bubble up as an opaque 500.

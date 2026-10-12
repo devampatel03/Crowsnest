@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -11,8 +12,12 @@ class Settings(BaseSettings):
     npm_token: str = ""
     crowsnest_db_path: str = "./crowsnest.duckdb"
     crowsnest_snapshot_dir: str = "./snapshots"
-    crowsnest_api_host: str = "0.0.0.0"
+    # Loopback by default: the API has no authentication, so it must not listen on the network
+    # unless the operator opts in (the Docker image sets CROWSNEST_API_HOST via its CMD).
+    crowsnest_api_host: str = "127.0.0.1"
     crowsnest_api_port: int = 8000
+    # Comma-separated browser origins allowed to call the API (the dashboard's origin).
+    crowsnest_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     # Accept both DEMO_MODE=true and CROWSNEST_DEMO_MODE=true
     crowsnest_demo_mode: bool = Field(default=False, validation_alias="DEMO_MODE")
 

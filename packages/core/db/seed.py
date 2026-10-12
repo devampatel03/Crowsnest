@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import structlog
@@ -63,7 +63,6 @@ async def _seed_maintainer_data(engine: Any) -> None:
     - gh_commits.files_changed is TEXT[] → must pass None (not []) to avoid JSON string mismatch
     - Logins must match what UNNEST(npm_packages.maintainers) returns
     """
-    import asyncio
 
     # Check if we already seeded (avoid re-seeding on every restart)
     existing_commits = await engine.query(
@@ -94,7 +93,7 @@ async def _seed_maintainer_data(engine: Any) -> None:
         ]
 
     rng = random.Random(42)  # reproducible, avoids polluting global state
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # ── npm_maintainers (platform age) ─────────────────────────────────────
     # NOTE: npm_maintainers has NO PRIMARY KEY → engine.ingest() will fail on

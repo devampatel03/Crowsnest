@@ -3,6 +3,7 @@
   "displayName": "Crowsnest — Supply Chain Sentinel",
   "description": "Inline supply chain risk warnings. See the storm before it hits your ship.",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "publisher": "crowsnest",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Linters", "Other"],
@@ -57,12 +58,14 @@
     "vscode:prepublish": "npm run compile",
     "build": "npm run compile",
     "dev": "npm run watch",
-    "typecheck": "tsc --noEmit -p ./"
+    "typecheck": "tsc --noEmit -p ./",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^2.1.0"
   },
   "dependencies": {}
 }
