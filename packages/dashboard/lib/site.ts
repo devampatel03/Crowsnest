@@ -10,6 +10,8 @@ const DEV_FALLBACK = 'http://localhost:3000';
 
 const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
 
+const VERCEL_HOST = /^https?:\/\/[^/]+\.vercel\.app(\/|$)/i;
+
 export function resolveSiteUrl(env: Record<string, string | undefined>): string {
   const raw = env.NEXT_PUBLIC_SITE_URL?.trim();
   const isTest = env.NODE_ENV === 'test' || env.VITEST !== undefined;
@@ -20,6 +22,11 @@ export function resolveSiteUrl(env: Record<string, string | undefined>): string 
   if (raw && mustBeSet && LOCAL_HOST.test(raw)) {
     throw new Error(
       `[crowsnest] NEXT_PUBLIC_SITE_URL is ${raw}, a localhost origin. A CI or production build would bake it into canonicals, the sitemap, robots.txt and JSON-LD. Set it to the production origin.`,
+    );
+  }
+  if (raw && env.VERCEL_ENV === 'production' && !isTest && VERCEL_HOST.test(raw)) {
+    throw new Error(
+      `[crowsnest] NEXT_PUBLIC_SITE_URL is ${raw}, a vercel.app address. A production build would make search engines index that host instead of the custom domain. Set it to the custom domain.`,
     );
   }
   if (raw) return raw.replace(/\/+$/, '');
