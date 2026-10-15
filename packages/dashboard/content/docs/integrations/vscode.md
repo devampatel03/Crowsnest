@@ -1,6 +1,6 @@
 ---
 title: VS Code extension
-description: "Get warnings in the margin of VS Code when you import a risky package. Install from source, use three commands, and set three options. JS, TS and Python."
+description: "Get warnings in the margin of VS Code when you import a risky package. Install from source, use three commands, and set four options. JS, TS and Python."
 slug: integrations/vscode
 order: 7
 section: Integrations
@@ -11,7 +11,7 @@ answer: Build the extension from packages/vscode-extension, press F5 to open a d
 facts:
   - "Version 0.1.0; needs VS Code 1.85 or newer (packages/vscode-extension/package.json, 2026-10-07)."
   - "Switches on for JavaScript, TypeScript, JSX, TSX and Python files (package.json, 2026-10-07)."
-  - "Three commands and three settings (package.json, 2026-10-07)."
+  - "Three commands and four settings (package.json, 2026-10-13)."
   - "Waits 1,000 ms after you stop typing, and remembers each package's result for 5 minutes (src/decorator.ts, 2026-10-07)."
   - "Warning limit defaults to 0.5, lower than the install stop of 0.6 (package.json and install check, 2026-10-07)."
   - "Not published to the VS Code Marketplace (owner confirmation, 2026-10-07)."
@@ -39,7 +39,7 @@ It is not on the VS Code Marketplace, and no packaged `.vsix` file is provided. 
 
 ## What will I see?
 
-When you write an import for a package that scores at or above your warning limit, a mark appears in the margin of that line. Hover over it to read the reasons. The extension waits one second after you stop typing before it checks, and remembers each package's result for five minutes.
+When you write an import for a package that scores at or above your warning limit, a mark appears in the margin of that line. Hover over it to read the reasons. The extension waits one second after you stop typing before it checks, and remembers each package's result for five minutes. Imports of things that ship with the language, such as `fs`, `node:path` or Python's `os`, are never checked, and Python imports are checked against PyPI.
 
 ## Which commands does it add?
 
@@ -49,7 +49,7 @@ Open the Command Palette to run them.
 |---|---|
 | Crowsnest: Scan Current File | Checks every import in the open file. |
 | Crowsnest: Investigate Package Under Cursor | Looks closely at one package. |
-| Crowsnest: Open Dashboard | Opens the dashboard in your browser. |
+| Crowsnest: Open Dashboard | Opens the dashboard on your machine in your browser. |
 
 ## Which settings can I change?
 
@@ -59,6 +59,7 @@ Open Settings and search for "Crowsnest".
 |---|---|---|
 | `crowsnest.enabled` | on | Turns the margin warnings on or off. |
 | `crowsnest.apiUrl` | `http://localhost:8000` | Where Crowsnest is running. |
+| `crowsnest.dashboardUrl` | `http://localhost:3000` | Where the dashboard runs on your machine. "Open Dashboard" opens its Horizon page. |
 | `crowsnest.riskThreshold` | `0.5` | The risk, from 0 to 1, at which a warning starts to show. Raise it to see fewer. |
 
 ## What is worth knowing?

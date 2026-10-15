@@ -86,3 +86,7 @@ coverage.xml
 htmlcov/
 packages/dashboard/.claude/
 .claude/qa-team/runs/*/artifacts/*.json
+
+# VS Code extension build outputs
+*.vsix
+/packages/vscode-extension/out-e2e/

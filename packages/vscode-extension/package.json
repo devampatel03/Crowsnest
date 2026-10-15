@@ -1,13 +1,41 @@
 {
   "name": "crowsnest-vscode",
-  "displayName": "Crowsnest — Supply Chain Sentinel",
-  "description": "Inline supply chain risk warnings. See the storm before it hits your ship.",
+  "displayName": "Crowsnest: Supply Chain Sentinel",
+  "description": "Flags risky npm and PyPI imports right in your editor: look-alike names, made-up packages and hijacked packages, before they reach your lockfile.",
+  "icon": "media/icon.png",
+  "homepage": "https://github.com/devampatel03/Crowsnest#readme",
+  "bugs": {
+    "url": "https://github.com/devampatel03/Crowsnest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devampatel03/Crowsnest.git",
+    "directory": "packages/vscode-extension"
+  },
+  "galleryBanner": {
+    "color": "#f7f1e3",
+    "theme": "light"
+  },
   "version": "0.1.0",
   "license": "Apache-2.0",
   "publisher": "crowsnest",
-  "engines": { "vscode": "^1.85.0" },
-  "categories": ["Linters", "Other"],
-  "keywords": ["supply chain", "security", "npm", "slopsquatting"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "supply chain",
+    "security",
+    "npm",
+    "pypi",
+    "typosquatting",
+    "slopsquatting",
+    "dependencies",
+    "imports"
+  ],
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
@@ -39,6 +67,11 @@
           "default": "http://localhost:8000",
           "description": "Crowsnest API base URL"
         },
+        "crowsnest.dashboardUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "markdownDescription": "Where the Crowsnest dashboard runs on your machine. \"Crowsnest: Open Dashboard\" opens `/horizon` here."
+        },
         "crowsnest.enabled": {
           "type": "boolean",
           "default": true,
@@ -59,7 +92,11 @@
     "build": "npm run compile",
     "dev": "npm run watch",
     "typecheck": "tsc --noEmit -p ./",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "node test-e2e/run.mjs",
+    "package": "npx --yes @vscode/vsce@4.0.0 package --no-dependencies",
+    "publish:marketplace": "npx --yes @vscode/vsce@4.0.0 publish --no-dependencies",
+    "publish:openvsx": "npx --yes ovsx@1.2.0 publish --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

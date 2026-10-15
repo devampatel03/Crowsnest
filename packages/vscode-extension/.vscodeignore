@@ -1,7 +1,13 @@
 .vscode/**
+.vscode-test/**
 src/**
-.gitignore
-tsconfig.json
+test/**
+test-e2e/**
+out-e2e/**
+node_modules/**
+tsconfig*.json
+vitest.config.ts
+PUBLISHING.md
 **/*.map
 **/*.ts
-!out/**
+.gitignore

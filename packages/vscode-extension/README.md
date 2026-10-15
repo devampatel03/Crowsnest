@@ -1,40 +1,60 @@
-# crowsnest-vscode
+# Crowsnest: Supply Chain Sentinel
 
-Inline gutter warnings on `import`/`require` lines (JS/TS/JSX/TSX/Python)
-flagging risky packages — hover for the reasoning, plus commands to scan the
-current file, investigate the package under the cursor, or open the
-Crowsnest dashboard.
+See a risky package before it reaches your lockfile. Crowsnest puts a coloured dot in the gutter and a wavy
+underline on any `import` or `require` line that names a package that looks wrong, and tells you why when you hover.
 
-## Running standalone
+It catches the things ordinary vulnerability scanners miss:
 
-```bash
-cd packages/vscode-extension
-npm install
+- **Look-alike names** that imitate a popular package and wait for a typing mistake.
+- **Made-up packages**, the names an AI assistant invented that an attacker can then register.
+- **Hijacked packages**, where a new publisher appears or build files change.
+- **Brand-new packages** with almost no history.
 
-npm run dev          # tsc -watch -p ./ (alias of `watch`)
-npm run watch         # tsc -watch -p ./
-npm run build          # npm run compile (tsc -p ./)
-npm run compile         # tsc -p ./
-npm run typecheck        # tsc --noEmit -p ./
-```
+| Dot | Meaning |
+| --- | --- |
+| Red | Critical: score above 80% |
+| Orange | High: above 60% |
+| Yellow | Medium: above your threshold (50% by default) |
 
-To try it out: open this folder in its own VS Code window, run
-`npm install` and `npm run compile`, then press **F5** to launch an
-Extension Development Host window. Open a JS/TS/Python file with a
-suspicious import to see the gutter decoration and hover text.
+Imports that look fine get no mark at all. Node built-ins (`fs`, `node:path`) and the Python standard library are
+skipped.
 
-## Configuration
+Works in JavaScript, TypeScript, React (`.jsx`, `.tsx`) and Python files. Python imports are checked against PyPI,
+the rest against npm.
 
-This extension has no `process.env` variables — it's configured entirely
-through VS Code settings (`contributes.configuration` in `package.json`,
-read via `vscode.workspace.getConfiguration('crowsnest')` in `src/client.ts`
-and `src/commands.ts`):
+## You need the Crowsnest backend
 
-- `crowsnest.apiUrl` — Crowsnest API base URL (default
-  `http://localhost:8000`)
-- `crowsnest.enabled` — enable/disable inline risk warnings (default `true`)
-- `crowsnest.riskThreshold` — risk score threshold (0–1) for showing a
-  warning (default `0.5`)
+This extension is a viewer. The checks run in the Crowsnest backend on your own machine, free and open source, with
+no account and no API keys required. Start it by following the
+[quickstart](https://github.com/devampatel03/Crowsnest#quickstart). It listens on `http://localhost:8000`, which
+is what the extension expects.
 
-The extension needs the Crowsnest FastAPI backend reachable at
-`crowsnest.apiUrl` for scans and investigations to return results.
+If the backend is not running, the status bar shows **Crowsnest (offline)**, nothing is flagged, and nothing breaks.
+
+## Commands
+
+Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+
+- **Crowsnest: Scan Current File** lists every package in the file with its score in the Crowsnest output panel.
+- **Crowsnest: Investigate Package Under Cursor** opens a full report for one package.
+- **Crowsnest: Open Dashboard** opens the dashboard on your machine.
+
+## Settings
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `crowsnest.apiUrl` | `http://localhost:8000` | Where the backend runs. |
+| `crowsnest.dashboardUrl` | `http://localhost:3000` | Where the dashboard runs. |
+| `crowsnest.enabled` | `true` | Turn the inline marks on or off. |
+| `crowsnest.riskThreshold` | `0.5` | Only mark packages scoring above this (0 to 1). |
+
+## Privacy
+
+The extension sends only package names, such as `lodash`, and whether each is an npm or PyPI package, to the backend
+you configured. It never sends your code or file paths. It also asks that same backend for its status every minute.
+It makes no other network requests and collects no usage data. With the default settings the backend is on your own
+machine.
+
+## Links
+
+[Source and issues](https://github.com/devampatel03/Crowsnest) · Apache-2.0 licence
