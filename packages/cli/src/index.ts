@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Crowsnest CLI — supply chain forensics agent
- * See the storm before it hits your ship.
+ * Crowsnest command-line interface.
  */
 
+import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { scanCommand } from './commands/scan.js';
 import { investigateCommand } from './commands/investigate.js';
@@ -15,12 +15,15 @@ import { configGetCommand, configSetCommand } from './commands/config-cmd.js';
 import { theme } from './display/theme.js';
 import { banner } from './display/banner.js';
 
+// One source of truth for the version: package.json sits one level above both src/ and dist/.
+const pkg = createRequire(import.meta.url)('../package.json') as { version: string };
+
 const program = new Command();
 
 program
   .name('crowsnest')
   .description('Supply chain forensics — see the storm before it hits your ship')
-  .version('0.1.0');
+  .version(pkg.version);
 
 program.addHelpText('beforeAll', () =>
   banner(
@@ -29,7 +32,6 @@ program.addHelpText('beforeAll', () =>
   ) + '\n',
 );
 
-// ── scan ──────────────────────────────────────────────────────────────────
 program
   .command('scan [path]')
   .description('Run a full supply chain scan on a project')
@@ -40,7 +42,6 @@ program
     await scanCommand(path || process.cwd(), opts);
   });
 
-// ── investigate ───────────────────────────────────────────────────────────
 program
   .command('investigate <package>')
   .description('Deep investigation of a specific package')
@@ -50,7 +51,6 @@ program
     await investigateCommand(pkg, opts);
   });
 
-// ── blast-radius ──────────────────────────────────────────────────────────
 program
   .command('blast-radius')
   .description('Compute exposure if a maintainer is compromised')
@@ -61,7 +61,6 @@ program
     await blastRadiusCommand(opts);
   });
 
-// ── replay ────────────────────────────────────────────────────────────────
 program
   .command('replay')
   .description('Replay a known incident against Time Machine historical snapshot')
@@ -72,7 +71,6 @@ program
     await replayCommand(opts);
   });
 
-// ── watch ─────────────────────────────────────────────────────────────────
 program
   .command('watch')
   .description(
@@ -83,7 +81,6 @@ program
     await watchCommand();
   });
 
-// ── install ───────────────────────────────────────────────────────────────
 program
   .command('install <package>')
   .description('Safe install wrapper: veto checks before npm install')
@@ -95,7 +92,6 @@ program
     await installCommand(pkg, { acknowledgeRisk: Boolean(opts.crowsnestAcknowledgeRisk) });
   });
 
-// ── config ────────────────────────────────────────────────────────────────
 const configCmd = program.command('config').description('Manage Crowsnest configuration');
 
 configCmd

@@ -2,14 +2,49 @@
   "name": "@crowsnest/cli",
   "version": "0.1.0",
   "license": "Apache-2.0",
-  "description": "Crowsnest supply chain security CLI",
+  "description": "Crowsnest supply chain security CLI: scan lockfiles, investigate packages, and veto risky npm installs",
+  "keywords": [
+    "supply-chain",
+    "security",
+    "npm",
+    "typosquatting",
+    "slopsquatting",
+    "dependency-confusion",
+    "lockfile",
+    "cli"
+  ],
+  "homepage": "https://github.com/devampatel03/Crowsnest#readme",
+  "bugs": {
+    "url": "https://github.com/devampatel03/Crowsnest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devampatel03/Crowsnest.git",
+    "directory": "packages/cli"
+  },
+  "author": "Devam Patel",
   "type": "module",
   "bin": {
-    "crowsnest": "./dist/index.js"
+    "crowsnest": "dist/index.js"
   },
   "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "tsc",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run lint && npm test && npm run build",
     "dev": "tsx src/index.ts",
     "lint": "eslint src",
     "test": "vitest run"
@@ -32,5 +67,6 @@
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^2.1.0"
-  }
+  },
+  "types": "./dist/index.d.ts"
 }

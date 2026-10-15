@@ -1,8 +1,7 @@
 /**
  * crowsnest install <package>[@version]
  *
- * Pre-install veto hook — the demo's stopping moment.
- * Checks the package against Crowsnest before running npm install.
+ * Checks the package against Crowsnest and stops before `npm install` when its risk is above the veto threshold.
  */
 
 import { spawn } from 'child_process';
