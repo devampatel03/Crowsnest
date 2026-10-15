@@ -1,5 +1,5 @@
 /**
- * statusBar.ts — Crowsnest status bar item
+ * Crowsnest status bar item
  *
  * Shows a persistent shield icon in the VS Code status bar with the current
  * number of active incidents. Falls back to "offline" styling when the
@@ -9,7 +9,7 @@
 import * as vscode from 'vscode';
 import { CrowsnestClient } from './client';
 
-// Refresh interval in milliseconds (60 seconds)
+// How often to ask the backend for its status.
 const REFRESH_INTERVAL_MS = 60_000;
 
 export class CrowsnestStatusBar {
@@ -20,15 +20,12 @@ export class CrowsnestStatusBar {
   constructor(client: CrowsnestClient, context: vscode.ExtensionContext) {
     this.client = client;
 
-    // Create the status bar item, aligned to the left at priority 100
     this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     this.item.command = 'crowsnest.openDashboard';
     this.item.tooltip = 'Crowsnest Supply Chain Sentinel — click to open dashboard';
 
-    // Register for disposal
     context.subscriptions.push(this.item);
 
-    // Show immediately then start polling
     this.item.show();
     this.refresh();
     this.timer = setInterval(() => this.refresh(), REFRESH_INTERVAL_MS);
@@ -48,14 +45,12 @@ export class CrowsnestStatusBar {
     const stats = await this.client.getStats();
 
     if (!stats) {
-      // API is unreachable
       this.item.text = '$(shield) Crowsnest (offline)';
       this.item.color = new vscode.ThemeColor('descriptionForeground');
       this.item.backgroundColor = undefined;
       return;
     }
 
-    // API is healthy
     this.item.color = undefined; // reset to default theme colour
 
     if (stats.activeIncidents > 0) {

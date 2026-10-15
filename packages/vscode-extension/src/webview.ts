@@ -1,5 +1,5 @@
 /**
- * webview.ts — Investigation result webview
+ * Investigation result webview
  *
  * Renders a rich VS Code WebviewPanel with all findings returned by the
  * Crowsnest /api/investigate endpoint, styled to match the Crowsnest dark theme.
@@ -7,10 +7,6 @@
 
 import * as vscode from 'vscode';
 import { InvestigationResult, SocketAlert } from './client';
-
-// ─────────────────────────────────────────────
-// Public API
-// ─────────────────────────────────────────────
 
 /**
  * Creates (or reveals) a WebviewPanel showing all investigation findings for
@@ -25,17 +21,13 @@ export function showInvestigationWebview(
     `Crowsnest: ${packageName}`,
     vscode.ViewColumn.Beside,
     {
-      enableScripts: false, // no JS needed — static HTML only
+      enableScripts: false,
       retainContextWhenHidden: true,
     }
   );
 
   panel.webview.html = buildHtml(result);
 }
-
-// ─────────────────────────────────────────────
-// HTML builder
-// ─────────────────────────────────────────────
 
 function buildHtml(result: InvestigationResult): string {
   const scorePercent = Math.round(result.riskScore * 100);
@@ -56,10 +48,11 @@ function buildHtml(result: InvestigationResult): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crowsnest: ${esc(result.packageName)}</title>
   <style>
-    /* ─── Reset & base ──────────────────────── */
+    /* Reset & base */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -73,7 +66,7 @@ function buildHtml(result: InvestigationResult): string {
 
     h1, h2, h3 { font-weight: 600; }
 
-    /* ─── Header ────────────────────────────── */
+    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -100,7 +93,7 @@ function buildHtml(result: InvestigationResult): string {
       margin-top: 2px;
     }
 
-    /* ─── Score card ────────────────────────── */
+    /* Score card */
     .score-card {
       background: #0b1120;
       border: 1px solid #223049;
@@ -153,7 +146,7 @@ function buildHtml(result: InvestigationResult): string {
       font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
     }
 
-    /* ─── Section cards ─────────────────────── */
+    /* Section cards */
     .section {
       background: #0b1120;
       border: 1px solid #223049;
@@ -179,7 +172,7 @@ function buildHtml(result: InvestigationResult): string {
       padding: 16px 20px;
     }
 
-    /* ─── Key-value table ───────────────────── */
+    /* Key-value table */
     .kv-table {
       width: 100%;
       border-collapse: collapse;
@@ -208,7 +201,7 @@ function buildHtml(result: InvestigationResult): string {
       font-family: var(--vscode-editor-font-family, 'JetBrains Mono', monospace);
     }
 
-    /* ─── Alert rows ─────────────────────────── */
+    /* Alert rows */
     .alert-row {
       display: flex;
       align-items: flex-start;
@@ -247,7 +240,7 @@ function buildHtml(result: InvestigationResult): string {
       color: #9aa8c7;
     }
 
-    /* ─── Findings list ─────────────────────── */
+    /* Findings list */
     .findings-list {
       list-style: none;
       padding: 0;
@@ -271,14 +264,14 @@ function buildHtml(result: InvestigationResult): string {
       flex-shrink: 0;
     }
 
-    /* ─── Empty state ───────────────────────── */
+    /* Empty state */
     .empty {
       color: #5b6b8c;
       font-size: 13px;
       font-style: italic;
     }
 
-    /* ─── Footer ────────────────────────────── */
+    /* Footer */
     .footer {
       margin-top: 28px;
       padding-top: 16px;
@@ -336,10 +329,6 @@ function buildHtml(result: InvestigationResult): string {
 </html>`;
 }
 
-// ─────────────────────────────────────────────
-// Section builders
-// ─────────────────────────────────────────────
-
 function buildNpmSection(
   meta: NonNullable<InvestigationResult['npmMetadata']>
 ): string {
@@ -378,7 +367,8 @@ function buildNpmSection(
 function buildAlertsSection(alerts: SocketAlert[]): string {
   const rows = alerts
     .map((a) => {
-      const sevClass = `sev-${a.severity}`;
+      // The class name comes from the API: only the four known levels may reach the attribute.
+      const sevClass = `sev-${['critical', 'high', 'medium', 'low'].includes(a.severity) ? a.severity : 'low'}`;
       return /* html */ `
       <div class="alert-row">
         <span class="alert-severity ${sevClass}">${esc(a.severity)}</span>
@@ -411,11 +401,7 @@ function buildFindingsSection(findings: string[]): string {
   </div>`;
 }
 
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-
-/** Escape HTML special characters to prevent XSS-style injection in webviews. */
+/** Escapes text from the API before it goes into the webview HTML. */
 function esc(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -426,10 +412,10 @@ function esc(str: string): string {
 }
 
 function riskColor(score: number): string {
-  if (score > 0.8) { return '#ff4d5e'; } // critical
-  if (score > 0.6) { return '#ff8a3d'; } // high
-  if (score > 0.4) { return '#ffb020'; } // medium
-  return '#35e6d6';                       // low
+  if (score > 0.8) { return '#ff4d5e'; }
+  if (score > 0.6) { return '#ff8a3d'; }
+  if (score > 0.4) { return '#ffb020'; }
+  return '#35e6d6';
 }
 
 function riskBadge(score: number): { bg: string; fg: string } {

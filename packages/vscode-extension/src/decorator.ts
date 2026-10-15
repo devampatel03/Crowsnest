@@ -1,34 +1,22 @@
 /**
- * decorator.ts — Import line decoration provider
+ * Import line decoration provider
  *
- * Watches open documents for import/require statements, queries the Crowsnest
- * veto API for each discovered package, and applies coloured gutter icons plus
- * underline decorations to lines that exceed the configured risk threshold.
+ * Watches open documents for import/require statements, asks the Crowsnest veto API about each package, and marks
+ * lines above the configured risk threshold with a gutter dot and a wavy underline.
  *
- * Design decisions:
- *  - Debounce: API calls are deferred 1000 ms after the last document change
- *    to avoid hammering the API on every keystroke.
- *  - Cache: Results are cached per package name for 5 minutes to prevent
- *    redundant calls when re-scanning a document.
- *  - Three severity levels driven by the combined probability score:
- *      CRITICAL (> 0.8): red   — ⛔ gutter icon, red underline
- *      HIGH     (> 0.6): orange — ⚠️ gutter icon, orange underline
- *      MEDIUM   (> threshold): yellow — 🟡 gutter icon, yellow underline
+ *  - Updates are debounced by 1000 ms after the last edit.
+ *  - Results are cached per ecosystem and package for 5 minutes; a failed lookup is cached for 30 seconds.
+ *  - The colour follows the score: critical above 0.8 (red), high above 0.6 (orange), otherwise medium (yellow).
  */
 
 import * as vscode from 'vscode';
 import { CrowsnestClient, VetoResult } from './client';
-
-// ─────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────
+import { isNodeBuiltin, isPythonStdlib } from './builtins';
 
 const DEBOUNCE_MS = 1000;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
-// ─────────────────────────────────────────────
-// SVG gutter icon generator
-// ─────────────────────────────────────────────
+const CACHE_TTL_MS = 5 * 60 * 1000;
+/** A failed lookup (API down, timeout) is remembered briefly so typing does not retry it every second. */
+const MISS_TTL_MS = 30 * 1000;
 
 /**
  * Returns a `data:` URI containing a tiny SVG circle of the given colour.
@@ -42,13 +30,29 @@ function svgCircleDataUri(color: string): vscode.Uri {
   return vscode.Uri.parse(`data:image/svg+xml;base64,${encoded}`);
 }
 
-// ─────────────────────────────────────────────
-// Decoration types
-// ─────────────────────────────────────────────
-
 interface SeverityDecoration {
   type: vscode.TextEditorDecorationType;
   label: string;
+}
+
+export type Severity = 'critical' | 'high' | 'medium';
+
+export interface AppliedFlag {
+  /** Zero-based line of the import. */
+  line: number;
+  packageName: string;
+  probability: number;
+  severity: Severity;
+}
+
+/** The three bands from the header comment: above 0.8, above 0.6, otherwise (already above the threshold). */
+export function severityOf(probability: number): Severity {
+  return probability > 0.8 ? 'critical' : probability > 0.6 ? 'high' : 'medium';
+}
+
+/** The registry a language's imports resolve against. */
+function ecosystemOf(languageId: string): 'npm' | 'pypi' {
+  return languageId === 'python' ? 'pypi' : 'npm';
 }
 
 function createDecorationTypes(): {
@@ -92,10 +96,6 @@ function createDecorationTypes(): {
     },
   };
 }
-
-// ─────────────────────────────────────────────
-// Package-name extraction  (exported for use in commands.ts)
-// ─────────────────────────────────────────────
 
 /**
  * Regex patterns used to extract package names from a single source line.
@@ -154,8 +154,8 @@ export function extractPackageName(line: string, languageId: string): string | n
       continue;
     }
 
-    // For Python, skip stdlib-style dotted paths deeper than one level
-    // (e.g. "os.path" → skip; "requests" → keep)
+    // Python: a dotted name (os.path) is a submodule path, not a distribution name
+    
     if (isPython && raw.includes('.')) {
       continue;
     }
@@ -172,6 +172,10 @@ export function extractPackageName(line: string, languageId: string): string | n
 
     const plainMatch = raw.match(PLAIN_PACKAGE_RE);
     if (plainMatch) {
+      // fs, node:fs, os, json ...: part of the language, never fetched from a registry.
+      if (isPython ? isPythonStdlib(plainMatch[0]) : isNodeBuiltin(raw.startsWith('node:') ? raw : plainMatch[0])) {
+        continue;
+      }
       return plainMatch[0];
     }
   }
@@ -179,34 +183,32 @@ export function extractPackageName(line: string, languageId: string): string | n
   return null;
 }
 
-// ─────────────────────────────────────────────
-// Result cache
-// ─────────────────────────────────────────────
-
 interface CacheEntry {
-  result: VetoResult;
+  /** null records a failed lookup. */
+  result: VetoResult | null;
   expiresAt: number;
 }
 
 class PackageCache {
   private readonly store = new Map<string, CacheEntry>();
 
-  get(packageName: string): VetoResult | null {
-    const entry = this.store.get(packageName);
+  /** undefined = never looked up (or expired); null = looked up and failed recently. */
+  get(key: string): VetoResult | null | undefined {
+    const entry = this.store.get(key);
     if (!entry) {
-      return null;
+      return undefined;
     }
     if (Date.now() > entry.expiresAt) {
-      this.store.delete(packageName);
-      return null;
+      this.store.delete(key);
+      return undefined;
     }
     return entry.result;
   }
 
-  set(packageName: string, result: VetoResult): void {
-    this.store.set(packageName, {
+  set(key: string, result: VetoResult | null): void {
+    this.store.set(key, {
       result,
-      expiresAt: Date.now() + CACHE_TTL_MS,
+      expiresAt: Date.now() + (result ? CACHE_TTL_MS : MISS_TTL_MS),
     });
   }
 
@@ -215,14 +217,11 @@ class PackageCache {
   }
 }
 
-// ─────────────────────────────────────────────
-// ImportDecoratorProvider
-// ─────────────────────────────────────────────
-
 export class ImportDecoratorProvider {
   private readonly client: CrowsnestClient;
   private readonly decorations: ReturnType<typeof createDecorationTypes>;
   private readonly cache = new PackageCache();
+  private readonly applied = new Map<string, AppliedFlag[]>();
   private readonly debounceTimers = new Map<string, NodeJS.Timeout>();
   private readonly disposables: vscode.Disposable[] = [];
 
@@ -266,8 +265,6 @@ export class ImportDecoratorProvider {
     }
   }
 
-  // ─── Scheduling ──────────────────────────────
-
   /** Debounces the decoration update for the given editor by DEBOUNCE_MS. */
   private scheduleUpdate(editor: vscode.TextEditor): void {
     if (!this.isEligibleDocument(editor.document)) {
@@ -300,8 +297,6 @@ export class ImportDecoratorProvider {
     return eligible.has(doc.languageId);
   }
 
-  // ─── Core decoration logic ────────────────────
-
   /** Scans the document and applies decorations for risky packages. */
   private async updateDecorations(editor: vscode.TextEditor): Promise<void> {
     const cfg = vscode.workspace.getConfiguration('crowsnest');
@@ -313,9 +308,9 @@ export class ImportDecoratorProvider {
     const threshold = cfg.get<number>('riskThreshold', 0.5);
     const doc = editor.document;
     const languageId = doc.languageId;
+    const versionAtStart = doc.version;
     const lines = doc.getText().split('\n');
 
-    // ── Step 1: collect (lineIndex, packageName) pairs ──
     const linePackages: Array<{ lineIndex: number; packageName: string }> = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -325,41 +320,40 @@ export class ImportDecoratorProvider {
       }
     }
 
-    // ── Step 2: resolve results (cache-first) ──
-    const resolvedMap = new Map<string, VetoResult | null>();
-
+    const ecosystem = ecosystemOf(languageId);
+    const keyOf = (pkg: string): string => `${ecosystem}:${pkg}`;
     const uncached = linePackages
       .map((lp) => lp.packageName)
-      .filter((pkg, idx, arr) => arr.indexOf(pkg) === idx) // unique
-      .filter((pkg) => !this.cache.get(pkg));
+      .filter((pkg, idx, arr) => arr.indexOf(pkg) === idx)
+      .filter((pkg) => this.cache.get(keyOf(pkg)) === undefined);
 
     // Fetch all uncached packages in parallel (capped to avoid thundering herd)
     const BATCH_SIZE = 5;
     for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
       const batch = uncached.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
-        batch.map((pkg) => this.client.vetoCheck(pkg))
+        batch.map((pkg) => this.client.vetoCheck(pkg, undefined, ecosystem))
       );
       for (let j = 0; j < batch.length; j++) {
-        const result = results[j];
-        if (result) {
-          this.cache.set(batch[j], result);
-        }
-        resolvedMap.set(batch[j], result);
+        this.cache.set(keyOf(batch[j]), results[j]);
       }
     }
 
-    // Also pull cached results into the map
+    const resolvedMap = new Map<string, VetoResult | null>();
     for (const { packageName } of linePackages) {
-      if (!resolvedMap.has(packageName)) {
-        resolvedMap.set(packageName, this.cache.get(packageName));
-      }
+      resolvedMap.set(packageName, this.cache.get(keyOf(packageName)) ?? null);
     }
 
-    // ── Step 3: build decoration arrays ──
+    // The user kept typing while we waited: a newer update is already scheduled, so drop this stale one.
+    if (doc.version !== versionAtStart) {
+      return;
+    }
+
     const criticalRanges: vscode.DecorationOptions[] = [];
     const highRanges: vscode.DecorationOptions[] = [];
     const mediumRanges: vscode.DecorationOptions[] = [];
+
+    const flagged: AppliedFlag[] = [];
 
     for (const { lineIndex, packageName } of linePackages) {
       const result = resolvedMap.get(packageName);
@@ -381,9 +375,14 @@ export class ImportDecoratorProvider {
       } else {
         mediumRanges.push(decoration);
       }
+      flagged.push({
+        line: lineIndex,
+        packageName,
+        probability: result.probability,
+        severity: severityOf(result.probability),
+      });
     }
 
-    // ── Step 4: apply (guard against editor being closed) ──
     // Verify the editor is still open
     const stillActive = vscode.window.visibleTextEditors.includes(editor);
     if (!stillActive) {
@@ -393,6 +392,7 @@ export class ImportDecoratorProvider {
     editor.setDecorations(this.decorations.critical.type, criticalRanges);
     editor.setDecorations(this.decorations.high.type, highRanges);
     editor.setDecorations(this.decorations.medium.type, mediumRanges);
+    this.applied.set(doc.uri.toString(), flagged);
   }
 
   /** Removes all Crowsnest decorations from an editor. */
@@ -400,9 +400,20 @@ export class ImportDecoratorProvider {
     editor.setDecorations(this.decorations.critical.type, []);
     editor.setDecorations(this.decorations.high.type, []);
     editor.setDecorations(this.decorations.medium.type, []);
+    this.applied.delete(editor.document.uri.toString());
   }
 
-  // ─── Hover message builder ────────────────────
+  /** What is currently flagged in a document. VS Code cannot read decorations back, so tests use this. */
+  getAppliedFlags(uri: string): readonly AppliedFlag[] {
+    return this.applied.get(uri) ?? [];
+  }
+
+  /** Re-scan every visible editor now, after a settings change (the cache is cleared first). */
+  refresh(): void {
+    for (const editor of vscode.window.visibleTextEditors) {
+      this.scheduleUpdate(editor);
+    }
+  }
 
   private buildDecoration(
     range: vscode.Range,
@@ -443,8 +454,6 @@ export class ImportDecoratorProvider {
 
     return { range, hoverMessage: md };
   }
-
-  // ─── Public invalidation ─────────────────────
 
   /** Clears the cache (e.g. after user updates config). */
   clearCache(): void {

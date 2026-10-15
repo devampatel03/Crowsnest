@@ -13,7 +13,7 @@ describe('extractPackageName (JS/TS)', () => {
   it.each([
     ["import x from 'lodash'", 'lodash'],
     ['import { a, b } from "react"', 'react'],
-    ["import * as fs from 'fs'", 'fs'],
+    ["import * as p from 'picocolors'", 'picocolors'],
     ["import type { T } from 'zod'", 'zod'],
     ["const x = require('express')", 'express'],
     ["const m = await import('chalk')", 'chalk'],
@@ -82,8 +82,6 @@ describe('extractPackageName (Python)', () => {
   });
 });
 
-// ---- client with a stubbed http.request ----
-
 function respondWith(body: string | null, opts: { error?: boolean; timeout?: boolean } = {}) {
   httpMock.request.mockImplementation((_options: unknown, cb: (res: EventEmitter) => void) => {
     const req = new EventEmitter() as EventEmitter & { write: () => void; end: () => void; destroy: () => void };
@@ -148,9 +146,7 @@ describe('CrowsnestClient', () => {
     expect(r?.socketAlerts?.[0]).toEqual({ severity: 'high', category: 'install-scripts', description: 'm' });
   });
 
-  // ---- Contract with the real backend (packages/core/api.py) ----
-
-  it('sends the request field names the backend requires (QA-TE-09)', async () => {
+  it('sends the request field names the backend requires', async () => {
     respondWith('{}');
     let sent = '';
     const orig = httpMock.request.getMockImplementation()!;
@@ -166,13 +162,13 @@ describe('CrowsnestClient', () => {
     expect(JSON.parse(sent)).toHaveProperty('package', 'left-pad');
   });
 
-  it('treats the backend "blocked" flag as a veto (QA-TE-10)', async () => {
+  it('treats the backend "blocked" flag as a veto', async () => {
     respondWith(JSON.stringify({ blocked: true, probability: 1.0, signals: ['ACTIVE IOC'], package: 'x' }));
     const r = await new CrowsnestClient().vetoCheck('x');
     expect(r?.vetoed).toBe(true);
   });
 
-  it('reads the backend stats shape (QA-TE-11)', async () => {
+  it('reads the backend stats shape', async () => {
     respondWith(JSON.stringify({ active_incidents: { CRITICAL: 2, HIGH: 1, MEDIUM: 0, LOW: 0 }, total_packages: 9 }));
     const r = await new CrowsnestClient().getStats();
     expect(r?.activeIncidents).toBe(3);
