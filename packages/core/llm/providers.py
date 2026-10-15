@@ -69,7 +69,7 @@ class AnthropicClient:
         from anthropic import AsyncAnthropic
 
         self.model = model
-        self._client = AsyncAnthropic(api_key=api_key, **({"base_url": base_url} if base_url else {}))
+        self._client = AsyncAnthropic(api_key=api_key, base_url=base_url or None)
 
     async def complete(self, *, system: str, user: str, max_tokens: int = 1024) -> LLMResponse:
         try:
