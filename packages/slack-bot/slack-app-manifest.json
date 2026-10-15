@@ -1,0 +1,49 @@
+{
+  "display_information": {
+    "name": "Crowsnest",
+    "description": "A lookout for what you install. Posts serious package risks where your team already looks.",
+    "background_color": "#f2c53d",
+    "long_description": "Crowsnest checks the packages in your software projects and gives each one a plain call: Clear, Watch or Hold. This app posts every Hold to a channel you choose, and answers slash commands to scan a project, investigate one package, see what is affected if a publisher is compromised, and check status. It connects out to Slack, so no public web address is needed."
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "Crowsnest",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/crowsnest-scan",
+        "description": "Scan a project folder for risky packages",
+        "usage_hint": "/path/to/project",
+        "should_escape": false
+      },
+      {
+        "command": "/crowsnest-investigate",
+        "description": "Check one package",
+        "usage_hint": "left-pad",
+        "should_escape": false
+      },
+      {
+        "command": "/crowsnest-blast-radius",
+        "description": "What is affected if one publisher is compromised",
+        "usage_hint": "publisher-login",
+        "should_escape": false
+      },
+      {
+        "command": "/crowsnest-status",
+        "description": "How many packages are checked and what is open",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": ["commands", "chat:write", "chat:write.public", "channels:read", "groups:read"]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
+  }
+}

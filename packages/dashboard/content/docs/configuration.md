@@ -38,7 +38,7 @@ Without any key, a scan still sends package names to public services: the npm re
 
 ## Which Slack keys do I need?
 
-Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_SIGNING_SECRET`, `CROWSNEST_ALERT_CHANNEL` (default `#security`) and `CROWSNEST_DASHBOARD_URL` (default `http://localhost:3000`). See the [Slack bot](/docs/integrations/slack) page.
+Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `CROWSNEST_ALERT_CHANNEL` (default `#security`) and `CROWSNEST_DASHBOARD_URL` (default `http://localhost:3000`). See the [Slack bot](/docs/integrations/slack) page.
 
 ## Which addresses and files can I set?
 

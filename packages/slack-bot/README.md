@@ -5,6 +5,19 @@ A `@slack/bolt` Socket Mode bot that subscribes to the Crowsnest backend's
 messages to a security channel, and handles slash commands
 (`/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius`).
 
+## First-time setup (about 3 minutes)
+
+```bash
+cd packages/slack-bot
+npm install
+npm run setup     # opens Slack with the app pre-filled, checks each key you paste, posts a test message, saves .env
+npm run doctor    # any time: checks the keys, permissions and backend without changing anything
+npm run dev
+```
+
+`slack-app-manifest.json` is the app definition (commands, permissions, Socket Mode). `setup` opens it in Slack for you;
+you can also paste it into Slack's "Create app from manifest" by hand. No signing secret or public address is needed.
+
 ## Running standalone
 
 ```bash
@@ -31,7 +44,6 @@ Read from `process.env` in `src/config.ts`:
 
 - `SLACK_BOT_TOKEN` — bot OAuth token (`xoxb-...`)
 - `SLACK_APP_TOKEN` — Socket Mode app-level token (`xapp-...`)
-- `SLACK_SIGNING_SECRET` — app signing secret
 - `CROWSNEST_API_URL` — backend base URL (default `http://localhost:8000`)
 - `CROWSNEST_ALERT_CHANNEL` — Slack channel to post alerts to (default
   `#security`)
