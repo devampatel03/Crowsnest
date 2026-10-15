@@ -1,13 +1,7 @@
 /**
- * src/types.ts
- *
  * All shared TypeScript interfaces for the Crowsnest Slack bot.
  * Mirrors the data shapes that the Crowsnest API returns.
  */
-
-// ---------------------------------------------------------------------------
-// Core domain types
-// ---------------------------------------------------------------------------
 
 /** Severity levels matching the Crowsnest API */
 export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
@@ -46,10 +40,6 @@ export interface Incident {
   maintainer?: string;            // Implicated maintainer login if relevant
   affected_versions?: string[];   // Version range strings
 }
-
-// ---------------------------------------------------------------------------
-// API response shapes
-// ---------------------------------------------------------------------------
 
 /** Returned from /api/scan (initiation) */
 export interface ScanInitResponse {
@@ -123,10 +113,6 @@ export interface StatsResult {
   last_scan_project: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// SSE event types
-// ---------------------------------------------------------------------------
-
 /** Envelope for all SSE events from /api/events */
 export interface PublishEvent {
   type: 'incident_detected' | 'scan_started' | 'scan_complete' | 'heartbeat';
@@ -140,17 +126,9 @@ export interface IncidentEvent extends PublishEvent {
   payload: Incident;
 }
 
-// ---------------------------------------------------------------------------
-// Slack block kit convenience alias
-//
-// Derived directly from `App['client']['chat']['postMessage']`'s own expected
-// blocks shape rather than a hand-rolled `Record<string, unknown>` — the
-// latter looked "compatible with any @slack/bolt version" but actually fails
-// to satisfy chat.postMessage's real `(Block | KnownBlock)[]` parameter type,
-// since a bare Record doesn't carry the discriminant `type` literals Slack's
-// Block Kit types require. Deriving from `App` also means this always matches
-// whichever @slack/web-api version @slack/bolt bundles internally, instead of
-// a separately-resolved @slack/web-api causing duplicate-type conflicts.
+// Block Kit blocks, typed from chat.postMessage itself. A plain Record<string, unknown> does not satisfy its
+// `(Block | KnownBlock)[]` parameter, and deriving the type from `App` keeps it in step with the WebClient version
+// that @slack/bolt bundles.
 import type { App as _SlackApp } from '@slack/bolt';
 type SlackChatPostMessageArgs = NonNullable<Parameters<_SlackApp['client']['chat']['postMessage']>[0]>;
 export type Block = NonNullable<SlackChatPostMessageArgs['blocks']>[number];

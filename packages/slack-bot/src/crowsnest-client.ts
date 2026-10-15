@@ -1,6 +1,4 @@
 /**
- * src/crowsnest-client.ts
- *
  * HTTP client for the Crowsnest FastAPI backend.
  * All methods are async and throw descriptive errors on failure.
  * Polling-based scan completion is implemented with a configurable timeout.
@@ -15,16 +13,8 @@ import type {
   StatsResult,
 } from './types.js';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 const POLL_INTERVAL_MS = 2_000;   // Poll scan status every 2 seconds
 const SCAN_TIMEOUT_MS  = 120_000; // Give up after 2 minutes
-
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
 
 /**
  * Wraps fetch to throw a CrowsnestApiError on non-2xx responses.
@@ -56,7 +46,7 @@ async function apiFetch<T>(
     try {
       body = await response.text();
     } catch {
-      // ignore
+      // The status code alone is enough for the error message.
     }
     throw new CrowsnestApiError(
       `Crowsnest API returned ${response.status} for ${url}: ${body}`,
@@ -66,10 +56,6 @@ async function apiFetch<T>(
 
   return response.json() as Promise<T>;
 }
-
-// ---------------------------------------------------------------------------
-// Custom error class
-// ---------------------------------------------------------------------------
 
 export class CrowsnestApiError extends Error {
   constructor(
@@ -86,10 +72,6 @@ export class CrowsnestApiError extends Error {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Client
-// ---------------------------------------------------------------------------
-
 export class CrowsnestApiClient {
   private readonly baseUrl: string;
 
@@ -97,10 +79,6 @@ export class CrowsnestApiClient {
     // Strip trailing slash for consistent URL construction
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
-
-  // -------------------------------------------------------------------------
-  // scan
-  // -------------------------------------------------------------------------
 
   /**
    * Initiates a scan for the given project path and polls until it is complete.
@@ -111,7 +89,6 @@ export class CrowsnestApiClient {
    * @throws Error if the scan exceeds the 120-second timeout
    */
   async scan(projectPath: string): Promise<ScanResult> {
-    // 1. Start the scan
     const init = await apiFetch<ScanInitResponse>(
       `${this.baseUrl}/api/scan`,
       {
@@ -125,7 +102,7 @@ export class CrowsnestApiClient {
       throw new Error('Crowsnest API did not return a scan id');
     }
 
-    // 2. Poll until complete or timeout
+    // Poll until the scan finishes or the timeout passes.
     const deadline = Date.now() + SCAN_TIMEOUT_MS;
 
     while (Date.now() < deadline) {
@@ -170,10 +147,6 @@ export class CrowsnestApiClient {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // blast-radius
-  // -------------------------------------------------------------------------
-
   /**
    * Returns the blast radius if the given maintainer account were compromised.
    *
@@ -197,10 +170,6 @@ export class CrowsnestApiClient {
       risk_score: (raw.total_affected_deps ?? 0) > 0 ? 0.8 : 0.0,
     };
   }
-
-  // -------------------------------------------------------------------------
-  // investigate
-  // -------------------------------------------------------------------------
 
   /**
    * Investigates a single package for supply chain compromise.
@@ -241,7 +210,7 @@ export class CrowsnestApiClient {
         const created = new Date(raw.npm_metadata.created_at);
         ageDays = Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
       } catch (e) {
-        // ignore
+        // An unparseable date only means the package age is not shown.
       }
     }
 
@@ -275,10 +244,6 @@ export class CrowsnestApiClient {
     };
   }
 
-  // -------------------------------------------------------------------------
-  // stats
-  // -------------------------------------------------------------------------
-
   /**
    * Returns system-wide statistics from the Crowsnest API.
    */
@@ -286,10 +251,6 @@ export class CrowsnestApiClient {
     return apiFetch<StatsResult>(`${this.baseUrl}/api/stats`);
   }
 }
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

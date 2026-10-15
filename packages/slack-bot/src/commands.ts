@@ -1,6 +1,4 @@
 /**
- * src/commands.ts
- *
  * Registers all Crowsnest slash commands with the Slack Bolt app.
  *
  * Slack requires a response (ack) within 3 seconds.  Every command immediately
@@ -23,14 +21,8 @@ import {
 } from './formatters.js';
 import { config } from './config.js';
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-// Derived from `App` itself (rather than importing `@slack/web-api` directly)
-// so these types always match whatever version @slack/bolt bundles internally
-// — importing a separately-resolved @slack/web-api here previously caused a
-// WebClient version mismatch (bolt's bundled 6.x vs a standalone 7.x install).
+// Derived from `App` rather than imported from `@slack/web-api`, so the types always match the WebClient version
+// that @slack/bolt bundles.
 type SlackClient = App['client'];
 type ChatPostMessageArgs = NonNullable<Parameters<SlackClient['chat']['postMessage']>[0]>;
 type SlackBlocks = ChatPostMessageArgs['blocks'];
@@ -75,17 +67,9 @@ async function postBlocks(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Command registration
-// ---------------------------------------------------------------------------
-
 export function registerCommands(app: App, apiClient: CrowsnestApiClient): void {
 
-  // -------------------------------------------------------------------------
-  // /crowsnest-scan [project_path]
-  // -------------------------------------------------------------------------
   app.command('/crowsnest-scan', async ({ command, ack, client }) => {
-    // Ack immediately — Slack requires this within 3 seconds
     await ack('🔍 Scan started — results will appear here shortly…');
 
     const rawText = command.text.trim();
@@ -115,9 +99,6 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
     }
   });
 
-  // -------------------------------------------------------------------------
-  // /crowsnest-investigate <package>
-  // -------------------------------------------------------------------------
   app.command('/crowsnest-investigate', async ({ command, ack, client }) => {
     const pkg = command.text.trim();
 
@@ -143,9 +124,6 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
     }
   });
 
-  // -------------------------------------------------------------------------
-  // /crowsnest-blast-radius <maintainer>
-  // -------------------------------------------------------------------------
   app.command('/crowsnest-blast-radius', async ({ command, ack, client }) => {
     // Strip leading '@' if the user included it
     const maintainer = command.text.trim().replace(/^@/, '');
@@ -174,9 +152,6 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
     }
   });
 
-  // -------------------------------------------------------------------------
-  // /crowsnest-status
-  // -------------------------------------------------------------------------
   app.command('/crowsnest-status', async ({ command, ack, client }) => {
     await ack('📊 Fetching Crowsnest status…');
 
