@@ -11,8 +11,8 @@ import json
 from typing import Any
 
 import structlog
-from anthropic import AsyncAnthropic
 
+from ..llm import LLMClient, extract_json
 from ..queries.templates import QueryLibrary
 from .state import CrowsnestState, ScanContext
 
@@ -53,12 +53,17 @@ Respond with ONLY a raw JSON array of strings, e.g.:
 async def detection_planner_node(
     state: CrowsnestState,
     *,
-    anthropic_api_key: str = "",
+    llm: LLMClient | None = None,
 ) -> dict[str, Any]:
     """LangGraph node: emit a prioritised list of detection queries."""
     ctx: ScanContext = state["scan_context"]
 
-    client = AsyncAnthropic(api_key=anthropic_api_key)
+    # No model configured: use the fixed ordering without a doomed network call.
+    if llm is None:
+        return {
+            "pending_queries": _default_queries(ctx),
+            "token_usage": state.get("token_usage", 0),
+        }
 
     prompt = _SYSTEM_PROMPT.format(query_list=json.dumps(_ALL_QUERIES, indent=2))
     user_msg = json.dumps({
@@ -70,18 +75,9 @@ async def detection_planner_node(
     })
 
     try:
-        response = await client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=512,
-            system=prompt,
-            messages=[{"role": "user", "content": user_msg}],
-        )
-        text = response.content[0].text.strip()
-        # Strip markdown code fences if present
-        text = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        queries = json.loads(text)
-        if not isinstance(queries, list):
-            raise ValueError("planner response must be a JSON list of query names")
+        response = await llm.complete(system=prompt, user=user_msg, max_tokens=512)
+        # Tolerates code fences and chatty replies, which smaller and local models produce more often.
+        queries = extract_json(response.text, want=(list,))
         # Validate — only return names that actually exist
         valid_queries = [q for q in queries if q in _ALL_QUERIES]
 
@@ -89,7 +85,7 @@ async def detection_planner_node(
         if "MAINTAINER_REPUTATION" not in valid_queries:
             valid_queries.append("MAINTAINER_REPUTATION")
 
-        token_delta = response.usage.input_tokens + response.usage.output_tokens
+        token_delta = response.total_tokens
         log.info(
             "detection_planner.complete",
             queries=valid_queries,
@@ -109,7 +105,7 @@ async def detection_planner_node(
 
 def _default_queries(ctx: ScanContext) -> list[str]:
     """Deterministic fallback when the LLM call fails."""
-    # MAINTAINER_REPUTATION is always included — it works on our seeded data
+    # MAINTAINER_REPUTATION is always included: it needs only lockfile and registry data.
     queries = ["MAINTAINER_REPUTATION", "IOC_MATCH", "SLOPSQUATTING", "SHAI_HULUD", "ABANDONED_POPULAR", "TYPOSQUAT_DISTANCE"]
     if ctx.get("github_org"):
         queries += ["XZ_PATTERN", "SLSA_POISONING", "OIDC_TOKEN_MISUSE"]

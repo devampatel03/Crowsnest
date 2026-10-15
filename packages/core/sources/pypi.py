@@ -45,7 +45,6 @@ class PyPISource(DataSource):
         info = data.get("info", {})
         records: list[dict[str, Any]] = []
 
-        # ── pypi_packages ─────────────────────────────────────────────────
         maintainers = []
         if info.get("author"):
             maintainers.append(info["author"])
@@ -62,7 +61,6 @@ class PyPISource(DataSource):
         }
         records.append({"_table": "pypi_packages", **pkg_record})
 
-        # ── pypi_versions ─────────────────────────────────────────────────
         for ver, releases in data.get("releases", {}).items():
             if not releases:
                 continue

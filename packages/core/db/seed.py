@@ -95,7 +95,6 @@ async def _seed_maintainer_data(engine: Any) -> None:
     rng = random.Random(42)  # reproducible, avoids polluting global state
     now = datetime.now(UTC)
 
-    # ── npm_maintainers (platform age) ─────────────────────────────────────
     # NOTE: npm_maintainers has NO PRIMARY KEY → engine.ingest() will fail on
     # ON CONFLICT DO UPDATE. Use direct raw INSERT via the engine's connection.
     npm_maintainer_records: list[dict] = []
@@ -121,8 +120,7 @@ async def _seed_maintainer_data(engine: Any) -> None:
         await _raw_insert_npm_maintainers(engine, npm_maintainer_records)
         log.info("seed.npm_maintainers", count=len(npm_maintainer_records))
 
-    # ── gh_commits (activity + GPG signing) ────────────────────────────────
-    # IMPORTANT: files_changed is TEXT[] in schema.
+    # files_changed is TEXT[] in the schema.
     # _coerce() converts [] → '[]' (a JSON string), which DuckDB rejects for TEXT[].
     # We must pass None for files_changed so it becomes NULL (accepted for TEXT[]).
     repos = [
@@ -167,7 +165,7 @@ async def _seed_maintainer_data(engine: Any) -> None:
         await engine.ingest("gh_commits", gh_commit_records)
         log.info("seed.gh_commits", count=len(gh_commit_records))
 
-    # ── IOC-flag 1–2 maintainers via npm_publish_events + shai_hulud_iocs ─
+    # Flag one or two maintainers through npm_publish_events and shai_hulud_iocs.
     ioc_candidates = logins[:2] if len(logins) >= 2 else logins
     ioc_records: list[dict] = []
     shai_records: list[dict] = []
@@ -204,15 +202,7 @@ async def _raw_insert_npm_maintainers(engine: Any, records: list[dict]) -> None:
     Insert npm_maintainer rows to avoid ON CONFLICT issues (npm_maintainers has
     no PRIMARY KEY so engine.ingest()'s upsert fails). We use a SELECT-based
     existence check per login instead.
-
-    NOTE: this previously reached into `engine._get_connection()` and called
-    `conn.executemany(...)` directly, bypassing CoralEngine's asyncio.Lock
-    write-serialization entirely. That could race with any other concurrent
-    write (e.g. a scan's `ingest()`/`execute()` call) against the single
-    shared DuckDB connection. It now goes through the public, lock-protected
-    `engine.execute()` method instead, one row per call, using the same
-    :name-style parameter substitution as every other write path.
-    """
+"""
     # Check which logins are already present
     existing_rows = await engine.query(
         "SELECT DISTINCT maintainer_login FROM npm_maintainers"

@@ -50,6 +50,9 @@ def api_client(tmp_path, monkeypatch, seeded_db_template):
     monkeypatch.setenv("CROWSNEST_DB_PATH", str(tmp_path / "api.duckdb"))
     monkeypatch.setenv("CROWSNEST_SNAPSHOT_DIR", str(tmp_path / "snaps"))
     monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    # A real key for any provider in the developer's .env must never reach a test.
+    monkeypatch.setattr(api, "get_llm", lambda *a, **k: None)
+    monkeypatch.setattr(api, "describe_llm", lambda *a, **k: {"configured": False})
     monkeypatch.setenv("DEMO_MODE", "false")
     get_settings.cache_clear()
 

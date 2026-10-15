@@ -8,6 +8,7 @@ from typing import Any
 from langgraph.graph import END, StateGraph
 
 from ..coral.engine import CoralEngine
+from ..llm import LLMClient
 from .detection_planner import detection_planner_node
 from .investigation import investigation_node
 from .remediation import remediation_node
@@ -17,7 +18,7 @@ from .triage import triage_node
 
 def build_graph(
     coral_engine: CoralEngine,
-    anthropic_api_key: str = "",
+    llm: LLMClient | None = None,
 ) -> Any:
     """
     Compile and return the Crowsnest LangGraph.
@@ -29,12 +30,12 @@ def build_graph(
     # Bind dependencies into each node
     planner = partial(
         detection_planner_node,
-        anthropic_api_key=anthropic_api_key,
+        llm=llm,
     )
     investigator = partial(
         investigation_node,
         coral_engine=coral_engine,
-        anthropic_api_key=anthropic_api_key,
+        llm=llm,
     )
     triager = partial(
         triage_node,
@@ -58,12 +59,12 @@ def build_graph(
 async def run_scan(
     coral_engine: CoralEngine,
     scan_context: dict[str, Any],
-    anthropic_api_key: str = "",
+    llm: LLMClient | None = None,
 ) -> CrowsnestState:
     """
     Convenience wrapper — run a full Crowsnest scan and return the final state.
     """
-    compiled = build_graph(coral_engine, anthropic_api_key)
+    compiled = build_graph(coral_engine, llm)
 
     initial_state: CrowsnestState = {
         "messages": [],

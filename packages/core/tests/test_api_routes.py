@@ -337,7 +337,7 @@ class TestEventsAndHelpers:
             api._engine = saved
 
     def test_cors_rejects_foreign_origins(self, api_client):
-        """Regression for QA-SEC CRIT-2: a random website must not get CORS access."""
+        """A page from an arbitrary origin must not get CORS access."""
         r = api_client.get("/health", headers={"Origin": "http://evil.example"})
         assert r.headers.get("access-control-allow-origin") is None
         pre = api_client.options(

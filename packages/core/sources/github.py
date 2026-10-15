@@ -269,9 +269,6 @@ class GitHubSource(DataSource):
         return records
 
 
-# ── helpers ────────────────────────────────────────────────────────────────
-
-
 def _parse_ts(val: str | None) -> datetime | None:
     if not val:
         return None

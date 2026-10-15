@@ -1,18 +1,8 @@
 """
 Regression tests for the CoralEngine SQL write-block-list bypass.
 
-Background: `CoralEngine._validate_sql` used to tokenize SQL with a naive
-`.split()` on whitespace and check for *exact* token equality against a
-forbidden-keyword set. That meant a semicolon-chained multi-statement query
-like ``"SELECT 1;DROP TABLE crowsnest_incidents"`` was never caught, because
-`.split()` produced the single glued token ``"1;DROP"`` which never exactly
-equals ``"DROP"``. DuckDB happily executes semicolon-separated multi-statement
-strings, so this was a real live SQL-injection-style bypass for agent-issued
-"read-only" queries.
-
-These tests assert that `CoralEngine.query()` now rejects such payloads
-(and several bypass variants) while still allowing legitimate single-
-statement SELECT/JOIN queries through.
+The SQL guard must reject a semicolon-chained second statement such as ``"SELECT 1;DROP TABLE crowsnest_incidents"``
+and its variants (mixed case, tab, newline, INSERT instead of DROP), while single-statement SELECT/JOIN queries still run.
 """
 
 from __future__ import annotations

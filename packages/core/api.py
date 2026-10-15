@@ -26,11 +26,11 @@ from .agents.graph import run_scan
 from .agents.state import AlertObject
 from .config import get_settings
 from .coral.engine import CoralEngine
+from .llm import LLMClient, get_llm
+from .llm import describe as describe_llm
 from .queries.templates import QueryLibrary
 
 log = structlog.get_logger(__name__)
-
-# ── Global state ──────────────────────────────────────────────────────────────
 
 _engine: CoralEngine | None = None
 _event_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=1000)
@@ -52,10 +52,10 @@ async def _demo_firehose_task() -> None:
         ("typescript", "5.4.5", 0.03),
         ("prettier", "3.2.5", 0.04),
         ("eslint", "8.57.0", 0.06),
-        ("node-fetch", "3.3.2", 0.15),  # slightly suspicious
-        ("colors", "1.4.1", 0.22),       # slightly suspicious
-        ("event-stream", "4.0.1", 0.65), # suspicious!
-        ("ua-parser-js", "1.0.38", 0.80), # very suspicious!
+        ("node-fetch", "3.3.2", 0.15),  # elevated
+        ("colors", "1.4.1", 0.22),       # elevated
+        ("event-stream", "4.0.1", 0.65), # high
+        ("ua-parser-js", "1.0.38", 0.80), # very high
     ]
     while True:
         await asyncio.sleep(random.uniform(3.0, 8.0))
@@ -124,8 +124,6 @@ app.add_middleware(
 )
 
 
-# ── Pydantic models ───────────────────────────────────────────────────────────
-
 class ScanRequest(BaseModel):
     project_path: str
     ecosystem: str = "npm"
@@ -160,8 +158,6 @@ class CoralQueryRequest(BaseModel):
     params: dict[str, Any] = {}
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _get_engine() -> CoralEngine:
     if _engine is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
@@ -175,8 +171,6 @@ async def _push_event(event_type: str, data: dict[str, Any]) -> None:
     except asyncio.QueueFull:
         pass  # drop oldest-style if overloaded
 
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -217,12 +211,11 @@ async def trigger_scan(req: ScanRequest) -> dict[str, str]:
         "token_usage": 0,
     }
 
-    settings = get_settings()
-    asyncio.create_task(_run_scan_task(scan_id, req, settings.anthropic_api_key))
+    asyncio.create_task(_run_scan_task(scan_id, req, get_llm()))
     return {"scan_id": scan_id}
 
 
-async def _run_scan_task(scan_id: str, req: ScanRequest, api_key: str) -> None:
+async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) -> None:
     engine = _get_engine()
     _scan_store[scan_id]["status"] = "running"
     await _push_event("scan_progress", {"scan_id": scan_id, "phase": "started"})
@@ -250,7 +243,7 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, api_key: str) -> None:
         result = await run_scan(
             coral_engine=engine,
             scan_context=scan_context,
-            anthropic_api_key=api_key,
+            llm=llm,
         )
 
         incidents = result.get("triage_output", [])
@@ -532,8 +525,7 @@ async def maintainer_reputation(
 @app.post("/api/veto")
 async def veto_check(req: VetoRequest) -> dict[str, Any]:
     """
-    Pre-install veto check — the demo's stopping moment.
-    Returns { blocked, reason, probability, signals }.
+    Pre-install veto check for one package. Returns { blocked, reason, probability, signals }.
     """
     engine = _get_engine()
     package = req.package
@@ -648,6 +640,12 @@ async def raw_query(req: CoralQueryRequest) -> list[dict[str, Any]]:
     return rows
 
 
+@app.get("/api/llm")
+async def llm_status() -> dict[str, Any]:
+    """Which model the agents use, if any. Never includes a key. `python -m packages.core.llm setup` changes it."""
+    return describe_llm()
+
+
 @app.get("/api/stats")
 async def stats() -> dict[str, Any]:
     """Database statistics — used by the dashboard status bar and Slack bot."""
@@ -694,8 +692,6 @@ async def stats() -> dict[str, Any]:
         "last_scan_project": last_scan_project,
     }
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 async def _get_active_campaigns(engine: CoralEngine) -> list[str]:
     rows = await engine.query(
