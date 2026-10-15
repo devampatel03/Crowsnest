@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 type Opts = {
   smoothWheel: boolean;
   syncTouch: boolean;
+  syncTouchLerp?: number;
   allowNestedScroll?: boolean;
   prevent: (n: HTMLElement) => boolean;
   virtualScroll: (d: { deltaX: number; deltaY: number; event: { type: string } }) => boolean;
@@ -33,12 +34,14 @@ import { SmoothScroll } from './SmoothScroll';
 const wheel = (deltaY: number) => ({ deltaX: 0, deltaY, event: { type: 'wheel' } });
 
 describe('SmoothScroll', () => {
-  it('renders nothing, smooths the wheel but not touch, and decides nested scrolling itself', () => {
+  it('renders nothing, smooths the wheel and touch, and decides nested scrolling itself', () => {
     const { container } = render(<SmoothScroll />);
     expect(container).toBeEmptyDOMElement();
     const { opts } = instances[instances.length - 1];
     expect(opts.smoothWheel).toBe(true);
-    expect(opts.syncTouch).toBe(false);
+    expect(opts.syncTouch).toBe(true);
+    expect(opts.syncTouchLerp).toBeGreaterThan(0);
+    expect(opts.syncTouchLerp).toBeLessThan(0.2);
     expect(opts.allowNestedScroll).toBeUndefined();
   });
 
@@ -78,6 +81,22 @@ describe('SmoothScroll', () => {
     expect(opts.prevent(box)).toBe(false); // at the bottom, the page takes over
     opts.virtualScroll(wheel(-100));
     expect(opts.prevent(box)).toBe(true); // going back up, the box scrolls again
+  });
+
+  it('tracks the touch direction, so a nested scroller hands off at its edge', () => {
+    render(<SmoothScroll />);
+    const { opts } = instances[instances.length - 1];
+    const touch = { deltaX: 0, deltaY: 40, event: { type: 'touchmove' } };
+    opts.virtualScroll(touch);
+    expect(touch.deltaY).toBe(40); // touch deltas are not capped: the finger sets the pace
+    const box = document.createElement('div');
+    box.style.overflowY = 'auto';
+    Object.defineProperty(box, 'scrollHeight', { value: 900, configurable: true });
+    Object.defineProperty(box, 'clientHeight', { value: 300, configurable: true });
+    box.scrollTop = 600;
+    expect(opts.prevent(box)).toBe(false); // finger moving down, box at its bottom
+    opts.virtualScroll({ deltaX: 0, deltaY: -40, event: { type: 'touchmove' } });
+    expect(opts.prevent(box)).toBe(true); // reversing: the box scrolls back up
   });
 
   it('pauses while a dialog locks the page and cleans up on unmount', async () => {

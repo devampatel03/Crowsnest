@@ -18,8 +18,9 @@ import 'lenis/dist/lenis.css';
  *   the wheel from the page. A code block whose content is a pixel taller than
  *   its box no longer switches the smoothing off.
  *
- * Arrow, Page, Space and Home/End keys glide too. Touch keeps the browser's own
- * momentum, and reduced motion gets plain native scrolling (Lenis honours that
+ * Arrow, Page, Space and Home/End keys glide too. Touch is smoothed too (the
+ * finger drags the page 1:1, release carries on with eased momentum), and
+ * reduced motion gets plain native scrolling on every device (Lenis honours that
  * itself). Renders nothing.
  *
  * In-page `#anchors` glide to the target, clear of the sticky header. A Radix
@@ -54,13 +55,23 @@ export function SmoothScroll() {
       lerp: 0.075,
       wheelMultiplier: 0.85,
       smoothWheel: true,
-      syncTouch: false,
+      // Touch is smoothed too: the finger drags the page 1:1 and the release carries on
+      // with eased momentum, the same glide the wheel gets. Without this the browser's
+      // own scrolling takes over on phones and tablets.
+      syncTouch: true,
+      syncTouchLerp: 0.09,
+      touchInertiaExponent: 1.6,
+      touchMultiplier: 1,
       anchors: { offset: -4.75 * rootPx },
       autoRaf: true,
       prevent: (node) => scrollsVertically(node, dir),
       // Runs before Lenis reads the delta, so changing it here shapes the scroll.
       virtualScroll: (data) => {
-        if (data.event.type !== 'wheel') return true;
+        if (data.event.type !== 'wheel') {
+          // Touch: keep the direction current so a nested scroller can hand off at its edge.
+          if (data.deltaY !== 0) dir = Math.sign(data.deltaY);
+          return true;
+        }
         let d = Math.max(-MAX_STEP, Math.min(MAX_STEP, data.deltaY));
         dir = Math.sign(d);
         if (d !== 0) {
