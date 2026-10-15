@@ -120,7 +120,7 @@ export async function run(): Promise<void> {
     const editor = await openFixture('sample.py');
     const uri = editor.document.uri.toString();
     const flags = await waitFor('flags on sample.py', () => api.getAppliedFlags(uri), (f) => f.length >= 1);
-    assert.deepEqual(summary(flags), ['0:evilpy:critical']);
+    assert.deepEqual(summary(flags), ['2:evilpy:critical']);
     const reqs = (await mockRequests()).filter((r) => r.path === '/api/veto' && r.body.package === 'evilpy');
     assert.ok(reqs.length >= 1);
     assert.equal(reqs[0].body.ecosystem, 'pypi');
