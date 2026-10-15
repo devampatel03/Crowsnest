@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 import { canonicalUrl } from '@/lib/site';
 import type { PageKind } from './types';
 
-// Pure sitemap builder (02-search-plan 4.2). app/sitemap.ts (phase 4) maps the
-// site builder's content index to `SitemapRoute[]` and returns buildSitemap().
+// Pure sitemap builder. app/sitemap.ts maps the
+// site's content index to `SitemapRoute[]` and returns buildSitemap().
 // lastModified always comes from frontmatter dates, never from new Date().
 
 export interface SitemapRoute {

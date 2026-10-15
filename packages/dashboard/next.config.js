@@ -2,7 +2,7 @@ const { REDIRECTS } = require('./lib/redirects');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Parallel builders and the screenshot server can each use their own output folder: NEXT_DIST_DIR=.next-site
+  // Parallel builds and the screenshot server can each use their own output folder: NEXT_DIST_DIR=.next-site
   distDir: process.env.NEXT_DIST_DIR || '.next',
   experimental: {},
   // Screenshot builds only (NEXT_SKIP_TYPECHECK=1): another package's type error must not block a visual check. `npm run typecheck` is the gate.
@@ -10,7 +10,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
   },
-  // 308 for every URL removed or renamed in round 2 (lib/redirects.js).
+  // 308 for every URL that was removed or renamed (lib/redirects.js).
   async redirects() {
     return REDIRECTS;
   },

@@ -1,6 +1,6 @@
 import { REPO_URL } from '@/lib/seo/constants';
 
-/** Header links (brief 8): Compare and Console are gone; GitHub is an external text link. */
+/** Header links: Compare and Console are gone; GitHub is an external text link. */
 export const NAV_LINKS = [
   { label: 'Docs', href: '/docs', external: false },
   { label: 'Blog', href: '/blog', external: false },

@@ -1,6 +1,5 @@
-// Permanent (308) redirects for every URL removed or renamed in round 2
-// (brief section 12). Plain CommonJS so next.config.js can require it and the
-// vitest suite can read the same table. Order matters only where patterns
+// Permanent (308) redirects for every URL that was removed or renamed. Plain CommonJS so next.config.js can
+// require it and the vitest suite can read the same table. Order matters only where patterns
 // overlap; none do.
 
 const detections = [

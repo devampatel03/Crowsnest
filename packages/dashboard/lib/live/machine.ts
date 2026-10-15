@@ -15,7 +15,7 @@ export function backoffSeconds(failures: number): number {
 }
 
 /**
- * The ONE status string (02-copy 9.1). There is no countdown anywhere in the
+ * The ONE status string. There is no countdown anywhere in the
  * UI: the retry timer is internal to the provider, so two clocks cannot
  * disagree. The absolute time for the offline line goes in a `title`.
  */

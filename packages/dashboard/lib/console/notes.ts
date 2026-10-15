@@ -1,9 +1,9 @@
 /**
- * Nib's note under each page title (02-copy 9.2). One line, hand face, UI
+ * Nib's note under each page title. One line, hand face, UI
  * never mixes it with the plain sentence. Every line here is copied from the
  * copy deck; nothing is composed at runtime.
  *
- * `HOLD_SAFE` is the whitelist (02-copy 0.2): the only Nib lines allowed on a
+ * `HOLD_SAFE` is the whitelist: the only Nib lines allowed on a
  * page where a Hold is showing. A test pins that every note returned for a Hold
  * state is in it.
  */

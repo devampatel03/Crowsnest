@@ -1,7 +1,7 @@
 import { cn } from '@/lib/format';
 import type { Severity } from '@/lib/types';
 
-/** Gauge levels (brief S4). `note` is neutral and never means "clear". */
+/** Gauge levels. `note` is neutral and never means "clear". */
 export type GaugeLevel = 'clear' | 'note' | 'watch' | 'hold';
 
 /** Notches filled per level: Clear 0, Note 1, Watch 2, Hold 3. Meaning survives greyscale. */

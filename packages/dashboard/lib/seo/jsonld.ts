@@ -5,7 +5,7 @@ import { ENTITY_DEFINITION } from './entity';
 import type { ArticleInput, Crumb, FaqItem, HowToStepInput } from './types';
 
 // Pure builders. They return plain objects so tests can import them without
-// React. Policy (02-search-plan 3.3): markup mirrors visible text; no ratings,
+// React. Policy: markup mirrors visible text; no ratings,
 // no reviews, no SearchAction.
 
 export type JsonLdObject = {
@@ -219,7 +219,7 @@ export function collectionPage(meta: PageMeta, items: readonly Item[]): JsonLdOb
 
 /**
  * Strings that must appear in the visible page text (mirror rule, 3.3.1).
- * Used by the page-level tests in phase 4; lives next to the builders so the
+ * Used by the page-level tests; lives next to the builders so the
  * rule and the markup change together.
  */
 export function mirroredStrings(block: Record<string, unknown>): string[] {

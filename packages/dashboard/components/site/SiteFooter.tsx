@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Nib } from '@/components/mascot';
+import { consoleAllowedByEnv } from '@/lib/console-access';
 import { FOOTER_SIGNOFF } from '@/lib/content/nib';
 import { LICENSE_NAME, REPO_URL } from '@/lib/seo/constants';
 import { FOOTER_TAGLINE } from '@/lib/seo/entity';
 
-// Three columns as in 02-copy section 2. No newsletter, no social row.
+// Three columns. No newsletter, no social row.
 
 type FooterLink = { label: string; href: string; external?: boolean };
 
@@ -14,7 +15,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Install', href: '/#install' },
       { label: 'Docs', href: '/docs' },
-      { label: 'Dashboard', href: '/horizon' },
+      ...(consoleAllowedByEnv(process.env) ? [{ label: 'Dashboard', href: '/horizon' }] : []),
     ],
   },
   {

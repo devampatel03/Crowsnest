@@ -2,12 +2,12 @@ import type { ElementType, ReactNode } from 'react';
 import { cn } from '@/lib/format';
 
 /**
- * Nib's note (v3): one line of handwriting-face text, placed under or beside a
+ * Nib's note: one line of handwriting-face text, placed under or beside a
  * page title. Text only. The mascot art comes from `components/mascot`, which
  * the caller may pass through `pose` (rendered first, `aria-hidden`, so Nib
  * is never the only carrier of meaning).
  *
- * Rules (brief sections 1 and 6): 14 words or fewer, one idea, no exclamation
+ * Rules: 14 words or fewer, one idea, no exclamation
  * marks, and on anything with a Hold the note says what to do next, plainly,
  * with no wink. Never inside a Call, table cell or button.
  */
@@ -37,5 +37,5 @@ export function NibNote({
   );
 }
 
-/** Alias for the handoff name in the brief ("NoteLine"). */
+/** Alias for the earlier component name, `NoteLine`. */
 export const NoteLine = NibNote;

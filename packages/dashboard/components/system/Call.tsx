@@ -3,7 +3,7 @@ import { cn } from '@/lib/format';
 import { Gauge, type GaugeLevel } from './Gauge';
 
 /**
- * The Call (brief S3): every verdict is a short sentence in a fixed shape,
+ * The Call: every verdict is a short sentence in a fixed shape,
  * `[gauge] Hold` · what happened · what to do. Console form: the headline in
  * an h3, a quiet detail line under it (`package@version · used in 3 projects ·
  * found 2 days ago`), then the gauge and word with "What to do". No

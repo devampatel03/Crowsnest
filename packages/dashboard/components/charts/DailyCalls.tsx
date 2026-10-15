@@ -208,7 +208,7 @@ export const DailyWave = memo(function DailyWave({
  * All calls (beam) and On Hold (hold colour, always at or below All). Soft area
  * fills, direct labels at the live head, no legend. With no calls it falls back
  * to the plain sentence (honest: no fake wave), and `emptyAdornment` is a slot for
- * the console builder's cameo.
+ * the console's cameo.
  */
 export function DailyCalls({
   incidents,

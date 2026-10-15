@@ -11,7 +11,7 @@ import { createElement } from 'react';
 // returns the h2/h3 outline for the on-page TOC and the Bearing Rule.
 // `toMarkdown` is the raw `.md` / llms-full.txt representation of the same
 // source: JSX is replaced by text equivalents, and an unknown JSX tag THROWS so
-// nothing silently disappears (02-search-plan 6).
+// nothing silently disappears.
 
 export interface Heading {
   id: string;

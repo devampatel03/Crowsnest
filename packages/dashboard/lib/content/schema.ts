@@ -110,7 +110,7 @@ export function validateFrontmatter<S extends ContentSection>(
     meta = {
       ...base,
       published: published ?? '',
-      // No named author (owner answer): the byline is the project.
+      // No named author: the byline is the project.
       author: str(raw.author) ?? AUTHOR_NAME,
       ...(str(raw.dek) ? { dek: str(raw.dek) } : {}),
       ...(str(raw.status) === 'draft-until-tagged' ? { status: 'draft-until-tagged' as const } : {}),

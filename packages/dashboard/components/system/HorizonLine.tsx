@@ -9,10 +9,9 @@ export type HorizonSighting = { name: string; level: GaugeLevel; call: string };
 export type HorizonTick = { id: string; sighting?: HorizonSighting };
 
 /**
- * Sample project (brief section 7): 12 ticks, 3 of them sighted. Fictional
+ * Sample project: 12 ticks, 3 of them sighted. Fictional
  * names, the same three samples as the "Check a name" sandbox. The call text
- * is the system-builder placeholder; copy-strategist may supply final lines
- * through the `ticks` prop.
+ * is placeholder text; pass your own lines through the `ticks` prop.
  */
 export const SAMPLE_HORIZON: HorizonTick[] = [
   { id: 't0' },
@@ -54,7 +53,7 @@ const STEM_BG: Record<GaugeLevel, string> = {
 };
 
 /**
- * The Horizon (brief S2): one 1px line across a 12px-radius band with package
+ * The Horizon: one 1px line across a 12px-radius band with package
  * ticks standing on it. Ticks and sighted marks are in the server HTML; the
  * one-time beam sweep and the mark brightening are pure CSS (globals.css:
  * .horizon-sweep, .horizon-mark-sighted) and are absent or already lit under

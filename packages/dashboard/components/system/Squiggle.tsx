@@ -3,7 +3,7 @@ import { cn } from '@/lib/format';
 import { squigglePath, squiggleVariantFor } from './sketch-path';
 
 /**
- * Pencil underline (v3) for the last word of each landing H2 and docs H1:
+ * Pencil underline for the last word of each landing H2 and docs H1:
  * `<h2>How it protects <Squiggle id="how">you.</Squiggle></h2>`. 6px tall,
  * `--c-brand`, three variants (pass `variant`, or it is derived from `id`).
  * Draws on once (500ms); reduced motion is fully drawn. The line is

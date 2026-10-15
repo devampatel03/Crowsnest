@@ -1,5 +1,5 @@
 /**
- * Shared Recharts theme (v2). Every value is a CSS variable (or a colour-mix of
+ * Shared Recharts theme. Every value is a CSS variable (or a colour-mix of
  * one) from app/globals.css. The `--c-*` layer flips with the nearest
  * [data-surface] ancestor, so charts follow the one paper theme. SVG presentation attributes accept var(), so these strings go straight
  * into stroke / fill props. Nothing here is a hex value.
@@ -16,7 +16,7 @@ export const chartTheme = {
   series3: 'var(--c-fg-mute)',
   /** Brand beam: neutral single-series bars (ranking). */
   brand: 'var(--c-brand)',
-  /** Gauge levels (brief S4). */
+  /** Gauge levels. */
   hold: 'var(--c-hold)',
   watch: 'var(--c-watch)',
   note: 'var(--c-fg-mute)',
@@ -30,11 +30,11 @@ export const chartTheme = {
   font: 'var(--font-sans), system-ui, sans-serif',
   fontSize: 11,
   strokeWidth: 1.5,
-  /** v3 wave lines (brief section 5). */
+  /** Wave lines. */
   stroke: 2.25,
   /** The wave's All calls series. */
   all: 'var(--c-brand)',
-  /** `margin` for every chart (01-brief 8c). */
+  /** `margin` for every chart. */
   margin: { top: 8, right: 8, bottom: 0, left: 0 },
   /** First mount only; callers pass `animate && !reducedMotion` and false for SSE updates. */
   animationMs: 600,
@@ -63,7 +63,7 @@ export const neutralTints = [
 ] as const;
 
 /**
- * v3 style source (brief section 5). One place for the wave's fill and the live
+ * Style source. One place for the wave's fill and the live
  * head. The gradient is the single sanctioned exception to "no gradients": it
  * encodes depth under a data line and is never used on text, UI or backgrounds.
  * Stops read --area-top / --area-bottom from globals.css (0.26 to 0.02); under

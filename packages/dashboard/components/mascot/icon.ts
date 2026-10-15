@@ -1,6 +1,6 @@
 /**
  * Favicon / app icon data for Nib's head. Standalone SVG with literal colours
- * (icons cannot read CSS variables), so the site builder can use it in
+ * (icons cannot read CSS variables), so the site can use it in
  * `app/icon.tsx` (ImageResponse) or serve it as `app/icon.svg` unchanged.
  *
  * Usage in app/icon.tsx: render `<img src={nibIconDataUri()} />` inside an

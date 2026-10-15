@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /**
  * Shared drawing parts for Nib. Everything here returns SVG fragments in the
  * shared 200x240 pose space (ground line y=224). Colours come from classes in
- * mascot.css, never from literals, so the dark surface and Fog both work.
+ * mascot.css, never from literals, so the paper theme applies.
  *
  * Misregistered fill: every filled shape draws its fill 2px down-right of its
  * outline, like a badly aligned print. That offset is the style.

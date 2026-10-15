@@ -1,5 +1,5 @@
 // Verified facts used by metadata, JSON-LD and llms.txt. Every value here is
-// traceable to the repo (02-copy section 0.1). Do not add statistics.
+// traceable to the repo. Do not add statistics.
 
 export const SITE_NAME = 'Crowsnest';
 export const REPO_URL = 'https://github.com/devampatel03/Crowsnest';
@@ -9,7 +9,7 @@ export const LICENSE_NAME = 'Apache-2.0';
 export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 export const VERSION = '0.1.0';
 
-/** Byline used on every post and the author field of Article JSON-LD (no named author, owner answer 2026-10-07). */
+/** Byline used on every post and the author field of Article JSON-LD (no named author). */
 export const AUTHOR_NAME = 'Crowsnest contributors';
 
 /** Docker path from README "Fastest path: Docker". */

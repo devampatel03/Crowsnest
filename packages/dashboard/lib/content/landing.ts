@@ -1,4 +1,4 @@
-// Landing page copy (02-copy section 3), "supply chain" unhyphenated. The FAQ
+// Landing page copy, "supply chain" unhyphenated. The FAQ
 // list feeds both the visible disclosures and the FAQPage JSON-LD, and the
 // install rows feed both the visible commands and the HowTo JSON-LD, so the
 // markup cannot drift from the page. No tags from the copy deck are carried
@@ -16,7 +16,7 @@ export const HERO = {
   bandLabel: 'A sample project with twelve packages on a line. Three have been checked.',
   caption: 'Sample project',
   fine: 'These are made-up packages, shown to explain the idea.',
-  /** Nib's bubble at first paint (02-copy v3 section 3, hero). */
+  /** Nib's bubble at first paint. */
   restBubble: "Tap a mark. I'll tell you what I see.",
   /** Hero Nib button: accessible name and tooltip. */
   nibButton: "Ring Nib's bell",
@@ -34,7 +34,7 @@ export const HERO = {
   ],
 } as const;
 
-/** Twelve ticks on the line, three of them checked (02-copy section 3, Hero). */
+/** Twelve ticks on the line, three of them checked. */
 export const HORIZON_TICKS: HorizonTick[] = [
   { id: 't0' },
   { id: 't1' },
@@ -75,7 +75,7 @@ export const HOW = {
     'Hold. Not this one.',
     'The rest come aboard. This one waits for you.',
   ],
-  /** Text equivalent of the strip (02-copy v3 section 3, Section 2), in the DOM for screen readers. */
+  /** Text equivalent of the strip, in the DOM for screen readers. */
   stripAlt:
     'A five-panel drawing about a made-up package. Panel 1: a small crow named Nib sits on a masthead with a lit lantern. Three wooden crates queue at the rail, labelled tidy-dates, fast-csv-lite and one new crate; the caption reads "You add a package. It joins the line." Panel 2: close on two crates. One carries a crown and is the famous package. The next, labelled quikrequest, stands one step behind it wearing a fake moustache; the caption reads "One crate is wearing a very familiar name." Panel 3: Nib raises a spyglass. A round inset shows the crate\'s tag with three marks: new, almost nobody uses it, and a name a hair from a famous one; the caption reads "I check its age, its users, and how familiar its name looks." Panel 4: Nib pulls a bell cord. The bell swings and a three-notch gauge in the corner shows Hold; the caption reads "Hold. Not this one." Panel 5: the quikrequest crate sits on the dock with a tag tied to it while the other crates are loaded, and Nib is back on the perch; the caption reads "The rest come aboard. This one waits for you."',
   note: 'Made-up packages, drawn to explain the idea.',
@@ -96,7 +96,7 @@ export const TRY = {
   legend: 'Sample package',
   reasonsLabel: 'Why',
   nothingFound: 'No warning signs found.',
-  /** Nib's bubble and note per sample (02-copy v3 section 3, Section 3). Hold has no note: the Call says what to do. */
+  /** Nib's bubble and note per sample. Hold has no note: the Call says what to do. */
   nib: {
     'tidy-dates': { pose: 'nod', title: 'Nib nods.', bubble: 'Looks fine. Let it aboard.', note: 'Nothing found. That is all Clear ever means.' },
     'fast-csv-lite': { pose: 'squint', title: 'Nib squints at the package.', bubble: 'Hm. Not sure about this one.', note: 'Check who wrote it before you install.' },

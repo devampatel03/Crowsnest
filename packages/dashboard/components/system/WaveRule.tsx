@@ -3,7 +3,7 @@ import { cn } from '@/lib/format';
 import { wavePath } from './sketch-path';
 
 /**
- * Section divider (v3): a hand-drawn wave, 1px `--c-line-strong`, about 24px
+ * Section divider: a hand-drawn wave, 1px `--c-line-strong`, about 24px
  * amplitude, seeded by `id` so server and client match. Replaces the straight
  * divider between landing sections and above the footer. Draws left to right
  * once (700ms) when 25% visible; reduced motion is fully drawn. Purely

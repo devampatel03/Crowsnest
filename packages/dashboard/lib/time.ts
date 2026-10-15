@@ -1,4 +1,4 @@
-/** Plain relative times (02-copy 9.1). Absolute ISO goes in a `title`, never in primary text. */
+/** Plain relative times. Absolute ISO goes in a `title`, never in primary text. */
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;

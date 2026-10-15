@@ -7,7 +7,7 @@ import { Nib, type NibPose } from './Nib';
  * or any wink on a Hold screen; Hold states stay factual and quiet.
  */
 interface StateProps {
-  /** Replace the default sentence (copy-strategist's final line). */
+  /** Replace the default sentence. */
   text?: string;
   /** Actions or the plain explanation, rendered under the sentence. */
   children?: ReactNode;

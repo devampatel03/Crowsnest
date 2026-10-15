@@ -6,7 +6,7 @@ export const VETO_THRESHOLD = 0.6;
 const n = (s: string): string => s.replace(/[^\d,]/g, '');
 
 /**
- * One backend signal string to one plain sentence (02-copy 9.5). Anything not
+ * One backend signal string to one plain sentence. Anything not
  * recognised becomes a generic line: raw backend text is never printed.
  */
 export function plainSignal(signal: string): string {

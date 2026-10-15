@@ -10,7 +10,7 @@ export interface StripPanel {
 }
 
 interface StripProps {
-  /** Override the default captions (copy-strategist owns the final lines). Length must match the strip. */
+  /** Override the default captions. Length must match the strip. */
   captions?: readonly string[];
   /** Set `data-draw` so MotionGate draws the frames on once when scrolled into view. */
   animate?: boolean;
