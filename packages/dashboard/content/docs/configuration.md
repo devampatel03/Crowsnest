@@ -28,7 +28,7 @@ All of these are optional.
 
 | Key | What it adds | What is sent when you set it |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | AI-assisted analysis and explanations. Without it, Crowsnest uses fixed rules. | Details of your scan go to Anthropic's API: the project folder path, the kind of project, the time of the last scan, any recent campaign names and your GitHub organisation name. For each check that finds something, up to 20 matching results (package names, versions and related details) are sent too. |
+| `ANTHROPIC_API_KEY` | AI-assisted analysis and explanations. Without it, Crowsnest uses fixed rules. Other providers work too: see [Choose your AI model](/docs/integrations/models). | Details of your scan go to your chosen model provider (Anthropic's API by default): the project folder path, the kind of project, the time of the last scan, any recent campaign names and your GitHub organisation name. For each check that finds something, up to 20 matching results (package names, versions and related details) are sent too. |
 | `GITHUB_TOKEN` | Repository details from GitHub, with higher rate limits. | Repository and maintainer lookups go to GitHub. |
 | `GITHUB_ORG` | Your GitHub organisation name, for repository lookups. | The organisation name goes to GitHub. |
 | `SOCKET_API_KEY` | Live threat alerts from Socket. | Package names (up to 50 npm packages per scan) go to Socket. |

@@ -67,7 +67,7 @@ describe('content loader', () => {
 
   it('public text never says hackathon or uses internals vocabulary', () => {
     for (const e of getAllEntries()) {
-      // The database file name is the one allowed mention (02-copy section 12).
+      // The database file name is the one allowed mention.
       const body = e.body.split('crowsnest.duckdb').join('');
       expect(`${e.meta.description} ${body}`, e.path).not.toMatch(/hackathon|DuckDB|CoralEngine|LangGraph|SQL join/i);
     }
@@ -80,16 +80,16 @@ describe('sitemap', () => {
     const sm = buildSitemap(routes);
     expect(sm.length).toBe(routes.length);
     for (const r of routes) expect(PLANNED_PATHS, r.path).toContain(r.path);
-    expect(routes.length).toBeLessThanOrEqual(26);
+    expect(routes.length).toBeLessThanOrEqual(27);
     expect(sm.some((s) => /^https?:\/\/[^/]+\/(horizon|lookout|hold|log|raw|api|compare)(\/|$)/.test(s.url))).toBe(false);
     for (const e of getAllEntries()) {
       expect(routes.find((r) => r.path === e.path)?.updated, e.path).toBe(e.meta.updated);
     }
   });
 
-  it('has all 26 routes (landing, 11 docs, blog index and 4 posts, glossary index and 6 terms, about, privacy)', () => {
+  it('has all 27 routes (landing, 12 docs, blog index and 4 posts, glossary index and 6 terms, about, privacy)', () => {
     expect(allPublicRoutes().map((r) => r.path).sort()).toEqual([...PLANNED_PATHS].sort());
-    expect(PLANNED_PATHS).toHaveLength(26);
+    expect(PLANNED_PATHS).toHaveLength(27);
   });
 });
 

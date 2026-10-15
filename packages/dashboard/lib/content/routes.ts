@@ -18,7 +18,7 @@ export const STATIC_PAGE_DATES: StaticPageDate[] = [
   { path: '/privacy', updated: '2026-10-07' },
 ];
 
-/** The 26 public content routes (brief section 11). Tests check every loaded entry is in this list. */
+/** The 27 public content routes. Tests check every loaded entry is in this list. */
 export const PLANNED_PATHS: readonly string[] = [
   '/',
   '/docs',
@@ -29,6 +29,7 @@ export const PLANNED_PATHS: readonly string[] = [
     'dashboard',
     'integrations/slack',
     'integrations/vscode',
+    'integrations/models',
     'configuration',
     'faq',
     'troubleshooting',
