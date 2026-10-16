@@ -1,0 +1,63 @@
+name: Publish CLI to npm
+
+# Manual on purpose: publishing is permanent. Run it from the Actions tab after the version tag's release exists.
+# One-time setup is in packages/cli/PUBLISHING.md (npm org, NPM_TOKEN secret, the "npm" environment).
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build and pack, but do not publish"
+        type: boolean
+        default: true
+
+concurrency:
+  group: publish-cli
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Add required reviewers on this environment to get an approval click before anything is published.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - name: Lint, test and build
+        working-directory: packages/cli
+        run: |
+          pnpm run lint
+          pnpm run test
+          pnpm run build
+      - name: Refuse to republish an existing version
+        working-directory: packages/cli
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npm. Bump the version first."
+            exit 1
+          fi
+      - name: Show what would be published
+        working-directory: packages/cli
+        run: npm pack --dry-run
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public

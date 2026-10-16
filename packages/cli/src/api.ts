@@ -113,7 +113,8 @@ async function request<T>(
   } catch (err) {
     throw new APIError(
       `Could not connect to Crowsnest API at ${apiUrl}.\n` +
-      `Start it with: uvicorn packages.core.api:app --reload\n` +
+      `The CLI talks to a Crowsnest backend. Start one (see https://github.com/devampatel03/Crowsnest#readme),\n` +
+      `or point the CLI at a running one: crowsnest config set apiUrl <url>\n` +
       `Error: ${err instanceof Error ? err.message : String(err)}`,
     );
   }

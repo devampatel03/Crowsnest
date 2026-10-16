@@ -28,7 +28,7 @@ export async function scanCommand(
     process.exit(2);
   }
 
-  // Poll for completion
+  // The scan runs in the backend; poll until it finishes.
   let status: ScanStatus;
   let dots = 0;
   while (true) {
@@ -119,7 +119,7 @@ function renderScanResults(status: ScanStatus): void {
     );
   }
 
-  // Token usage — the demo punchline
+  // Model tokens used by this scan. The comparison figure is a fixed 400x estimate, not a measurement.
   if (tokenUsage > 0) {
     const naiveTokens = tokenUsage * 400;
     console.log(

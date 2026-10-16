@@ -32,7 +32,6 @@ export async function investigateCommand(
   console.log();
   console.log(sectionHeader(`  Investigation: ${pkgName}${version ? '@' + version : ''}`));
 
-  // npm metadata
   const npm = result.npm_metadata as Record<string, unknown> | undefined;
   if (npm) {
     console.log();
@@ -48,7 +47,6 @@ export async function investigateCommand(
     );
   }
 
-  // Socket alerts
   const alerts = result.socket_alerts as Record<string, unknown>[] | undefined;
   if (alerts && alerts.length > 0) {
     console.log();
@@ -59,7 +57,6 @@ export async function investigateCommand(
     }
   }
 
-  // Findings from detection queries
   const findings = result.findings as Record<string, unknown[]> | undefined;
   if (findings) {
     const hitQueries = Object.entries(findings).filter(([, rows]) => rows.length > 0);
