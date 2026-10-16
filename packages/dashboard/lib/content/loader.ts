@@ -157,7 +157,7 @@ export function contentProblems(root = CONTENT_ROOT): SchemaProblem[] {
   return (['docs', 'blog', 'glossary'] as const).flatMap((s) => loadSection(s, root).problems);
 }
 
-/** Sidebar groups in order (brief 8.2). Compared case-insensitively against frontmatter `section`. */
+/** Sidebar groups in order. Compared case-insensitively against frontmatter `section`. */
 export const DOC_GROUP_ORDER = ['get started', 'use', 'integrations', 'reference', 'help', 'community'] as const;
 
 function groupRank(section: string): number {

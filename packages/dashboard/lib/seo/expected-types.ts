@@ -1,6 +1,6 @@
 import type { PageKind } from './types';
 
-// Non-sitewide JSON-LD types each page kind must emit (brief section 9).
+// Non-sitewide JSON-LD types each page kind must emit.
 // Organization and WebSite come from the site frame on every public page.
 // SoftwareApplication, FAQPage and HowTo on "/" only. Docs with numbered
 // steps add HowTo (frontmatter `howTo: true`); /docs/faq adds FAQPage.

@@ -27,7 +27,7 @@ function LayerB() {
 }
 
 /**
- * Sketch sky (v3): the drifting backdrop behind hero text only. One moon ring
+ * Sketch sky: the drifting backdrop behind hero text only. One moon ring
  * and four cloud wisps in `--c-line-strong` strokes, in two layers drifting
  * left at 140s and 220s (seamless: each layer is two identical copies at 2x
  * width). Height is capped at 18% of the hero and faded out by an alpha mask;

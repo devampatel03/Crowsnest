@@ -163,7 +163,7 @@ html {
     font-feature-settings: 'tnum' 1;
   }
 
-  /* Focus ring: 2px beam, 2px offset (brand on Fog). */
+  /* Focus ring: 2px beam, 2px offset (brand colour on paper). */
   :focus-visible {
     outline: 2px solid var(--c-brand);
     outline-offset: 2px;
@@ -210,7 +210,7 @@ html {
     @apply font-mono text-bearing text-fg-mute;
   }
 
-  /* Nib voice (v3): the handwriting face. Comic captions, speech bubbles,
+  /* Nib voice: the handwriting face. Comic captions, speech bubbles,
      Nib's note, sign-offs, ONLY. Never nav, buttons, tables, dialogs, toasts,
      Calls, docs body or headings. 1.0625rem is the floor. */
   .nib-voice {
@@ -315,7 +315,7 @@ html {
     animation: rise-in 700ms var(--ease-lookout) backwards;
   }
 
-  /* Draw-on (v3). Elements carrying data-draw hold SVG paths classed
+  /* Draw-on. Elements carrying data-draw hold SVG paths classed
      .sketch-path. Default: draws on mount. MotionGate marks below-the-fold
      ones data-draw=pending (held undrawn) and flips them to run when 25%
      visible, once. Without JS nothing is ever pending, so all is drawn. The
@@ -509,7 +509,7 @@ html[data-motion='off'] [data-ambient] {
   .horizon-sweep {
     display: none !important;
   }
-  /* v3: every draw-on fully drawn, sky static, crow snaps and does not ring. */
+  /* every draw-on fully drawn, sky static, crow snaps and does not ring. */
   [data-draw] .sketch-path,
   [data-draw='pending'] .sketch-path {
     animation: none !important;

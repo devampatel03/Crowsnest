@@ -8,7 +8,7 @@ import './globals.css';
 import './buttons.css';
 import './bands.css';
 
-// Fonts only (brief section 4). The route groups own the shell and the page
+// Fonts only. The route groups own the shell and the page
 // background; the whole platform is one cream paper theme set in globals.css.
 // Metadata, JSON-LD and the shell live in the route groups and in lib/seo.
 //

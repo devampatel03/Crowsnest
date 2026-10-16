@@ -1,4 +1,4 @@
-/* Chart motion and fills (v3). Imported by DailyCalls / Heartbeat. Only transform, opacity and clip-path animate. */
+/* Chart motion and fills. Imported by DailyCalls / Heartbeat. Only transform, opacity and clip-path animate. */
 
 /* One-time swell on mount: rises from the baseline while a clip wipes in left to right. */
 .cn-swell {

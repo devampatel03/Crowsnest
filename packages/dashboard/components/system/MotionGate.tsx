@@ -8,7 +8,7 @@ export function prefersReducedMotion(): boolean {
 }
 
 /**
- * Tiny, render-nothing client gate for the v3 motion rules. Mounted once in
+ * Tiny, render-nothing client gate for the motion rules. Mounted once in
  * the root layout.
  *
  * 1. Tab hidden: sets `data-motion="off"` on <html>; CSS pauses every

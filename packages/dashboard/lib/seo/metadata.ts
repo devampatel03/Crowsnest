@@ -10,7 +10,7 @@ import {
   TOPIC_MAX,
 } from './constants';
 
-// Single source for page metadata (02-search-plan section 2). No page writes a
+// Single source for page metadata. No page writes a
 // raw `metadata` object except console layouts (use CONSOLE_ROBOTS).
 //
 // Title: "{Topic} — Crowsnest", <= 60 characters, via `title.absolute` so the
@@ -109,7 +109,7 @@ export const PUBLIC_ROBOTS: NonNullable<Metadata['robots']> = {
   },
 };
 
-/** For console segment layouts (owned by console-builder) and not-found. */
+/** For console segment layouts (owned by the console) and not-found. */
 export const CONSOLE_ROBOTS: NonNullable<Metadata['robots']> = {
   index: false,
   follow: false,

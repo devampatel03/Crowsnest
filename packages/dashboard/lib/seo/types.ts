@@ -1,4 +1,4 @@
-// Types shared by the SEO helpers, the content loader (site builder) and the
+// Types shared by the SEO helpers, the content loader (site) and the
 // content frontmatter (content writer). Dates are ISO YYYY-MM-DD strings.
 
 export type ContentKind = 'doc' | 'post' | 'term';

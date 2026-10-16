@@ -20,7 +20,7 @@ function NavLink({ href, current, children }: { href: string; current: boolean; 
 }
 
 /**
- * Docs sidebar: groups from frontmatter `section` in the brief's order. The
+ * Docs sidebar: groups from frontmatter `section` in a fixed order. The
  * current item is `--c-fg` with a 2px brand left bar. Integrations is a
  * heading, not a page. Below 1280 it sits behind a "Docs menu" disclosure.
  */

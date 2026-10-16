@@ -133,12 +133,12 @@ function useRopeScroll(
 }
 
 /**
- * The Bearing Rule, v3 (brief section 4 "Rope Rule"). `site`: a vertical mast
+ * The Bearing Rule. `site`: a vertical mast
  * rope (twisted SVG pattern) with a 6px knot per section, 3px minor knots per
  * paragraph block (max 5), the ACTIVE knot in the beam colour with the
  * section title beside it only, and bearing degrees on the rule only (derived
  * `i*360/n`, in the sr-only link name and the tooltip). A `marker` (pass the
- * illustrator's rope crow, e.g. a NibMini) rides the rope with scroll through
+ * rope crow, e.g. a NibMini) rides the rope with scroll through
  * the `--rope-p` CSS variable (400ms ease; snaps under reduced motion). When
  * the reader reaches `ringAt` (e.g. `install`) from another section, the
  * marker wrapper gets `data-ring="true"` for 600ms (CSS rotates it; crow art

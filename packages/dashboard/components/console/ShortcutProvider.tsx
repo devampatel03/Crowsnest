@@ -45,7 +45,7 @@ export function useShortcutActions(actions: PageActions): void {
   useEffect(() => (register ? register(() => ref.current) : undefined), [register]);
 }
 
-/** Rows of the keyboard sheet (02-copy 9.1). `keys` of length 2 with `chord` read "g then h"; with `pair` they read "j / k". */
+/** Rows of the keyboard sheet. `keys` of length 2 with `chord` read "g then h"; with `pair` they read "j / k". */
 const ROWS: { keys: string[]; label: string; kind?: 'chord' | 'pair' }[] = [
   { keys: ['/'], label: 'Search or filter' },
   { keys: ['s'], label: 'Scan a project' },

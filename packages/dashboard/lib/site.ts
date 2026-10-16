@@ -1,7 +1,7 @@
 // Single source of truth for the site's canonical origin. Used by
 // lib/seo/*, app/layout.tsx (metadataBase), app/sitemap.ts, app/robots.ts.
 //
-// Fail-loud rule (02-search-plan 2.4): a production build on CI, or on Vercel
+// Fail-loud rule: a production build on CI, or on Vercel
 // production, with no NEXT_PUBLIC_SITE_URL would bake http://localhost:3000
 // into canonicals, the sitemap and robots.txt. That throws. Dev and test keep
 // the localhost fallback.

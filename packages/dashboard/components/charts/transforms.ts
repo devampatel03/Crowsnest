@@ -1,5 +1,5 @@
 /**
- * Pure data transforms for the v2 charts. No React, no DOM, no clock reads
+ * Pure data transforms for the charts. No React, no DOM, no clock reads
  * (callers pass `now`), so every function is unit-testable at known times.
  * Numeric fields are coerced defensively: the API sends "1.00" as often as 1.
  */
@@ -220,7 +220,7 @@ export function callsWord(n: number): string {
   return n === 1 ? '1 call' : `${n} calls`;
 }
 
-/* ---------------------------------------------------------- Wave (v3) -- */
+/* ---------------------------------------------------------- Wave -- */
 
 /** Three faint grid values for the hidden Y axis: the baseline, half, and the top. De-duplicated, ascending. */
 export function waveGridTicks(yMax: number): number[] {

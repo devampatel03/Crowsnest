@@ -1,6 +1,6 @@
 /**
- * Prop contracts for the three v2 charts. Charts take plain data (no SWR, no
- * fetch, no context, no SSE). The console builder owns loading, the live buffer
+ * Prop contracts for the three charts. Charts take plain data (no SWR, no
+ * fetch, no context, no SSE). The the console owns loading, the live buffer
  * and the surrounding Panel (which prints the panel title); a chart owns its
  * states: loading, error, empty, data.
  *
@@ -32,8 +32,6 @@ export interface ChartStateProps {
   emptyText?: ReactNode;
   className?: string;
 }
-
-// ---- DailyCalls: Horizon, "Last 30 days" ---------------------------------------
 
 /** The subset of Incident the chart reads. A full Incident satisfies it. */
 export interface DailyCallIncident {
@@ -68,8 +66,6 @@ export interface DailyCallsProps extends ChartStateProps {
   emptyAdornment?: ReactNode;
 }
 
-// ---- RiskRanking: Lookout, "People who publish your packages" -------------------
-
 /** The subset of MaintainerScore the ranking reads. A full MaintainerScore satisfies it. */
 export interface RankingMaintainer {
   login: string;
@@ -93,8 +89,6 @@ export interface RiskRankingProps extends ChartStateProps {
   cap?: number;
 }
 
-// ---- EcosystemBar: Hold, above the package list ---------------------------------
-
 export interface EcosystemCount {
   ecosystem: string;
   count: Numeric;
@@ -106,8 +100,6 @@ export interface EcosystemBarProps extends ChartStateProps {
   /** ...or raw rows (counted internally; pass the FILTERED set). */
   rows?: { ecosystem: string }[];
 }
-
-// ---- Heartbeat: console header --------------------------------------------------
 
 import type { HeartbeatEvent } from './transforms';
 export type { HeartbeatEvent };

@@ -4,7 +4,7 @@ import { NIB_ICON_COLORS, nibIconDataUri } from '@/components/mascot/icon';
 export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
-// Nib's head on a square Abyss field; iOS rounds the corners itself.
+// Nib's head on a square cream field; iOS rounds the corners itself.
 export default function AppleIcon() {
   return new ImageResponse(
     (

@@ -1,4 +1,4 @@
-// "Check a name" sandbox data and scoring (brief section 7, 02-copy section 3).
+// "Check a name" sandbox data and scoring.
 // The weights are the repo's real install-check signals (packages/core/api.py
 // `veto_check`, checked 2026-10-06 and 2026-10-07). Pure functions, no I/O:
 // the landing panel computes in the browser and sends no request.
@@ -41,7 +41,7 @@ export interface Sample {
   todo: string;
 }
 
-/** Exactly three fictional samples (brief 7). Never add others. */
+/** Exactly three fictional samples. Never add others. */
 export const SAMPLES: readonly Sample[] = [
   {
     name: 'tidy-dates',

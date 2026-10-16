@@ -1,7 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// Crowsnest "Night Watch" system (runs/2026-10-07-crowsnest-v2/01-brief.md
-// sections 3 and 4). Every colour is a CSS variable defined in
-// app/globals.css; the semantic names flip with [data-surface] (deep | fog).
+// Crowsnest "Paper" theme: one fixed light theme. Every colour is a CSS variable defined in app/globals.css.
 // No shadows, gradients, pills or blur exist in this theme on purpose: those
 // utilities are removed, not hidden. Radius pair: 6px controls, 12px panels.
 const v = (name) => `var(--${name})`;
@@ -34,7 +32,7 @@ module.exports = {
       ctl: '0.375rem',
       panel: '0.75rem',
       notch: '2px',
-      knot: '50%', // rope knots only (v3)
+      knot: '50%', // rope knots only
     },
     // No shadows, no gradients, no blur.
     boxShadow: { none: 'none' },
@@ -72,7 +70,7 @@ module.exports = {
       clear: v('c-clear'),
       'diff-add': v('c-diff-add'),
       backdrop: v('c-backdrop'),
-      'nib-line': v('c-nib-line'), // mascot outline (v3)
+      'nib-line': v('c-nib-line'), // mascot outline
       'nib-fill': v('c-nib-fill'), // mascot body fill, decorative
     },
     extend: {
@@ -81,9 +79,9 @@ module.exports = {
         mono: MONO,
         display: DISPLAY,
         serif: DISPLAY,
-        hand: HAND, // Patrick Hand: Nib's voice only (v3)
+        hand: HAND, // Patrick Hand: Nib's voice only
       },
-      // Type scale (brief section 4): fluid between mobile and desktop values;
+      // Type scale: fluid between mobile and desktop values;
       // line-height, tracking and weight travel with each role. Family is set
       // by the component (`font-display` for the serif roles, `font-mono` for
       // stat-m and bearing); the .label / .stat-* / .bearing classes in
@@ -100,8 +98,8 @@ module.exports = {
         'body-s': ['0.875rem', { lineHeight: '1.5', letterSpacing: '0' }],
         label: ['0.8125rem', { lineHeight: '1.3', letterSpacing: '0.01em', fontWeight: '500' }],
         code: ['0.875rem', { lineHeight: '1.65', letterSpacing: '0' }],
-        // Italic serif answer-first lead (one per article). Size chosen by the
-        // system builder: a condensed serif needs more size than body-l.
+        // Italic serif answer-first lead (one per article). It is larger than
+        // body-l because a condensed serif needs more size.
         lead: ['clamp(1.25rem, 2vw, 1.5rem)', { lineHeight: '1.4', letterSpacing: '-0.005em', fontWeight: '400' }],
         'stat-xl': ['clamp(4.5rem, 10vw, 7.5rem)', { lineHeight: '0.95', letterSpacing: '-0.02em', fontWeight: '400' }],
         'stat-l': ['clamp(2.75rem, 4.6vw, 3.5rem)', { lineHeight: '1', letterSpacing: '-0.02em', fontWeight: '400' }],
@@ -164,7 +162,7 @@ module.exports = {
       },
       opacity: { 45: '0.45' },
       // Prose for docs / blog / glossary: Instrument Sans 17/1.7 at 68ch.
-      // Links are the beam colour (brand on Fog), code is DM Mono.
+      // Links are the beam colour (brand colour), code is DM Mono.
       typography: () => ({
         DEFAULT: {
           css: {

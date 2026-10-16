@@ -6,8 +6,7 @@ import { getAllEntries, getDocs, getPosts, getTerms, type AnyEntry } from './loa
 import { toMarkdown } from './mdx';
 import { siteLastUpdated } from './routes';
 
-// Generators for llms.txt, llms-full.txt, rss.xml and raw .md (brief 9,
-// 02-copy section 11). Everything is built from the content files and the
+// Generators for llms.txt, llms-full.txt, rss.xml and raw .md. Everything is built from the content files and the
 // landing FAQ; no counts or claims are typed here.
 
 const abs = (p: string) => canonicalUrl(p);
@@ -32,7 +31,7 @@ function list(entries: AnyEntry[]): string {
   return entries.map((e) => `- [${titleOf(e)}](${abs(e.path)}): ${e.meta.description}`).join('\n');
 }
 
-/** 02-copy v3 section 11. Every line is a repo-supported fact or a dated observation. */
+/** Every line is a fact the repository supports or a dated observation. */
 const FACTS: string[] = [
   `Who Nib is. ${NIB_SENTENCE} Nib does not appear in the command line tool, the Slack bot or the VS Code extension.`,
   'Four ways to use it: the crowsnest command in a terminal, a VS Code extension, a Slack bot and a dashboard at http://localhost:3000.',

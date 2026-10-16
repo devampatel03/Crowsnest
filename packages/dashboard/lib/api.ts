@@ -72,8 +72,6 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   }
 }
 
-// ---- Normalisers: the boundary. Nothing downstream sees a raw payload. ----------
-
 const SEVERITIES: readonly Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
 function rec(v: unknown): Record<string, unknown> {
@@ -299,8 +297,6 @@ export function normaliseScanStatus(raw: unknown): ScanStatus {
     error: r.error == null ? undefined : str(r.error),
   };
 }
-
-// ---- Fetchers -----------------------------------------------------------------
 
 /** SWR keys shared across pages (one request, many consumers). */
 export const KEYS = {

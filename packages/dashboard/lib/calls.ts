@@ -2,8 +2,7 @@ import { gaugeFromSeverity, type GaugeLevel } from '@/components/system/Gauge';
 import type { BlastRadiusEntry, Incident } from '@/lib/types';
 
 /**
- * Plain-language mapping from an Incident to the Call card (brief section 10,
- * 02-copy 9.2). No attack-pattern code, template name, confidence decimal or
+ * Plain-language mapping from an Incident to the Call card. No attack-pattern code, template name, confidence decimal or
  * raw finding ever leaves this file.
  */
 

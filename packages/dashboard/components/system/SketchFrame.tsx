@@ -3,7 +3,7 @@ import { cn } from '@/lib/format';
 import { sketchRectPath, type TailSide } from './sketch-path';
 
 /**
- * A hand-drawn frame (v3). Server component. The outline is a wobbly closed
+ * A hand-drawn frame. Server component. The outline is a wobbly closed
  * path generated from `id` (same id, same drawing, on server and client), drawn
  * 1.5px in `--c-line-strong` (`tone="panel"`: 2px `--c-fg-mute`, for comic
  * panels). `vector-effect: non-scaling-stroke` keeps the stroke width constant

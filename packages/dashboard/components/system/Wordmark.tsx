@@ -3,8 +3,8 @@ import { cn } from '@/lib/format';
 
 /**
  * Glyph plus `Crowsnest.` in Instrument Serif 24px. Wrap in a link at the
- * call site. `glyph` is the v3 slot for the illustrator's NibMini (decorative,
- * 20px); without it the v2 two-line bearing-tick glyph renders.
+ * call site. `glyph` is the slot for the NibMini mascot mark (decorative, 20px); without it a two-line
+ * bearing-tick glyph renders.
  */
 export function Wordmark({ glyphOnly, glyph, className }: { glyphOnly?: boolean; glyph?: ReactNode; className?: string }) {
   return (

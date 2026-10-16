@@ -1,7 +1,7 @@
 import { ENTITY_DEFINITION } from '@/lib/seo/entity';
 import { LICENSE_NAME, REPO_URL, VERSION } from '@/lib/seo/constants';
 
-// Text for /about and /privacy (02-copy section 7). Owner answers of
+// Text for /about and /privacy. Owner answers of
 // 2026-10-07: no named author, no contact email (issues on GitHub), no
 // analytics, 0.1.0 worded as unreleased. Nothing here is a placeholder.
 

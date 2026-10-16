@@ -1,5 +1,4 @@
-// Copy for the hub (index) pages, from 02-copy sections 5 and 6 and the meta
-// table in section 10. "Supply chain" is unhyphenated. Descriptions are
+// Copy for the hub (index) pages and their meta descriptions. "Supply chain" is unhyphenated. Descriptions are
 // 140-160 characters and checked by lib/content/content.test.ts. The docs hub
 // is the Introduction page itself (content/docs/introduction.md).
 
@@ -44,7 +43,7 @@ export const HUBS = {
   },
 } as const satisfies Record<string, HubCopy>;
 
-/** One line per glossary term for the index (02-copy 6.1). Keys are term slugs. */
+/** One line per glossary term for the index. Keys are term slugs. */
 export const GLOSSARY_LINES: Record<string, string> = {
   slopsquatting: 'A package name an AI assistant made up, registered by an attacker.',
   typosquatting: 'A package named almost like a popular one.',

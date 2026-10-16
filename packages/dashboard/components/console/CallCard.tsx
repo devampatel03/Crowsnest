@@ -67,7 +67,7 @@ function DetailLine({ call, now }: { call: CallModel; now: number }) {
  * headline, the quiet line and the main action; `What to do` opens the other
  * advice and the plain who-else list in place. Nothing here prints a pattern
  * code, template name or confidence number. No Nib art, no hand face, no joke
- * ever appears inside a Call (02-copy 9.8).
+ * ever appears inside a Call.
  *
  * `alsoCount` is the number of other calls with the identical pattern, packages
  * and people (see `lib/console/groups.ts`); it prints one plain line and a link.
@@ -118,7 +118,6 @@ export function CallCard({
     </div>
   );
 }
-
 
 /**
  * Log form: one line (gauge, headline, package, time) that opens in place to the
