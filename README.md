@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/assets/nib.png" alt="Nib, the Crowsnest mascot: a yellow bird in a cap" width="120" height="120">
+
 # Crowsnest
 
 **A lookout for what you install.**
