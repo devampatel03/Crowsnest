@@ -12,6 +12,11 @@ Crowsnest checks the packages in your software project and gives each one a plai
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 [Quickstart](#quickstart) · [Ways to use it](#ways-to-use-it) · [Documentation](#documentation) · [Contributing](#contributing)
+<br />
+
+https://github.com/user-attachments/assets/06878a30-0f78-436d-9f65-570ae450abc4
+
+<sub>A 1-minute look at what Crowsnest does. The package names in the film are made up.</sub>
 
 </div>
 
