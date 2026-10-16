@@ -1,18 +1,18 @@
 ---
 title: Slack bot
-description: "Set up the Crowsnest Slack bot to post serious calls to a channel and run four slash commands. Keys, steps and fixes, with no public web address needed."
+description: "Set up the Crowsnest Slack bot with one guided command. It posts serious calls to a channel and answers four slash commands, with no public web address needed."
 slug: integrations/slack
 order: 6
 section: Integrations
-updated: 2026-10-07
+updated: 2026-10-13
 howTo: true
 question: How do I set up the Crowsnest Slack bot?
-answer: Turn on Socket Mode in your Slack app, add the four slash commands, put the three Slack keys in .env, and run npm run dev in packages/slack-bot. The bot posts only the most serious calls to #security by default. No public web address is needed.
+answer: Run npm run setup in packages/slack-bot. It opens Slack with the app pre-filled, checks the two keys you paste, sends a test message and saves everything to .env. Then run npm run dev. The bot posts only the most serious calls to #security by default. No public web address is needed.
 facts:
   - "Four slash commands: /crowsnest-scan, /crowsnest-investigate, /crowsnest-blast-radius, /crowsnest-status (slack-bot source, 2026-10-07)."
   - "Posts only the most serious calls, which the product shows as Hold (slack-bot source, 2026-10-07)."
   - "Default channel: #security, set with CROWSNEST_ALERT_CHANNEL (slack-bot source, 2026-10-07)."
-  - "Three Slack keys are needed: SLACK_BOT_TOKEN, SLACK_APP_TOKEN and SLACK_SIGNING_SECRET (.env.example, 2026-10-07)."
+  - "Two Slack keys are needed: SLACK_BOT_TOKEN and SLACK_APP_TOKEN. The signing secret is not used in Socket Mode (slack-bot source, 2026-10-13)."
   - "Default Crowsnest address: http://localhost:8000; default dashboard address: http://localhost:3000 (slack-bot source, 2026-10-07)."
 related:
   - /docs/configuration
@@ -25,28 +25,38 @@ The Slack bot posts every Hold to a channel of your choice and answers four comm
 
 ## What do I need?
 
-A Slack app with a bot key, an app key for socket connections, and a signing secret. Crowsnest running on port 8000. The bot is built from source; it is not in a package store.
+A Slack workspace where you may add apps, and Crowsnest running on port 8000. The bot is built from source; it is not in a package store. You do not need a public web address or a signing secret.
 
 ## How do I set it up?
 
-1. **Turn on Socket Mode.** In your Slack app settings, turn on Socket Mode and create an app-level key with the `connections:write` permission. The menu names are Slack's; see Slack's own documentation if they have moved.
-2. **Add the four slash commands** from the table below to the app, and install the app to your workspace.
-3. **Add your keys** to the `.env` file in the Crowsnest folder. The bot reads that file.
-   ```env
-   SLACK_BOT_TOKEN=xoxb-...
-   SLACK_APP_TOKEN=xapp-...
-   SLACK_SIGNING_SECRET=...
-   CROWSNEST_ALERT_CHANNEL=#security
-   ```
-4. **Start the bot.**
-   ```bash
-   cd packages/slack-bot
-   npm install
-   npm run dev
-   ```
-5. **Invite the bot to the channel**, for example with `/invite @your-bot`, so it is allowed to post there.
+Run the guided setup. It takes about three minutes.
 
-If a key is missing, the bot prints a warning and keeps running, but Slack will not connect. If Crowsnest is not running yet, the bot keeps trying again with longer waits.
+```bash
+cd packages/slack-bot
+npm install
+npm run setup
+```
+
+It opens Slack's "create app from manifest" page with every permission and slash command already filled in, so you only pick a workspace and click Create. Then it asks for two keys and checks each one with Slack as you paste it:
+
+1. **Bot key** (`xoxb-...`) from the app's OAuth & Permissions page, after you click Install to Workspace.
+2. **App key** (`xapp-...`) from Basic Information, App-Level Tokens, with the `connections:write` permission.
+
+It then asks which channel to use, posts a test message there, and saves the keys to the `.env` file in the Crowsnest folder. Start the bot with `npm run dev`.
+
+Run `npm run doctor` any time to check the keys, permissions and the backend without changing anything. If Slack refuses to connect, the bot prints what went wrong in plain words and points to this command.
+
+Prefer to do it by hand? Create the app from `packages/slack-bot/slack-app-manifest.json` (Slack, Your Apps, Create New App, From a manifest), install it, and put the two keys in `.env`:
+
+```env
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_APP_TOKEN=xapp-...
+CROWSNEST_ALERT_CHANNEL=#security
+```
+
+The manifest includes the `chat:write.public` permission, so the bot can post in any public channel without being invited. For a private channel, invite it with `/invite @Crowsnest`.
+
+If a key is missing, the bot stops and tells you to run `npm run setup`. If Crowsnest is not running yet, the bot keeps trying again with longer waits.
 
 ## Which commands does it answer?
 

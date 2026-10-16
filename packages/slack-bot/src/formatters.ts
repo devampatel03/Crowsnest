@@ -1,6 +1,4 @@
 /**
- * src/formatters.ts
- *
  * Converts Crowsnest API data into Slack Block Kit message payloads.
  *
  * Design principles:
@@ -21,10 +19,6 @@ import type {
   AttackPattern,
 } from './types.js';
 
-// ---------------------------------------------------------------------------
-// Emoji mappings
-// ---------------------------------------------------------------------------
-
 const SEVERITY_EMOJI: Record<Severity, string> = {
   CRITICAL: '🚨',
   HIGH:     '⛔',
@@ -43,11 +37,6 @@ const ATTACK_PATTERN_LABEL: Record<AttackPattern, string> = {
   dep_confusion:       '🔀 Dependency Confusion',
 };
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-/** Build a simple text section block */
 function section(text: string): Block {
   return {
     type: 'section',
@@ -55,10 +44,8 @@ function section(text: string): Block {
   };
 }
 
-/** Divider line */
 const DIVIDER: Block = { type: 'divider' };
 
-/** Context block with smaller muted text */
 function context(...elements: string[]): Block {
   return {
     type: 'context',
@@ -66,7 +53,6 @@ function context(...elements: string[]): Block {
   };
 }
 
-/** Header block (bold, larger text) */
 function header(text: string): Block {
   return {
     type: 'header',
@@ -109,14 +95,7 @@ function incidentSummaryLine(inc: Incident): string {
   return `${emoji} *${inc.severity}* — ${pattern} — \`${pkgs}\``;
 }
 
-// ---------------------------------------------------------------------------
-// Public formatters
-// ---------------------------------------------------------------------------
-
-/**
- * Format a completed scan result as Slack Block Kit blocks.
- */
-/** The API may send blast_radius as a count or as a list of affected projects. */
+/** The API sends blast_radius as a count from some endpoints and as a list of affected projects from others. */
 function blastRadiusCount(value: unknown): number {
   if (Array.isArray(value)) return value.length;
   return typeof value === 'number' ? value : 0;
@@ -130,7 +109,6 @@ export function formatScanResult(
   const incidents = result.incidents;
   const total = incidents.length;
 
-  // Count by severity
   const bySeverity: Record<Severity, number> = {
     CRITICAL: 0,
     HIGH:     0,
@@ -156,7 +134,6 @@ export function formatScanResult(
     DIVIDER,
   ];
 
-  // Severity breakdown
   const severityLines = (
     Object.entries(bySeverity) as Array<[Severity, number]>
   )
@@ -206,8 +183,6 @@ export function formatScanResult(
 
   return blocks;
 }
-
-// ---------------------------------------------------------------------------
 
 /**
  * Format a single incident as a real-time alert (for SSE push notifications).
@@ -277,8 +252,6 @@ export function formatIncidentAlert(
   return blocks;
 }
 
-// ---------------------------------------------------------------------------
-
 /**
  * Format blast radius analysis results as Slack blocks.
  */
@@ -339,8 +312,6 @@ export function formatBlastRadius(
 
   return blocks;
 }
-
-// ---------------------------------------------------------------------------
 
 /**
  * Format a package investigation result as Slack blocks.
@@ -405,8 +376,6 @@ export function formatInvestigation(
   return blocks;
 }
 
-// ---------------------------------------------------------------------------
-
 /**
  * Format system statistics as a Slack blocks summary.
  */
@@ -456,10 +425,6 @@ export function formatStats(
 
   return blocks;
 }
-
-// ---------------------------------------------------------------------------
-// Internal utilities
-// ---------------------------------------------------------------------------
 
 function severityRank(s: Severity): number {
   return { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }[s] ?? 99;

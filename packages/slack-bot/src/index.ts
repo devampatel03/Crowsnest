@@ -1,6 +1,4 @@
 /**
- * src/index.ts
- *
  * Main entry point for the Crowsnest Slack bot.
  *
  * Architecture:
@@ -12,32 +10,31 @@
 
 import pkgBolt from '@slack/bolt';
 const { App, LogLevel } = pkgBolt;
-import { config, warnMissingConfig } from './config.js';
+import { config, missingRequiredConfig } from './config.js';
+import { explainSlackError } from './setup-lib.js';
 import { CrowsnestApiClient } from './crowsnest-client.js';
 import { registerCommands } from './commands.js';
 import { AlertStream } from './alert-stream.js';
 import { formatIncidentAlert } from './formatters.js';
 import type { Incident, PublishEvent } from './types.js';
 
-// ---------------------------------------------------------------------------
-// Bootstrap
-// ---------------------------------------------------------------------------
-
 async function main(): Promise<void> {
   console.log('🦅 Crowsnest Slack Bot starting…');
 
-  // Warn about missing env vars — but don't crash so dev experience is smooth
-  warnMissingConfig();
+  const missing = missingRequiredConfig();
+  if (missing.length > 0) {
+    console.error(
+      `\nCannot start: ${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set.\n` +
+        'Run `npm run setup` in packages/slack-bot. It walks you through creating the Slack app and saves the keys.\n'
+    );
+    process.exit(1);
+  }
 
-  // -------------------------------------------------------------------------
-  // 1. Create Bolt app in Socket Mode
-  //    Socket Mode uses a WebSocket connection initiated from our side, so
-  //    no public HTTPS endpoint is needed.  Requires SLACK_APP_TOKEN (xapp-…).
-  // -------------------------------------------------------------------------
+  // Socket Mode opens the WebSocket from this side, so no public HTTPS endpoint is needed. It requires
+  // SLACK_APP_TOKEN (xapp-...).
   const app = new App({
     token:         config.slackBotToken,
     appToken:      config.slackAppToken,
-    signingSecret: config.slackSigningSecret,
     socketMode:    true,
 
     // Surface any Bolt errors to the console
@@ -52,20 +49,11 @@ async function main(): Promise<void> {
     },
   });
 
-  // -------------------------------------------------------------------------
-  // 2. Create the Crowsnest API client
-  // -------------------------------------------------------------------------
   const apiClient = new CrowsnestApiClient(config.crowsnestApiUrl);
 
-  // -------------------------------------------------------------------------
-  // 3. Register slash commands
-  // -------------------------------------------------------------------------
   registerCommands(app, apiClient);
 
-  // -------------------------------------------------------------------------
-  // 4. Set up the SSE alert stream
-  //    When a CRITICAL or HIGH incident is detected, post to the alert channel.
-  // -------------------------------------------------------------------------
+  // Post every CRITICAL or HIGH incident from the SSE stream to the alert channel.
   const alertStream = new AlertStream(
     config.crowsnestApiUrl,
 
@@ -100,9 +88,6 @@ async function main(): Promise<void> {
   // Start the SSE stream.  It will auto-reconnect if the API isn't up yet.
   alertStream.start();
 
-  // -------------------------------------------------------------------------
-  // 5. Graceful shutdown
-  // -------------------------------------------------------------------------
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`\n[index] Received ${signal} — shutting down…`);
     alertStream.stop();
@@ -114,12 +99,8 @@ async function main(): Promise<void> {
   process.on('SIGINT',  () => void shutdown('SIGINT'));
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
-  // -------------------------------------------------------------------------
-  // 6. Start Bolt
-  // -------------------------------------------------------------------------
   await app.start();
 
-  // Print startup summary
   console.log('');
   console.log('╔══════════════════════════════════════════════════╗');
   console.log('║          🦅 Crowsnest Slack Bot Ready            ║');
@@ -139,6 +120,11 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error('[index] Fatal startup error:', err);
+  const code = (err as { data?: { error?: string } })?.data?.error;
+  if (code) {
+    console.error(`\nSlack refused to connect: ${explainSlackError(code)}\nRun \`npm run doctor\` for a full check.\n`);
+  } else {
+    console.error('[index] Fatal startup error:', err);
+  }
   process.exit(1);
 });

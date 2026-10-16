@@ -77,8 +77,8 @@ describe('formatScanResult', () => {
     expect(t).toContain('+2 more');
   });
 
-  // QA-TE-08: the backend returns blast_radius as a list of objects, but the bot types it as a number.
-  it('renders a numeric blast radius even when the API sends a list (QA-TE-08)', () => {
+  // The backend sends blast_radius as a list of objects, but the bot's type says number.
+  it('renders a numeric blast radius even when the API sends a list', () => {
     const apiShaped = inc({ blast_radius: [{ project_path: '/a' }, { project_path: '/b' }] as unknown as number });
     expect(text(formatScanResult(scan([apiShaped]), '/p'))).not.toContain('[object Object]');
   });

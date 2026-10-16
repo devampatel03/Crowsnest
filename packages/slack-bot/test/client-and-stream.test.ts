@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// ---- EventSource fake (alert-stream imports the default export of 'eventsource') ----
 const { instances, FakeES } = vi.hoisted(() => {
 const instances: any[] = [];
 class FakeES {
@@ -145,8 +144,8 @@ describe('CrowsnestApiClient', () => {
       expect((await p).status).toBe('complete');
     });
 
-    // QA-TE-07: real backend returns {"scan_id": ...} (no "id"), so the bot polls /api/scan/undefined/status.
-    it('uses the scan_id the real backend returns (QA-TE-07)', async () => {
+    // The backend returns {"scan_id": ...} with no "id"; reading only `id` made the bot poll /api/scan/undefined/status.
+    it('uses the scan_id the real backend returns', async () => {
       vi.useFakeTimers();
       fetchMock
         .mockResolvedValueOnce(jsonResponse({ scan_id: 'real-id' }))

@@ -1,6 +1,4 @@
 /**
- * src/alert-stream.ts
- *
  * Subscribes to the Crowsnest API's Server-Sent Events stream at GET /api/events.
  * Fires the onAlert callback for every CRITICAL or HIGH incident_detected event.
  * Auto-reconnects with exponential backoff if the connection drops.
@@ -9,20 +7,12 @@
 import EventSource from 'eventsource';
 import type { Incident, PublishEvent, IncidentEvent } from './types.js';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 /** Initial reconnect delay — doubles on each failure, caps at MAX_BACKOFF_MS */
 const BASE_BACKOFF_MS    = 2_000;
 const MAX_BACKOFF_MS     = 60_000;
 
 /** Only alert on these severities via SSE */
 const ALERT_SEVERITIES   = new Set(['CRITICAL', 'HIGH']);
-
-// ---------------------------------------------------------------------------
-// AlertStream
-// ---------------------------------------------------------------------------
 
 export class AlertStream {
   private es: EventSource | null = null;
@@ -35,10 +25,6 @@ export class AlertStream {
     private readonly onAlert: (incident: Incident) => Promise<void>,
     private readonly onPublishEvent: (event: PublishEvent) => void
   ) {}
-
-  // -------------------------------------------------------------------------
-  // Public API
-  // -------------------------------------------------------------------------
 
   /**
    * Connect to the SSE stream and start listening.
@@ -59,10 +45,6 @@ export class AlertStream {
     console.log('[alert-stream] Stopped.');
   }
 
-  // -------------------------------------------------------------------------
-  // Connection management
-  // -------------------------------------------------------------------------
-
   private connect(): void {
     if (this.stopped) return;
 
@@ -79,39 +61,32 @@ export class AlertStream {
       return;
     }
 
-    // ----- Connection opened -----
     this.es.addEventListener('open', () => {
       console.log('[alert-stream] ✅ Connected to Crowsnest event stream.');
       this.backoffMs = BASE_BACKOFF_MS; // Reset backoff on successful connection
     });
 
-    // ----- Default message handler (event type: 'message') -----
     this.es.addEventListener('message', (ev: MessageEvent) => {
       this.handleRawEvent(ev.data as string);
     });
 
-    // ----- Named event: incident_detected -----
     this.es.addEventListener('incident_detected', (ev: MessageEvent) => {
       this.handleRawEvent(ev.data as string, 'incident_detected');
     });
 
-    // ----- Named event: scan_started -----
     this.es.addEventListener('scan_started', (ev: MessageEvent) => {
       this.handleRawEvent(ev.data as string, 'scan_started');
     });
 
-    // ----- Named event: scan_complete -----
     this.es.addEventListener('scan_complete', (ev: MessageEvent) => {
       this.handleRawEvent(ev.data as string, 'scan_complete');
     });
 
-    // ----- Named event: heartbeat -----
     this.es.addEventListener('heartbeat', () => {
       // Just a keep-alive ping — reset backoff to show the link is alive
       this.backoffMs = BASE_BACKOFF_MS;
     });
 
-    // ----- Error / disconnection -----
     this.es.addEventListener('error', (err: Event) => {
       if (this.stopped) return;
 
@@ -129,10 +104,6 @@ export class AlertStream {
       // where the server itself is down.
     });
   }
-
-  // -------------------------------------------------------------------------
-  // Event processing
-  // -------------------------------------------------------------------------
 
   /**
    * Parse a raw SSE data string as JSON and route it to the appropriate handler.
@@ -162,14 +133,12 @@ export class AlertStream {
       timestamp: (raw.timestamp as string) ?? new Date().toISOString(),
     };
 
-    // Notify the generic subscriber
     try {
       this.onPublishEvent(publishEvent);
     } catch (err) {
       console.error('[alert-stream] onPublishEvent threw:', err);
     }
 
-    // Handle incident alerts
     if (eventType === 'incident_detected') {
       this.handleIncident(publishEvent as IncidentEvent);
     }
@@ -201,10 +170,6 @@ export class AlertStream {
       console.error('[alert-stream] onAlert threw:', err);
     });
   }
-
-  // -------------------------------------------------------------------------
-  // Reconnect logic
-  // -------------------------------------------------------------------------
 
   private scheduleReconnect(): void {
     if (this.stopped) return;

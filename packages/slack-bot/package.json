@@ -8,6 +8,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "setup": "tsx src/setup.ts",
+    "doctor": "tsx src/setup.ts doctor",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
