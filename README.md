@@ -62,16 +62,16 @@ docker compose -f infra/docker-compose.yml down
 ```
 
 Prefer to run it from source on macOS, Linux or Windows? See
-[Installation](packages/dashboard/content/docs/installation.md).
+[Installation](https://crowsnest.co.in/docs/installation).
 
 ## Ways to use it
 
 | | What it does | Where to start |
 |---|---|---|
-| **Dashboard** | Horizon (what needs attention now), Lookout (the people who publish your packages), Installed (everything your project uses) and Log (every call Crowsnest has made). | [Dashboard guide](packages/dashboard/content/docs/dashboard.md) |
-| **Terminal** | Scan a project, check one package, see who else is affected, replay an earlier day, and install through a safety check that stops a risky `npm install` before it runs. | [Command line guide](packages/dashboard/content/docs/cli.md) |
-| **VS Code** | A warning on the import line of a risky package while you type. | [VS Code guide](packages/dashboard/content/docs/integrations/vscode.md) |
-| **Slack** | Alerts in a channel you choose, plus four slash commands such as `/crowsnest-scan`. | [Slack guide](packages/dashboard/content/docs/integrations/slack.md) |
+| **Dashboard** | Horizon (what needs attention now), Lookout (the people who publish your packages), Installed (everything your project uses) and Log (every call Crowsnest has made). | [Dashboard guide](https://crowsnest.co.in/docs/dashboard) |
+| **Terminal** | Scan a project, check one package, see who else is affected, replay an earlier day, and install through a safety check that stops a risky `npm install` before it runs. | [Command line guide](https://crowsnest.co.in/docs/cli) |
+| **VS Code** | A warning on the import line of a risky package while you type. | [VS Code guide](https://crowsnest.co.in/docs/integrations/vscode) |
+| **Slack** | Alerts in a channel you choose, plus four slash commands such as `/crowsnest-scan`. | [Slack guide](https://crowsnest.co.in/docs/integrations/slack) |
 
 Crowsnest reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `Cargo.lock`
 and `go.sum`.
@@ -82,12 +82,12 @@ Crowsnest starts and works with none of these. Each one adds a little more.
 
 | Key | What it adds |
 |---|---|
-| `ANTHROPIC_API_KEY` | Plain-language explanations written with AI help. Without it, fixed rules write them. |
+| `ANTHROPIC_API_KEY` (or the key for OpenAI, Gemini, Groq, Ollama and others) | Plain-language explanations written with AI help. Without any, fixed rules write them. Pick a provider with `python -m packages.core.llm setup`. |
 | `GITHUB_TOKEN`, `GITHUB_ORG` | Repository and publisher details, with higher rate limits. |
 | `SOCKET_API_KEY` | Live threat alerts from Socket. |
 | `NPM_TOKEN` | Signed-in requests to the npm registry. |
 
-The [Configuration](packages/dashboard/content/docs/configuration.md) page lists what each key sends
+The [Configuration](https://crowsnest.co.in/docs/configuration) page lists what each key sends
 and where. Without a key, Crowsnest falls back to saved data instead of failing.
 
 Your lockfiles stay on your machine. The dashboard's `/privacy` page lists the package names that
@@ -102,24 +102,24 @@ are looked up and where. To remove everything Crowsnest has stored, stop it and 
 
 ## Documentation
 
-The full guides live in [`packages/dashboard/content/docs`](packages/dashboard/content/docs) and are
-served by the dashboard at `/docs`:
+The full guides are at [crowsnest.co.in/docs](https://crowsnest.co.in/docs). Their source is in
+`packages/dashboard/content/docs`.
 
-[Introduction](packages/dashboard/content/docs/introduction.md) ·
-[Quickstart](packages/dashboard/content/docs/quickstart.md) ·
-[Installation](packages/dashboard/content/docs/installation.md) ·
-[Command line](packages/dashboard/content/docs/cli.md) ·
-[Using the dashboard](packages/dashboard/content/docs/dashboard.md) ·
-[Configuration](packages/dashboard/content/docs/configuration.md) ·
-[FAQ](packages/dashboard/content/docs/faq.md) ·
-[Troubleshooting](packages/dashboard/content/docs/troubleshooting.md)
+[Introduction](https://crowsnest.co.in/docs) ·
+[Quickstart](https://crowsnest.co.in/docs/quickstart) ·
+[Installation](https://crowsnest.co.in/docs/installation) ·
+[Command line](https://crowsnest.co.in/docs/cli) ·
+[Using the dashboard](https://crowsnest.co.in/docs/dashboard) ·
+[Configuration](https://crowsnest.co.in/docs/configuration) ·
+[FAQ](https://crowsnest.co.in/docs/faq) ·
+[Troubleshooting](https://crowsnest.co.in/docs/troubleshooting)
 
 ## Status
 
 Crowsnest is at version **0.1.0**: usable today, with a young API that may change between minor
 versions. The command line tool and the VS Code extension are built from source and are not yet
 published to a package store. Release notes are in the
-[0.1.0 post](packages/dashboard/content/blog/crowsnest-0-1-0-release-notes.md).
+[0.1.0 post](https://crowsnest.co.in/blog/crowsnest-0-1-0-release-notes).
 
 ## Contributing
 
