@@ -70,5 +70,5 @@ class CrowsnestState(TypedDict):
     incidents: list[AlertObject]
     triage_output: list[AlertObject]       # deduplicated, severity-sorted
     remediation_drafts: list[RemediationDraft]
-    token_usage: int                       # running total for the demo punchline
+    token_usage: int                       # total model tokens used by this scan
     error: str | None

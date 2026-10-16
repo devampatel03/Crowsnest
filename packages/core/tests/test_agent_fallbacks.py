@@ -2,25 +2,24 @@
 Tests for the deterministic fallback paths of the LangGraph agent nodes:
 
 - detection_planner.py's `_default_queries()` and `detection_planner_node`
-  (falls back when the Anthropic API call raises).
+  (falls back when the model call raises).
 - investigation.py's `_synthesize_incidents()` (falls back when no API key
-  is provided or the LLM classification call raises).
+  is configured or the model's classification call raises).
 
 These fallbacks are what keep Crowsnest scans working when Socket.dev,
-GitHub, or Anthropic API keys are missing/misbehaving.
+GitHub or model-provider keys are missing or misbehaving.
 """
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from packages.core.agents.detection_planner import _default_queries, detection_planner_node
 from packages.core.agents.investigation import _synthesize_incidents
+from packages.core.llm import LLMError
 from packages.core.queries.templates import QueryLibrary
-
-# ── detection_planner._default_queries ──────────────────────────────────────
 
 
 class TestDefaultQueries:
@@ -73,9 +72,6 @@ class TestDefaultQueries:
         assert "IOC_MATCH" in queries
 
 
-# ── detection_planner_node falling back on Anthropic failure ────────────────
-
-
 class TestDetectionPlannerNodeFallback:
     @pytest.mark.asyncio
     async def test_node_falls_back_to_default_queries_on_anthropic_error(self):
@@ -91,19 +87,14 @@ class TestDetectionPlannerNodeFallback:
             "token_usage": 0,
         }
 
-        with patch("packages.core.agents.detection_planner.AsyncAnthropic") as mock_cls:
-            mock_client = AsyncMock()
-            mock_client.messages.create.side_effect = RuntimeError("API unreachable")
-            mock_cls.return_value = mock_client
+        mock_client = AsyncMock()
+        mock_client.complete.side_effect = LLMError("API unreachable")
 
-            result = await detection_planner_node(state, anthropic_api_key="fake-key")
+        result = await detection_planner_node(state, llm=mock_client)
 
         expected = _default_queries(state["scan_context"])
         assert result["pending_queries"] == expected
         assert result["token_usage"] == 0
-
-
-# ── investigation._synthesize_incidents ──────────────────────────────────────
 
 
 class TestSynthesizeIncidents:

@@ -1,8 +1,8 @@
 """
 CoralDB — DuckDB-powered cross-source SQL federation engine.
 
-All external data sources are materialized as DuckDB tables. Agents query them
-with plain SQL JOINs across sources that would normally require dozens of API calls.
+External data sources (lockfiles, registries, GitHub, threat intel) are materialised as DuckDB tables, so detections
+are plain SQL JOINs across them.
 """
 
 from __future__ import annotations
@@ -392,9 +392,7 @@ def _replace_named_params(sql: str, params: dict[str, Any]) -> str:
 
     Only primitive scalar types (str, bool, int, float, datetime, None) are
     accepted. Anything else (list, dict, set, custom objects, ...) raises a
-    TypeError instead of being silently `str()`-interpolated — a bare
-    `str(val)` on a list/dict previously produced malformed (and
-    attacker-influenceable) SQL rather than a clear error.
+    TypeError rather than being interpolated with `str()`, which would produce malformed SQL.
     """
     # Sort by length descending so :pkg_10 is replaced before :pkg_1
     for key in sorted(params.keys(), key=len, reverse=True):

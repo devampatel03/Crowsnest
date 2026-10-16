@@ -361,9 +361,6 @@ class LockfileSource(DataSource):
         return records
 
 
-# ── helpers ────────────────────────────────────────────────────────────────
-
-
 def _extract_parent_chain(pkg_path: str) -> list[str]:
     """node_modules/a/node_modules/b → ['a']"""
     parts = pkg_path.split("/node_modules/")
@@ -426,7 +423,6 @@ def _load_git_blame_data(path: Path) -> dict[str, dict[str, str]]:
             continue
 
     return result
-
 
 
 def _compute_ai_likelihood(

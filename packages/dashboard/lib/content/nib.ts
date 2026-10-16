@@ -1,4 +1,4 @@
-// Nib's lines for the public site (02-copy v3 sections 2 and 4 to 8). Every
+// Nib's lines for the public site. Every
 // line is 14 words or fewer, has no exclamation mark, and none sits next to a
 // Hold or an error step: Troubleshooting and Privacy have no sign-off at all.
 // The tips are statements the docs already make.
@@ -17,6 +17,7 @@ export const DOC_SIGNOFFS: Record<string, string> = {
   dashboard: "Nib's tip: read the first step.",
   'integrations/slack': "Nib's tip: keep the channel small.",
   'integrations/vscode': "Nib's tip: hover the mark for reasons.",
+  'integrations/models': "Nib's tip: no model is a fine start.",
   configuration: "Nib's tip: start with no keys.",
   faq: "Nib's tip: commit your lockfile.",
   contributing: "Nib's tip: a bug report is a contribution.",
@@ -32,6 +33,7 @@ export const DOC_SPOTS: Record<string, NibPose> = {
   configuration: 'spy',
   'integrations/slack': 'wave',
   'integrations/vscode': 'wave',
+  'integrations/models': 'spy',
   faq: 'tilt',
   troubleshooting: 'tilt',
   contributing: 'wave',
@@ -39,7 +41,7 @@ export const DOC_SPOTS: Record<string, NibPose> = {
 
 export type CoverKind = 'slopsquat' | 'checklist' | 'dock' | 'flag';
 
-/** Blog covers: alt text and sign-off per post (02-copy v3 section 5.2). */
+/** Blog covers: alt text and sign-off per post. */
 export const POST_COVERS: Record<string, { kind: CoverKind; alt: string; signoff: string }> = {
   'what-is-slopsquatting': {
     kind: 'slopsquat',
@@ -66,7 +68,7 @@ export const POST_COVERS: Record<string, { kind: CoverKind; alt: string; signoff
 export const BLOG_NIB_LINE = 'Short reads from the masthead.';
 export const GLOSSARY_NIB_LINE = 'Words I hear a lot on watch.';
 
-/** About: "Meet Nib." (02-copy v3 section 7.1). */
+/** About: "Meet Nib.". */
 export const MEET_NIB = {
   title: 'Meet Nib.',
   paragraphs: [
@@ -84,7 +86,7 @@ export const MEET_NIB = {
   ] as { pose: NibPose; caption: string }[],
 } as const;
 
-/** 404, route error and global error (02-copy v3 section 8.1). */
+/** 404, route error and global error. */
 export const NOT_FOUND = {
   bubble: 'I checked the whole horizon.',
   title: "That page isn't here.",

@@ -18,8 +18,6 @@ async def _table_exists(engine, name="crowsnest_incidents"):
     return bool(rows)
 
 
-# ── block-list: payloads that MUST be rejected ──────────────────────────────
-
 REJECTED = [
     "SELECT 1; SELECT 2",
     "select 1 ;drop table crowsnest_incidents",
@@ -64,7 +62,7 @@ async def test_legit_queries_allowed(engine, sql):
 
 @pytest.mark.asyncio
 async def test_bypass_semicolon_after_dashes_inside_string_literal(engine):
-    """QA-TE-01: '--' inside a string literal makes _validate_sql truncate the line, hiding the
+    """A '--' inside a string literal makes _validate_sql truncate the line, hiding the
     `;DROP` from the semicolon and keyword checks, while the ORIGINAL sql is what DuckDB runs."""
     with pytest.raises(ValueError):
         await engine.query("SELECT '--'; DROP TABLE crowsnest_incidents")
@@ -72,7 +70,7 @@ async def test_bypass_semicolon_after_dashes_inside_string_literal(engine):
 
 @pytest.mark.asyncio
 async def test_bypass_dashes_in_string_does_not_drop_table(engine):
-    """QA-TE-01 (impact form): even if not rejected, the table must not be dropped."""
+    """Even if the query is not rejected, the table must not be dropped."""
     try:
         await engine.query("SELECT '--'; DROP TABLE crowsnest_incidents")
     except ValueError:
@@ -82,7 +80,7 @@ async def test_bypass_dashes_in_string_does_not_drop_table(engine):
 
 @pytest.mark.asyncio
 async def test_file_read_functions_blocked(engine):
-    """QA-TE-02: read_text/read_csv/glob are not blocked, so /api/query can read any local file."""
+    """read_text, read_csv and glob must be blocked, or /api/query could read any local file."""
     with pytest.raises(ValueError):
         await engine.query("SELECT content FROM read_text('pyproject.toml')")
 
@@ -106,12 +104,10 @@ async def test_keyword_inside_string_literal_is_allowed(engine):
     "SELECT * FROM parquet_scan('x.parquet')",
 ])
 async def test_file_and_host_access_blocked_in_every_position(engine, sql):
-    """Regression for QA-TE-02: file/env access is rejected wherever it appears in the query."""
+    """File and environment access is rejected wherever it appears in the query."""
     with pytest.raises(ValueError):
         await engine.query(sql)
 
-
-# ── helpers ─────────────────────────────────────────────────────────────────
 
 class TestHelpers:
     def test_contains_unquoted_char(self):
@@ -137,8 +133,6 @@ class TestHelpers:
     def test_unused_param_ignored(self):
         assert _replace_named_params("SELECT 1", {"x": object()}) == "SELECT 1"
 
-
-# ── ingest / execute / stats ────────────────────────────────────────────────
 
 @pytest.mark.asyncio
 class TestIngestAndStats:
@@ -208,7 +202,7 @@ class TestSnapshots:
             await engine.restore_snapshot("ghost")
 
     async def test_restore_snapshot_name_path_traversal_not_possible_outside_dir(self, engine, tmp_path):
-        """QA-TE-04: snapshot name is joined into a path unvalidated; ../ escapes snapshot_dir."""
+        """A snapshot name containing ../ must not escape snapshot_dir."""
         outside = tmp_path / "outside"
         outside.mkdir()
         with pytest.raises((FileNotFoundError, ValueError)):
@@ -220,8 +214,6 @@ def test_engine_creates_snapshot_dir(tmp_path):
     CoralEngine(db_path=":memory:", snapshot_dir=str(target))
     assert target.is_dir()
 
-
-# ── bulk ingest (regression for the 106 s / 1862-row scan stall) ─────────────
 
 def _lock_rows(n: int) -> list[dict]:
     return [
@@ -267,7 +259,7 @@ async def test_ingest_rejects_unsafe_identifiers(engine, table, col):
     "WITH t AS (SELECT * FROM canary_probe.csv) SELECT * FROM t",
 ])
 async def test_replacement_scan_via_qualified_name_blocked(engine, sql, tmp_path, monkeypatch):
-    """Regression for the release-gate finding: FROM name.csv reads a file in the working dir."""
+    """`FROM name.csv` is a replacement scan that reads a file from the working directory, so it must be rejected."""
     monkeypatch.chdir(tmp_path)
     (tmp_path / "canary_probe.csv").write_text("a,b\n1,2\n")
     with pytest.raises(ValueError):

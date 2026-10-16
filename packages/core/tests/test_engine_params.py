@@ -6,13 +6,7 @@ Tests for pure-logic helpers in packages/core/coral/engine.py:
 - `_contains_unquoted_char`: quote-aware character scanner used by
   CoralEngine._validate_sql's multi-statement (semicolon) guard.
 
-NOTE: `_validate_sql`'s injection-bypass fix itself is covered by Agent C's
-`test_engine_security.py`. This file sticks to the smaller,
-independently-testable string helpers `_replace_named_params` and
-`_contains_unquoted_char`. It was re-synced against `_replace_named_params`
-after Agent C landed its type-safety hardening concurrently (bool ->
-TRUE/FALSE, datetime -> quoted isoformat, and a TypeError for any
-unsupported param type instead of a bare `str(val)` fallback).
+SQL-guard behaviour is covered in test_engine_security.py; this file covers the two small string helpers.
 """
 
 from __future__ import annotations

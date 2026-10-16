@@ -65,7 +65,6 @@ class NpmRegistrySource(DataSource):
 
         records: list[dict[str, Any]] = []
 
-        # ── npm_packages ─────────────────────────────────────────────────
         time_data: dict[str, str] = data.get("time", {})
         created_at = _parse_ts(time_data.get("created"))
         updated_at = _parse_ts(time_data.get("modified"))
@@ -100,7 +99,6 @@ class NpmRegistrySource(DataSource):
         }
         records.append({"_table": "npm_packages", **pkg_record})
 
-        # ── npm_versions ─────────────────────────────────────────────────
         for ver, vdata in data.get("versions", {}).items():
             scripts_v = vdata.get("scripts", {})
             ver_record = {
@@ -121,7 +119,6 @@ class NpmRegistrySource(DataSource):
             }
             records.append({"_table": "npm_versions", **ver_record})
 
-        # ── npm_maintainers (synthesised from version publish events) ─────
         seen_maintainers: dict[str, str] = {}  # login → first version published
         for ver, vdata in sorted(
             data.get("versions", {}).items(),
@@ -208,9 +205,6 @@ class NpmRegistrySource(DataSource):
             except Exception as exc:
                 log.warning("npm.firehose_error", error=str(exc))
                 await asyncio.sleep(10)
-
-
-# ── helpers ────────────────────────────────────────────────────────────────
 
 
 def _parse_ts(val: str | None) -> datetime | None:

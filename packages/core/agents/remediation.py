@@ -7,8 +7,7 @@ For each triaged incident, generates:
   - A Jira/Linear ticket body
   - A postmortem skeleton
 
-Uses a simple template engine — no LLM call needed for standard patterns.
-Complex cases fall back to claude-haiku-4-5.
+Pure templates: no model is called here, so drafts are identical with or without an LLM configured.
 """
 
 from __future__ import annotations
@@ -54,10 +53,8 @@ def _generate_draft(incident: AlertObject) -> RemediationDraft:
         for b in incident.get("blast_radius", [])[:10]
     )
 
-    # ── PR diff ──────────────────────────────────────────────────────────
     pr_diff = _make_pr_diff(pattern, packages, incident.get("blast_radius", []))
 
-    # ── Slack message ────────────────────────────────────────────────────
     severity_emoji = {"CRITICAL": "🚨", "HIGH": "⛔", "MEDIUM": "⚠️", "LOW": "ℹ️"}[severity]
     slack_message = f"""{severity_emoji} *[{severity}] Supply Chain Alert — {_pattern_label(pattern)}*
 *Packages:*\n{pkg_list or '  (see details)'}
@@ -69,7 +66,6 @@ def _generate_draft(incident: AlertObject) -> RemediationDraft:
 Recommended actions:
 """ + "\n".join(f"• {r}" for r in incident.get("remediation_options", [])[:3])
 
-    # ── Ticket body ──────────────────────────────────────────────────────
     ticket_body = f"""## {_pattern_label(pattern)} — {severity}
 
 **Detected:** {ts}
@@ -85,7 +81,6 @@ Recommended actions:
 ### Recommended remediation
 """ + "\n".join(f"- [ ] {r}" for r in incident.get("remediation_options", []))
 
-    # ── Postmortem skeleton ──────────────────────────────────────────────
     postmortem = f"""# Postmortem: {_pattern_label(pattern)}
 **Date:** {ts[:10]}
 **Severity:** {severity}

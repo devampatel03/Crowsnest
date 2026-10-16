@@ -1,10 +1,9 @@
 """
 Crowsnest detection query library.
 
-Every query here encodes a real attack pattern observed in the wild.
-Queries are parameterised SQL strings executed by the Investigation Agent
-via CoralDB.  All parameters are positional-safe strings — never f-string
-user input into these.
+Each query encodes a known supply-chain attack pattern. The Investigation Agent runs them against CoralDB.
+{name} placeholders are filled by _safe_substitute, which accepts only numbers and strings made of letters, digits
+and a few safe punctuation characters. Never format untrusted input into these strings yourself.
 """
 
 from __future__ import annotations
@@ -519,7 +518,6 @@ GROUP BY
 ORDER BY risk_score DESC, packages_in_graph DESC
 """
 
-
     #  Public query registry                                              
 
     _REGISTRY: dict[str, str] = {}
@@ -570,12 +568,10 @@ DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
 }
 
 
-# ── helpers ────────────────────────────────────────────────────────────────
-
 def _safe_substitute(template: str, params: dict[str, Any]) -> str:
     """
     Replace {key} placeholders with safe, validated values.
-    Only allows numeric and simple string parameters — no SQL injection.
+    Only numbers and strings of safe characters are accepted; anything else raises.
     """
     for key, val in params.items():
         placeholder = "{" + key + "}"

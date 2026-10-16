@@ -33,8 +33,7 @@ log = structlog.get_logger(__name__)
 
 _DEDUP_WINDOW = timedelta(days=7)
 
-# Severity promotion rules: if any condition holds, bump severity one level.
-# probability_of_compromise × exposure × runtime_multiplier
+# Ordered lowest to highest; promotion and demotion move one step along this list.
 _SEVERITY_ORDER: list[Severity] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
 
@@ -44,10 +43,10 @@ def _severity_score(severity: Severity) -> int:
 
 def _score_severity(incident: AlertObject) -> Severity:
     """
-    Compute severity from first principles:
-      base = pattern default
-      × confidence boost
-      × runtime confirmation multiplier
+    Adjust the incident's severity by whole levels:
+      - confidence below 0.4: one level down
+      - confidence above 0.85 and seen at runtime: one level up
+      - blast radius of more than 10 projects: one level up
     """
     base_score = _severity_score(incident["severity"])
     confidence = incident["confidence"]
@@ -82,16 +81,12 @@ async def _load_persisted_dedup_index(
     window and return a dedup_key -> persisted AlertObject map (the highest-
     confidence persisted incident wins per key).
 
-    Degrades gracefully (returns an empty index) if the table/query fails —
-    this mirrors this codebase's convention of degrading to a no-op rather
-    than failing the whole triage step when an optional data source is
-    unavailable (e.g. missing API keys elsewhere already degrade to cached/
-    seeded data rather than erroring).
+    Returns an empty index if the table cannot be read, so triage still runs without cross-scan history.
     """
     index: dict[str, AlertObject] = {}
     try:
         rows = await coral_engine.query("SELECT id, data FROM crowsnest_incidents")
-    except Exception as exc:  # pragma: no cover - defensive, mirrors codebase convention
+    except Exception as exc:  # pragma: no cover - defensive
         log.warning("triage.persisted_history_query_failed", error=str(exc))
         return index
 

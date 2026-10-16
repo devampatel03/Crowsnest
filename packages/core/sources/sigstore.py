@@ -135,9 +135,6 @@ class SigstoreRekorSource(DataSource):
             return []
 
 
-# ── parsing helpers ────────────────────────────────────────────────────────
-
-
 def _extract_subject(spec: dict[str, Any], kind: str) -> str:
     if kind == "hashedrekord":
         return spec.get("data", {}).get("hash", {}).get("value", "")
