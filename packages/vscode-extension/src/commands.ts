@@ -1,5 +1,5 @@
 /**
- * commands.ts — VS Code command handlers for Crowsnest
+ * VS Code command handlers for Crowsnest
  *
  * Three commands:
  *  1. crowsnest.scanFile           — scans all imports in the active editor
@@ -12,10 +12,6 @@ import { CrowsnestClient } from './client';
 import { showInvestigationWebview } from './webview';
 import { extractPackageName } from './decorator';
 
-// ─────────────────────────────────────────────
-// Output channel (shared across calls)
-// ─────────────────────────────────────────────
-
 let outputChannel: vscode.OutputChannel | undefined;
 
 function getOutputChannel(): vscode.OutputChannel {
@@ -24,10 +20,6 @@ function getOutputChannel(): vscode.OutputChannel {
   }
   return outputChannel;
 }
-
-// ─────────────────────────────────────────────
-// 1. Scan File Command
-// ─────────────────────────────────────────────
 
 /**
  * Scans every import/require/from statement in the current file and prints
@@ -142,10 +134,6 @@ export async function scanFileCommand(
   }
 }
 
-// ─────────────────────────────────────────────
-// 2. Investigate Package Command
-// ─────────────────────────────────────────────
-
 /**
  * Reads the word under the cursor (or asks the user), calls the investigation
  * API, and displays the results in a rich WebviewPanel.
@@ -154,7 +142,7 @@ export async function investigatePackageCommand(
   client: CrowsnestClient,
   editor: vscode.TextEditor | undefined
 ): Promise<void> {
-  // Step 1 — Determine the package name ─────────
+  // Step 1 — Determine the package name
   let packageName: string | undefined;
 
   if (editor) {
@@ -189,7 +177,7 @@ export async function investigatePackageCommand(
     return; // user cancelled
   }
 
-  // Step 2 — Call API ───────────────────────────
+  // Step 2 — Call API
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -211,29 +199,27 @@ export async function investigatePackageCommand(
   );
 }
 
-// ─────────────────────────────────────────────
-// 3. Open Dashboard Command
-// ─────────────────────────────────────────────
-
 /**
- * Opens the Crowsnest web dashboard in the system's default browser.
+ * Opens the Crowsnest console (Horizon) in the system's default browser. The console only opens on the machine
+ * that runs Crowsnest, so the address is a setting that defaults to the local dashboard.
  */
 export async function openDashboardCommand(): Promise<void> {
-  const cfg = vscode.workspace.getConfiguration('crowsnest');
-  const apiUrl = cfg.get<string>('apiUrl', 'http://localhost:8000');
+  await vscode.env.openExternal(vscode.Uri.parse(consoleUrl(vscode.workspace.getConfiguration('crowsnest').get<string>('dashboardUrl'))));
+}
 
-  // Derive the frontend URL — conventionally on port 3000
-  let dashboardUrl: string;
+/** `http://localhost:3000` -> `http://localhost:3000/horizon`. Falls back to the local default for a blank or invalid setting. */
+export function consoleUrl(setting: string | undefined): string {
+  const fallback = 'http://localhost:3000';
+  let base = fallback;
   try {
-    const url = new URL(apiUrl);
-    url.port = '3000';
-    url.pathname = '/';
-    dashboardUrl = url.toString();
+    const url = new URL((setting ?? '').trim() || fallback);
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      base = url.origin;
+    }
   } catch {
-    dashboardUrl = 'http://localhost:3000';
+    // keep the fallback
   }
-
-  await vscode.env.openExternal(vscode.Uri.parse(dashboardUrl));
+  return `${base}/horizon`;
 }
 
 /** Dispose the output channel — called on extension deactivate. */

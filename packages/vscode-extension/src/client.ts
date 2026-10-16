@@ -1,9 +1,8 @@
 /**
- * client.ts — Crowsnest API client
+ * Crowsnest API client
  *
- * Wraps all HTTP communication with the Crowsnest backend API.
- * All calls are guarded with try/catch so that a missing or unreachable
- * API server never causes unhandled promise rejections in the extension.
+ * All HTTP communication with the Crowsnest backend. Every call resolves to null on failure, so an unreachable
+ * backend never produces an unhandled rejection in the extension host.
  */
 
 import * as vscode from 'vscode';
@@ -11,24 +10,18 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 
-// ─────────────────────────────────────────────
-// Public type definitions
-// ─────────────────────────────────────────────
-
 export interface VetoResult {
-  /** Combined risk score: ai_authored_likelihood × slopsquat_probability (0–1) */
+  /** Risk score from 0 to 1, as computed by the backend from its signals. */
   probability: number;
-  /** Whether the veto threshold was exceeded */
+  /** Whether the backend would block an install at this score. */
   vetoed: boolean;
-  /** Human-readable signals driving the score */
+  /** The reasons behind the score, in plain language. */
   signals: string[];
-  /** The package name that was checked */
   packageName: string;
-  /** Optional version that was checked */
   version?: string;
-  /** AI authored likelihood component */
+  /** Not sent by current backends, so normally 0. */
   aiAuthoredLikelihood: number;
-  /** Slopsquatting probability component */
+  /** Not sent by current backends, so normally 0. */
   slopsquatProbability: number;
 }
 
@@ -66,10 +59,6 @@ export interface StatsResult {
   apiHealthy: boolean;
 }
 
-// ─────────────────────────────────────────────
-// CrowsnestClient
-// ─────────────────────────────────────────────
-
 /** Whole-request deadline, and the largest response body we will read (the API's answers are a few KB). */
 const REQUEST_TIMEOUT_MS = 8000;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
@@ -91,8 +80,6 @@ export class CrowsnestClient {
     const cfg = vscode.workspace.getConfiguration('crowsnest');
     return cfg.get<string>('apiUrl', 'http://localhost:8000').replace(/\/$/, '');
   }
-
-  // ─── Core HTTP helper ───────────────────────
 
   /**
    * Performs an HTTP/HTTPS request and resolves with the parsed JSON body.
@@ -174,14 +161,16 @@ export class CrowsnestClient {
     });
   }
 
-  // ─── Public API methods ─────────────────────
-
   /**
    * POST /api/veto
    * Returns null if the API is unreachable or returns an error.
    */
-  async vetoCheck(packageName: string, version?: string): Promise<VetoResult | null> {
-    const body: Record<string, string> = { package: packageName };
+  async vetoCheck(
+    packageName: string,
+    version?: string,
+    ecosystem: 'npm' | 'pypi' = 'npm'
+  ): Promise<VetoResult | null> {
+    const body: Record<string, string> = { package: packageName, ecosystem };
     if (version) {
       body['version'] = version;
     }
@@ -272,8 +261,6 @@ export class CrowsnestClient {
       apiHealthy: true,
     };
   }
-
-  // ─── Private coercion helpers ───────────────
 
   /** The API reports incidents as {CRITICAL, HIGH, MEDIUM, LOW} counts; older servers sent a number. */
   private countIncidents(value: unknown): number {

@@ -1,21 +1,13 @@
 /**
- * extension.ts — Main entry point for the Crowsnest VS Code extension
+ * Main entry point for the Crowsnest VS Code extension
  *
- * Lifecycle:
- *  activate()   — called by VS Code when the extension first becomes active
- *  deactivate() — called when VS Code shuts down or the extension is disabled
- *
- * Responsibilities:
- *  1. Instantiate the API client
- *  2. Register the three commands
- *  3. Start the import decorator provider
- *  4. Start the status bar item
- *  5. Wire configuration-change events
+ * Creates the API client, the import decorator and the status bar item, registers the three commands, and re-scans
+ * when a Crowsnest setting changes.
  */
 
 import * as vscode from 'vscode';
 import { CrowsnestClient } from './client';
-import { ImportDecoratorProvider } from './decorator';
+import { ImportDecoratorProvider, AppliedFlag } from './decorator';
 import { CrowsnestStatusBar } from './statusBar';
 import {
   scanFileCommand,
@@ -24,30 +16,24 @@ import {
   disposeOutputChannel,
 } from './commands';
 
-// ─────────────────────────────────────────────
-// Module-level references (kept for deactivate)
-// ─────────────────────────────────────────────
-
 let decoratorProvider: ImportDecoratorProvider | undefined;
 let statusBar: CrowsnestStatusBar | undefined;
 
-// ─────────────────────────────────────────────
-// activate
-// ─────────────────────────────────────────────
+const REPO_URL = 'https://github.com/devampatel03/Crowsnest';
 
-export function activate(context: vscode.ExtensionContext): void {
+export interface CrowsnestExtensionApi {
+  getAppliedFlags(uri: string): readonly AppliedFlag[];
+}
+
+export function activate(context: vscode.ExtensionContext): CrowsnestExtensionApi {
   console.log('[Crowsnest] Extension activating…');
 
-  // ── 1. API client ─────────────────────────────
   const client = new CrowsnestClient();
 
-  // ── 2. Import decorator ───────────────────────
   decoratorProvider = new ImportDecoratorProvider(client, context);
 
-  // ── 3. Status bar ─────────────────────────────
   statusBar = new CrowsnestStatusBar(client, context);
 
-  // ── 4. Commands ───────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand('crowsnest.scanFile', () => {
       return scanFileCommand(client, vscode.window.activeTextEditor);
@@ -62,28 +48,12 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  // ── 5. React to configuration changes ─────────
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('crowsnest')) {
-        // Clear cached veto results so the new threshold / URL takes effect
+        // Clear cached veto results so the new threshold / URL takes effect, then re-scan what is on screen
         decoratorProvider?.clearCache();
-
-        // Force a re-scan of the active editor
-        const editor = vscode.window.activeTextEditor;
-        if (editor) {
-          // Trigger a tiny edit-document event by scheduling a re-decoration.
-          // We do this by emitting a "fake" change notification via the private
-          // scheduleUpdate path — the cleanest public surface is to just call
-          // the command indirectly. Instead, we rely on the fact that
-          // onDidChangeConfiguration fires after the new config is readable, so
-          // the decorator will pick up the new threshold on its next run.
-          // The simplest safe approach: clear then re-decorate via a no-op edit.
-          void vscode.commands.executeCommand('editor.action.triggerSuggest').then(
-            () => { /* ignore */ },
-            () => { /* ignore */ }
-          );
-        }
+        decoratorProvider?.refresh();
 
         // Refresh status bar to pick up new API URL
         statusBar?.refresh();
@@ -91,7 +61,6 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  // ── 6. Welcome message on first install ───────
   const hasShownWelcome = context.globalState.get<boolean>('crowsnest.welcomeShown');
   if (!hasShownWelcome) {
     void context.globalState.update('crowsnest.welcomeShown', true);
@@ -104,16 +73,19 @@ export function activate(context: vscode.ExtensionContext): void {
       .then((choice) => {
         if (choice === 'Open Dashboard') {
           void vscode.commands.executeCommand('crowsnest.openDashboard');
+        } else if (choice === 'Learn More') {
+          void vscode.env.openExternal(vscode.Uri.parse(REPO_URL));
         }
       });
   }
 
   console.log('[Crowsnest] Extension activated successfully.');
-}
 
-// ─────────────────────────────────────────────
-// deactivate
-// ─────────────────────────────────────────────
+  // Read-only view for the integration tests: what is flagged in a document right now.
+  return {
+    getAppliedFlags: (uri: string) => decoratorProvider?.getAppliedFlags(uri) ?? [],
+  };
+}
 
 export function deactivate(): void {
   console.log('[Crowsnest] Extension deactivating…');

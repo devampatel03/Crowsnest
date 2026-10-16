@@ -1,0 +1,64 @@
+name: Publish VS Code extension
+
+# Manual on purpose: a published version cannot be changed. One-time setup (publisher, token, secrets) is in
+# packages/vscode-extension/PUBLISHING.md.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build the .vsix and attach it to the run, but do not publish"
+        type: boolean
+        default: true
+      open_vsx:
+        description: "Also publish to Open VSX (VSCodium, Cursor, Gitpod and others)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-vscode
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Add required reviewers on this environment to get an approval click before anything is published.
+    environment: vscode-marketplace
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck and unit tests
+        working-directory: packages/vscode-extension
+        run: |
+          pnpm run typecheck
+          pnpm run test
+      - name: Build the .vsix
+        working-directory: packages/vscode-extension
+        run: pnpm run package
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: crowsnest-vscode-vsix
+          path: packages/vscode-extension/*.vsix
+          if-no-files-found: error
+      - name: Publish to the Visual Studio Marketplace
+        if: ${{ !inputs.dry_run }}
+        working-directory: packages/vscode-extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: pnpm run publish:marketplace
+      - name: Publish to Open VSX
+        if: ${{ !inputs.dry_run && inputs.open_vsx }}
+        working-directory: packages/vscode-extension
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: pnpm run publish:openvsx
