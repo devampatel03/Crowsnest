@@ -72,6 +72,7 @@ class CoralEngine:
         conn = self._get_connection()
         conn.executemany("", [])  # no-op touch to ensure open
         conn.execute(_SCHEMA_DDL)
+        _migrate_npm_maintainers_key(conn)
         self._initialized = True
         log.info("coral.schema_initialized", db_path=self.db_path)
 
@@ -386,6 +387,44 @@ def _contains_unquoted_char(sql: str, ch: str) -> bool:
     return False
 
 
+def _migrate_npm_maintainers_key(conn: duckdb.DuckDBPyConnection) -> None:
+    """Rebuild npm_maintainers with its primary key in databases created before it had one.
+
+    CREATE TABLE IF NOT EXISTS leaves an existing table alone, and ingest() upserts with
+    ON CONFLICT, which needs a key: without one every maintainer row was silently dropped.
+    Existing rows are kept, collapsed to the earliest one per (package, login, action).
+    """
+    has_key = conn.execute(
+        "SELECT 1 FROM duckdb_constraints() "
+        "WHERE table_name = 'npm_maintainers' AND constraint_type = 'PRIMARY KEY'"
+    ).fetchone()
+    if has_key:
+        return
+    conn.execute("BEGIN")
+    try:
+        conn.execute(
+            "CREATE TABLE npm_maintainers_new ("
+            "package TEXT, maintainer_login TEXT, action TEXT, ts TIMESTAMP, performed_by TEXT, "
+            "PRIMARY KEY (package, maintainer_login, action))"
+        )
+        conn.execute(
+            "INSERT INTO npm_maintainers_new "
+            "SELECT package, maintainer_login, action, ts, performed_by FROM ("
+            "  SELECT *, ROW_NUMBER() OVER ("
+            "    PARTITION BY package, maintainer_login, action ORDER BY ts NULLS LAST"
+            "  ) AS rn FROM npm_maintainers "
+            "  WHERE package IS NOT NULL AND maintainer_login IS NOT NULL AND action IS NOT NULL"
+            ") WHERE rn = 1"
+        )
+        conn.execute("DROP TABLE npm_maintainers")
+        conn.execute("ALTER TABLE npm_maintainers_new RENAME TO npm_maintainers")
+        conn.execute("COMMIT")
+    except duckdb.Error:
+        conn.execute("ROLLBACK")
+        raise
+    log.info("coral.npm_maintainers_key_added")
+
+
 def _replace_named_params(sql: str, params: dict[str, Any]) -> str:
     """
     Replace :name placeholders with literal values (safe for DuckDB).
@@ -585,7 +624,8 @@ CREATE TABLE IF NOT EXISTS npm_maintainers (
     maintainer_login TEXT,
     action TEXT,
     ts TIMESTAMP,
-    performed_by TEXT
+    performed_by TEXT,
+    PRIMARY KEY (package, maintainer_login, action)
 );
 
 CREATE TABLE IF NOT EXISTS npm_publish_events (
