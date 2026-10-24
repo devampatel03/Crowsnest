@@ -53,10 +53,10 @@ class PyPISource(DataSource):
 
     async def fetch(self, package: str = "", **kwargs: Any) -> list[dict[str, Any]]:
         if package:
-            return await self._fetch_package_records(package)
+            return await self._fetch_package_records(package, kwargs.get("versions"))
         return []
 
-    async def _fetch_package_records(self, name: str) -> list[dict[str, Any]]:
+    async def _fetch_package_records(self, name: str, versions: list[str] | None = None) -> list[dict[str, Any]]:
         name = normalize_package_name(PYPI, name)
         try:
             async with self._client() as client:
@@ -107,14 +107,15 @@ class PyPISource(DataSource):
                 "provenance_repo": None,
             })
 
-        await self._add_release_details(name, published, records)
+        await self._add_release_details(name, published, records, versions)
         return records
 
     async def _add_release_details(
         self, name: str, published: Mapping[str, datetime | None], records: list[dict[str, Any]],
+        versions: list[str] | None = None,
     ) -> None:
-        """Dependencies, file size and provenance for recent releases (and each one's predecessor)."""
-        wanted = recent_with_predecessor(published)
+        """Dependencies, file size and provenance for the versions asked about (default: the newest) and each one's predecessor."""
+        wanted = recent_with_predecessor(published, focus=versions)
         targets = {r["version"]: r for r in records if r["_table"] == "pypi_versions" and r["version"] in wanted}
         if not targets:
             return

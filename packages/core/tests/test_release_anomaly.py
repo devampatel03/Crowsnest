@@ -74,6 +74,17 @@ def test_recent_with_predecessor_picks_new_releases_and_the_one_before():
     assert recent_with_predecessor({"1.0.0": datetime(2020, 1, 1)}, days=30, now=now) == set()
 
 
+def test_named_versions_bring_only_themselves_and_their_predecessors():
+    now = datetime(2026, 10, 24)
+    published = {f"1.{i}.0": datetime(2026, 10, 1) + timedelta(days=i) for i in range(1, 15)}  # a very busy package
+    assert recent_with_predecessor(published, now=now, focus=["1.9.0"]) == {"1.9.0", "1.8.0"}
+    assert recent_with_predecessor(published, now=now, focus=["1.1.0"]) == {"1.1.0"}      # nothing before it
+    assert recent_with_predecessor(published, now=now, focus=["9.9.9"]) == set()          # unknown version
+    assert recent_with_predecessor(published, now=now, focus=[]) == set()
+    # With nothing named, only the newest few are collected however many recent releases there are.
+    assert len(recent_with_predecessor(published, now=now)) == 6
+
+
 def test_a_backport_is_compared_with_the_previous_version_of_its_own_line():
     now = datetime(2026, 10, 24)
     published = {
@@ -126,6 +137,38 @@ async def test_npm_adapter_reads_size_provenance_and_the_build_repository_for_re
     assert versions["1.14.0"]["provenance_repo"] == "https://github.com/axios/axios"
     # 1.12.0 is neither recent nor the predecessor of a recent release, so its bundle is never requested.
     assert versions["1.12.0"]["provenance_repo"] is None and "/-/att/oldest" not in seen
+
+
+async def test_adapters_collect_details_only_for_the_versions_asked_about():
+    recent = _ago(days=1)
+    pypi_calls: list[str] = []
+
+    def pypi_handler(request: httpx.Request) -> httpx.Response:
+        pypi_calls.append(request.url.path)
+        if request.url.path == "/pypi/busy/json":
+            return httpx.Response(200, json={"info": {"version": "1.3"}, "releases": {
+                f"1.{i}": [{"upload_time_iso_8601": _ago(days=10 - i) + "Z"}] for i in range(1, 4)}})
+        if request.url.path.endswith("/json"):
+            return httpx.Response(200, json={"info": {}, "urls": [{"filename": "x.whl", "size": 1}]})
+        return httpx.Response(404)
+
+    await PyPISource(transport=httpx.MockTransport(pypi_handler)).fetch(package="busy", versions=["1.2"])
+    detail_calls = sorted(p for p in pypi_calls if p.startswith("/pypi/busy/1."))
+    assert detail_calls == ["/pypi/busy/1.1/json", "/pypi/busy/1.2/json"]  # 1.2 and its predecessor, not 1.3
+
+    npm_calls: list[str] = []
+
+    def npm_handler(request: httpx.Request) -> httpx.Response:
+        npm_calls.append(request.url.path)
+        if request.url.path == "/busy":
+            return httpx.Response(200, json={"name": "busy", "dist-tags": {"latest": "1.3.0"},
+                "time": {"1.1.0": _ago(days=9), "1.2.0": _ago(days=8), "1.3.0": recent},
+                "versions": {v: {"dist": {"attestations": {"url": f"https://registry.npmjs.org/-/att/{v}"}}}
+                             for v in ("1.1.0", "1.2.0", "1.3.0")}})
+        return httpx.Response(404)
+
+    await NpmRegistrySource(transport=httpx.MockTransport(npm_handler)).fetch(package="busy", versions=["1.2.0"])
+    assert sorted(p for p in npm_calls if p.startswith("/-/att/")) == ["/-/att/1.1.0", "/-/att/1.2.0"]
 
 
 async def test_pypi_adapter_reads_dependencies_size_and_provenance_for_recent_releases():

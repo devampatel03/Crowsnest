@@ -11,6 +11,7 @@ import { blastRadiusCommand } from './commands/blast-radius.js';
 import { replayCommand } from './commands/replay.js';
 import { watchCommand } from './commands/watch.js';
 import { installCommand } from './commands/install.js';
+import { checkCommand } from './commands/check.js';
 import { configGetCommand, configSetCommand } from './commands/config-cmd.js';
 import { theme } from './display/theme.js';
 import { banner } from './display/banner.js';
@@ -88,8 +89,29 @@ program
     '--crowsnest-acknowledge-risk',
     'Proceed with install despite a risk block',
   )
-  .action(async (pkg: string, opts: { crowsnestAcknowledgeRisk?: boolean }) => {
-    await installCommand(pkg, { acknowledgeRisk: Boolean(opts.crowsnestAcknowledgeRisk) });
+  .option('--min-release-age <days>', 'days a version must have been public (0 turns the rule off)')
+  .option('--strict', 'refuse to install if the Crowsnest API cannot be reached')
+  .action(
+    async (
+      pkg: string,
+      opts: { crowsnestAcknowledgeRisk?: boolean; minReleaseAge?: string; strict?: boolean },
+    ) => {
+      await installCommand(pkg, {
+        acknowledgeRisk: Boolean(opts.crowsnestAcknowledgeRisk),
+        minReleaseAge: opts.minReleaseAge,
+        strict: Boolean(opts.strict),
+      });
+    },
+  );
+
+program
+  .command('check [path]')
+  .description('Vet the package versions a change adds (for pull requests); exits 3 when one is blocked')
+  .option('-b, --base <ref>', 'git ref to compare with, such as origin/main (omit to check every version)')
+  .option('--min-release-age <days>', 'days a version must have been public (0 turns the rule off)')
+  .option('-f, --format <fmt>', 'output format (table|json)', 'table')
+  .action(async (path: string | undefined, opts: { base?: string; minReleaseAge?: string; format?: string }) => {
+    await checkCommand(path || process.cwd(), opts);
   });
 
 const configCmd = program.command('config').description('Manage Crowsnest configuration');

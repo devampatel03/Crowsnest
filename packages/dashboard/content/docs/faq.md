@@ -48,7 +48,7 @@ Only when you install through Crowsnest. `crowsnest install <package>` checks fi
 
 ## Does my code leave my machine?
 
-Your lockfile and results stay on your machine. A scan sends package names to the npm registry and the OSV vulnerability database. Optional keys add calls to Socket, GitHub and Anthropic, and only when you set them.
+Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list, which also receives exact versions. Optional keys add calls to Socket, GitHub and Anthropic, and only when you set them.
 
 *Detail:* with an Anthropic key set, scan details go to Anthropic's API: the project folder path, the kind of project, the time of the last scan, recent campaign names, your GitHub organisation name, and up to 20 matching results for each check that finds something. Crowsnest sends no usage data to its authors, and the tool on your machine has no analytics. This website counts page views with Vercel Web Analytics and sets no cookies. See [Configuration](/docs/configuration) for the full list of keys and what each sends.
 

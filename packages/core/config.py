@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     crowsnest_api_port: int = 8000
     # Comma-separated browser origins allowed to call the API (the dashboard's origin).
     crowsnest_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # Install check: a version must have been public this many days before it is allowed (0 turns it off).
+    crowsnest_min_release_age_days: float = 2.0
+    # Look up the registry and the malware feed live during an install check. Turn off for offline use.
+    crowsnest_live_lookups: bool = True
     # Accept both DEMO_MODE=true and CROWSNEST_DEMO_MODE=true
     crowsnest_demo_mode: bool = Field(default=False, validation_alias="DEMO_MODE")
 
