@@ -44,5 +44,7 @@ All notable changes to Crowsnest are listed here. The format follows
   re-scans straight away.
 
 - Docs and blog content now read correctly when files use Windows line endings.
+- Maintainer history for npm packages was silently dropped, so the maintainer-takeover check and the account-age part
+  of the maintainer risk score had no data. It is now stored, and existing databases are upgraded on start.
 
 Version 0.1.0 has not been tagged yet. When it is, this section becomes `[0.1.0]` with its date.
