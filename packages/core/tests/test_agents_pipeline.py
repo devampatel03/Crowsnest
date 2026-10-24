@@ -53,7 +53,7 @@ class TestPlannerSuccess:
         with nullcontext():
             out = await detection_planner.detection_planner_node(state(token_usage=5), llm=client)
         assert out["pending_queries"][:2] == ["IOC_MATCH", "SHAI_HULUD"]
-        assert out["pending_queries"][-1] == "MAINTAINER_REPUTATION"
+        assert out["pending_queries"][-2:] == ["MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH"]
         assert out["token_usage"] == 125
 
     @pytest.mark.asyncio

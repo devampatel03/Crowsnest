@@ -348,7 +348,7 @@ async def investigate(req: InvestigateRequest) -> dict[str, Any]:
     engine = _get_engine()
     results: dict[str, Any] = {"package": req.package, "version": req.version, "findings": {}}
 
-    queries_to_run = ["IOC_MATCH", "SHAI_HULUD", "SLEEPER_DEPENDENCY", "IDENTITY_DRIFT"]
+    queries_to_run = ["MALICIOUS_PACKAGE_MATCH", "IOC_MATCH", "SHAI_HULUD", "SLEEPER_DEPENDENCY", "IDENTITY_DRIFT"]
     for qname in queries_to_run:
         try:
             sql = QueryLibrary.get(qname)
