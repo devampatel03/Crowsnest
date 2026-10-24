@@ -74,6 +74,8 @@ class CoralEngine:
         conn.execute(_SCHEMA_DDL)
         _migrate_npm_maintainers_key(conn)
         _migrate_lockfile_key(conn)
+        _add_missing_columns(conn)
+        conn.execute(_VIEWS_DDL)
         self._initialized = True
         log.info("coral.schema_initialized", db_path=self.db_path)
 
@@ -389,6 +391,62 @@ def _contains_unquoted_char(sql: str, ch: str) -> bool:
     return False
 
 
+# Columns added after the first release, as (table, column, type). Databases created earlier are upgraded in place.
+_ADDED_COLUMNS = (
+    ("npm_versions", "unpacked_size", "BIGINT"),
+    ("npm_versions", "has_provenance", "BOOLEAN"),
+    ("npm_versions", "provenance_repo", "TEXT"),
+    ("pypi_versions", "dependencies", "JSON"),
+    ("pypi_versions", "unpacked_size", "BIGINT"),
+    ("pypi_versions", "has_provenance", "BOOLEAN"),
+    ("pypi_versions", "provenance_repo", "TEXT"),
+)
+
+# Views and macros are rebuilt on every start, after the tables and column upgrades, so they always match.
+_VIEWS_DDL = r"""
+-- "owner/repo" of a source repository however a registry or CI writes it (https, ssh, git+, .git, subpaths).
+CREATE OR REPLACE MACRO repo_slug(u) AS lower(coalesce(regexp_extract(
+    u, '(?:github\.com|gitlab\.com|bitbucket\.org)[/:]([^/:]+/[^/#?]+?)(?:\.git)?(?:[/#?].*)?$', 1), ''));
+
+-- One ecosystem-neutral view of every registry. New detections read these, never npm_* or pypi_* directly,
+-- so supporting another ecosystem means writing an adapter, not new queries.
+CREATE OR REPLACE VIEW packages AS
+    SELECT 'npm' AS ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM npm_packages
+    UNION ALL
+    SELECT 'pypi', name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM pypi_packages
+    UNION ALL
+    SELECT ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM registry_packages;
+
+-- NULL means "not collected", never "no": a release's dependencies, provenance and size are read for recent
+-- releases only, and a detection must not treat a missing value as a change.
+CREATE OR REPLACE VIEW package_versions AS
+    SELECT 'npm' AS ecosystem, name, version, published_at, published_by,
+           CAST(json_keys(CAST(dependencies ->> '$' AS JSON)) AS TEXT[]) AS dependency_names,
+           has_install_script, has_provenance, provenance_repo, unpacked_size
+    FROM npm_versions
+    UNION ALL
+    SELECT 'pypi', name, version, published_at, published_by,
+           CAST(from_json(CAST(dependencies ->> '$' AS JSON), '["VARCHAR"]') AS TEXT[]),
+           NULL, has_provenance, provenance_repo, unpacked_size
+    FROM pypi_versions
+    UNION ALL
+    SELECT ecosystem, name, version, published_at, published_by,
+           NULL, NULL, NULL, NULL, NULL
+    FROM registry_versions;
+"""
+
+
+def _add_missing_columns(conn: duckdb.DuckDBPyConnection) -> None:
+    for table, column, sql_type in _ADDED_COLUMNS:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type}")
+
+
 def _migrate_npm_maintainers_key(conn: duckdb.DuckDBPyConnection) -> None:
     """Rebuild npm_maintainers with its primary key in databases created before it had one.
 
@@ -654,6 +712,9 @@ CREATE TABLE IF NOT EXISTS npm_versions (
     has_prepare BOOLEAN,
     attestation_subject_uri TEXT,
     attestation_predicate_type TEXT,
+    unpacked_size BIGINT,
+    has_provenance BOOLEAN,
+    provenance_repo TEXT,
     PRIMARY KEY (name, version)
 );
 
@@ -694,6 +755,10 @@ CREATE TABLE IF NOT EXISTS pypi_versions (
     published_at TIMESTAMP,
     published_by TEXT,
     requires_python TEXT,
+    dependencies JSON,
+    unpacked_size BIGINT,
+    has_provenance BOOLEAN,
+    provenance_repo TEXT,
     PRIMARY KEY (name, version)
 );
 
@@ -719,28 +784,6 @@ CREATE TABLE IF NOT EXISTS registry_versions (
     published_by TEXT,
     PRIMARY KEY (ecosystem, name, version)
 );
-
--- One ecosystem-neutral view of every registry. New detections read these, never npm_* or pypi_* directly,
--- so supporting another ecosystem means writing an adapter, not new queries.
-CREATE OR REPLACE VIEW packages AS
-    SELECT 'npm' AS ecosystem, name, latest_version, weekly_downloads, repo_url, license,
-           maintainers, created_at, updated_at
-    FROM npm_packages
-    UNION ALL
-    SELECT 'pypi', name, latest_version, weekly_downloads, repo_url, license,
-           maintainers, created_at, updated_at
-    FROM pypi_packages
-    UNION ALL
-    SELECT ecosystem, name, latest_version, weekly_downloads, repo_url, license,
-           maintainers, created_at, updated_at
-    FROM registry_packages;
-
-CREATE OR REPLACE VIEW package_versions AS
-    SELECT 'npm' AS ecosystem, name, version, published_at, published_by FROM npm_versions
-    UNION ALL
-    SELECT 'pypi', name, version, published_at, published_by FROM pypi_versions
-    UNION ALL
-    SELECT ecosystem, name, version, published_at, published_by FROM registry_versions;
 
 -- ─────────────────────────────────────────────
 -- THREAT INTEL

@@ -19,6 +19,7 @@ AttackPattern = Literal[
     "ci_cache_poisoning",
     "oidc_misuse",
     "abandoned_popular",
+    "release_anomaly",
 ]
 
 Severity = Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]

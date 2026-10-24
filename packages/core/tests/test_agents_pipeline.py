@@ -53,7 +53,7 @@ class TestPlannerSuccess:
         with nullcontext():
             out = await detection_planner.detection_planner_node(state(token_usage=5), llm=client)
         assert out["pending_queries"][:2] == ["IOC_MATCH", "SHAI_HULUD"]
-        assert out["pending_queries"][-2:] == ["MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH"]
+        assert out["pending_queries"][-3:] == ["MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH", "RELEASE_ANOMALY"]
         assert out["token_usage"] == 125
 
     @pytest.mark.asyncio
@@ -332,6 +332,7 @@ class TestRemediation:
     @pytest.mark.parametrize("pattern", [
         "maintainer_takeover", "worm", "slopsquat", "slsa_poisoning", "sleeper", "identity_drift",
         "typosquat", "dep_confusion", "ioc_match", "ci_cache_poisoning", "oidc_misuse", "abandoned_popular",
+        "release_anomaly",
     ])
     async def test_every_pattern_generates_complete_draft(self, pattern):
         d = _generate_draft(inc(attack_pattern=pattern, packages=["evil"], blast_radius=[

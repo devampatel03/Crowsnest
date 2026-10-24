@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
+import re
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
@@ -11,12 +15,14 @@ import structlog
 
 from ..ecosystems import PYPI, normalize_package_name
 from .base import DataSource
+from .provenance import pypi_provenance_repo, recent_with_predecessor
 
 log = structlog.get_logger(__name__)
 
 _PYPI_API = "https://pypi.org/pypi"
 _PYPI_STATS = "https://pypistats.org/api/packages"
 _REPO_HOSTS = {"github.com", "www.github.com", "gitlab.com", "www.gitlab.com"}
+_PYPI_INTEGRITY = "https://pypi.org/integrity"
 
 
 class PyPISource(DataSource):
@@ -95,9 +101,67 @@ class PyPISource(DataSource):
                 "published_at": published_at,
                 "published_by": "",  # PyPI's public API does not name the uploader
                 "requires_python": info.get("requires_python", "") or "",
+                "dependencies": None,
+                "unpacked_size": None,
+                "has_provenance": None,
+                "provenance_repo": None,
             })
 
+        await self._add_release_details(name, published, records)
         return records
+
+    async def _add_release_details(
+        self, name: str, published: Mapping[str, datetime | None], records: list[dict[str, Any]],
+    ) -> None:
+        """Dependencies, file size and provenance for recent releases (and each one's predecessor)."""
+        wanted = recent_with_predecessor(published)
+        targets = {r["version"]: r for r in records if r["_table"] == "pypi_versions" and r["version"] in wanted}
+        if not targets:
+            return
+        semaphore = asyncio.Semaphore(5)
+
+        async def one(version: str) -> None:
+            row = targets[version]
+            async with semaphore, self._client() as client:
+                try:
+                    resp = await client.get(f"{_PYPI_API}/{name}/{version}/json")
+                    resp.raise_for_status()
+                    release = resp.json()
+                except (httpx.HTTPError, ValueError) as exc:
+                    log.warning("pypi.release_error", package=name, version=version, error=str(exc))
+                    return
+                row["dependencies"] = json.dumps(_dependency_names(release.get("info", {}).get("requires_dist")))
+                files = release.get("urls") or []
+                chosen = next((f for f in files if str(f.get("filename", "")).endswith(".whl")), files[0] if files else None)
+                if not chosen:
+                    return
+                row["unpacked_size"] = chosen.get("size")
+                try:
+                    prov = await client.get(f"{_PYPI_INTEGRITY}/{name}/{version}/{chosen['filename']}/provenance")
+                    if prov.status_code == 404:
+                        row["has_provenance"] = False
+                        return
+                    prov.raise_for_status()
+                    row["has_provenance"] = True
+                    row["provenance_repo"] = pypi_provenance_repo(prov.json())
+                except (httpx.HTTPError, ValueError) as exc:
+                    log.warning("pypi.provenance_error", package=name, version=version, error=str(exc))
+
+        await asyncio.gather(*[one(v) for v in targets])
+
+
+_REQUIREMENT_NAME = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
+
+
+def _dependency_names(requires_dist: list[str] | None) -> list[str]:
+    """Normalised names a release installs by default (optional extras are not part of a plain install)."""
+    names: set[str] = set()
+    for line in requires_dist or []:
+        requirement, _, marker = line.partition(";")
+        match = _REQUIREMENT_NAME.match(requirement)
+        if match and "extra ==" not in marker.replace("'", '"').replace('extra=="', 'extra == "'):
+            names.add(normalize_package_name(PYPI, match.group(1)))
+    return sorted(names)
 
 
 def _repo_url(info: dict[str, Any]) -> str:

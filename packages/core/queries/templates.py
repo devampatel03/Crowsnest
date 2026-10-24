@@ -11,6 +11,90 @@ from __future__ import annotations
 import re
 from typing import Any
 
+# What changed in each release compared with the one before it, for every ecosystem. Each signal is weak alone
+# (legitimate releases add dependencies and change maintainers) and strong together, so they carry weights and a
+# release is reported once the weights reach {min_score}. NULL data counts as "unknown", never as a change.
+#   provenance_repo_changed (3)  the signed build record names a different repository than the last release's:
+#                                the litellm compromise ran the real pipeline against a look-alike fork
+#   repo_mismatch_declared  (2)  the build record names a repository other than the one the package declares
+#   provenance_dropped      (2)  the previous release was built with provenance and this one was not (axios)
+#   install_hook_added      (2)  the release started running code at install time
+#   new_publisher           (2)  a publisher who never released this package before (node-ipc)
+#   dependency_added        (1)  a dependency the previous release did not have (axios added one in a patch)
+#   size_jump               (1)  at least double the previous size and 20 KB larger (node-ipc: 37 KB to 117 KB)
+#   dormant_release         (1)  first release after more than a year of silence
+_RELEASE_SIGNALS = """
+WITH history AS (
+  SELECT
+    v.ecosystem, v.name, v.version, v.published_at, v.published_by,
+    v.dependency_names, v.has_install_script, v.has_provenance, v.provenance_repo, v.unpacked_size,
+    regexp_extract(v.version, '^v?([0-9]+)', 1) AS major,
+    regexp_matches(regexp_replace(v.version, '^v', ''), '[A-Za-z-]') AS is_prerelease,
+    LAG(v.published_at)       OVER w AS prev_published_at,
+    LAG(v.dependency_names)   OVER w AS prev_dependencies,
+    LAG(v.has_install_script) OVER w AS prev_install_script,
+    LAG(v.has_provenance)     OVER w AS prev_provenance,
+    LAG(v.provenance_repo)    OVER w AS prev_provenance_repo,
+    LAG(v.unpacked_size)      OVER w AS prev_size
+  FROM package_versions v
+  WHERE v.published_at IS NOT NULL
+  -- A release is compared with the next lower version on its own major line, and pre-releases only with
+  -- pre-releases: a 2.0.55 backport published after 2.1.4 is a change from 2.0.54, not from 2.1.4.
+  WINDOW w AS (PARTITION BY v.ecosystem, v.name, regexp_extract(v.version, '^v?([0-9]+)', 1),
+                            regexp_matches(regexp_replace(v.version, '^v', ''), '[A-Za-z-]')
+               ORDER BY coalesce(TRY_CAST(nullif(regexp_extract(v.version, '^v?([0-9]+)', 1), '') AS BIGINT), 0),
+                        coalesce(TRY_CAST(nullif(regexp_extract(v.version, '^v?[0-9]+[.]([0-9]+)', 1), '') AS BIGINT), 0),
+                        coalesce(TRY_CAST(nullif(regexp_extract(v.version, '^v?[0-9]+[.][0-9]+[.]([0-9]+)', 1), '') AS BIGINT), 0),
+                        v.published_at, v.version)
+),
+flagged AS (
+  SELECT
+    h.*,
+    p.repo_url AS declared_repo,
+    coalesce(h.prev_published_at IS NOT NULL AND coalesce(h.published_by, '') <> '' AND NOT EXISTS (
+      SELECT 1 FROM package_versions o
+      WHERE o.ecosystem = h.ecosystem AND o.name = h.name
+        AND o.published_by = h.published_by AND o.published_at < h.published_at
+    ), false) AS new_publisher,
+    coalesce(len(list_filter(h.dependency_names, x -> NOT list_contains(h.prev_dependencies, x))) > 0
+      AND h.prev_dependencies IS NOT NULL, false) AS dependency_added,
+    coalesce(h.has_install_script AND NOT h.prev_install_script, false) AS install_hook_added,
+    coalesce(h.prev_provenance AND NOT h.has_provenance, false) AS provenance_dropped,
+    coalesce(repo_slug(h.prev_provenance_repo) <> '' AND repo_slug(h.provenance_repo) <> ''
+      AND repo_slug(h.prev_provenance_repo) <> repo_slug(h.provenance_repo), false) AS provenance_repo_changed,
+    coalesce(repo_slug(h.provenance_repo) <> '' AND repo_slug(p.repo_url) <> ''
+      AND repo_slug(h.provenance_repo) <> repo_slug(p.repo_url), false) AS repo_mismatch_declared,
+    coalesce(h.prev_size > 0 AND h.unpacked_size >= 2 * h.prev_size
+      AND h.unpacked_size - h.prev_size >= 20000, false) AS size_jump,
+    coalesce(h.published_at - h.prev_published_at > INTERVAL '365 days', false) AS dormant_release
+  FROM history h
+  LEFT JOIN packages p ON p.ecosystem = h.ecosystem AND p.name = h.name
+),
+scored AS (
+  SELECT
+    f.*,
+    3 * CAST(provenance_repo_changed AS INTEGER) + 2 * CAST(repo_mismatch_declared AS INTEGER)
+      + 2 * CAST(provenance_dropped AS INTEGER) + 2 * CAST(install_hook_added AS INTEGER)
+      + 2 * CAST(new_publisher AS INTEGER) + CAST(dependency_added AS INTEGER)
+      + CAST(size_jump AS INTEGER) + CAST(dormant_release AS INTEGER) AS score,
+    list_filter([
+      CASE WHEN provenance_repo_changed THEN 'provenance_repo_changed' END,
+      CASE WHEN repo_mismatch_declared THEN 'repo_mismatch_declared' END,
+      CASE WHEN provenance_dropped THEN 'provenance_dropped' END,
+      CASE WHEN install_hook_added THEN 'install_hook_added' END,
+      CASE WHEN new_publisher THEN 'new_publisher' END,
+      CASE WHEN dependency_added THEN 'dependency_added' END,
+      CASE WHEN size_jump THEN 'size_jump' END,
+      CASE WHEN dormant_release THEN 'dormant_release' END
+    ], s -> s IS NOT NULL) AS signals
+  FROM flagged f
+)
+"""
+
+_RELEASE_COLUMNS = """
+  s.ecosystem, s.name AS package, s.version, s.published_at, s.published_by, s.score, s.signals,
+  s.declared_repo, s.provenance_repo, s.prev_provenance_repo, s.prev_published_at"""
+
 
 class QueryLibrary:
     """Registry of named, parameterisable SQL detection queries."""
@@ -470,6 +554,20 @@ LEFT JOIN osv_advisories a
 ORDER BY m.first_reported DESC, l.project_path, l.package
 """
 
+    #  Release anomalies: a release that differs suspiciously from the one before
+
+    RELEASE_ANOMALY = _RELEASE_SIGNALS + """
+-- Releases in your lockfiles that were published recently and whose changes add up to a compromise pattern.
+SELECT""" + _RELEASE_COLUMNS + """,
+  l.project_path, l.declared_in, l.parent_chain
+FROM scored s
+JOIN local_lockfiles l
+  ON l.ecosystem = s.ecosystem AND l.package = s.name AND l.version = s.version
+WHERE s.score >= {min_score}
+  AND s.published_at > CURRENT_TIMESTAMP - INTERVAL '{lookback_days} days'
+ORDER BY s.score DESC, s.published_at DESC
+"""
+
     #  Maintainer reputation score query
     
     MAINTAINER_REPUTATION = """
@@ -584,7 +682,14 @@ ORDER BY risk_score DESC, packages_in_graph DESC
 
 
 # Defaults for {placeholder} parameters, so every caller renders a runnable query.
+RELEASE_CHECK_SQL = _RELEASE_SIGNALS.replace("{min_score}", "3") + "SELECT" + _RELEASE_COLUMNS + """
+FROM scored s
+WHERE s.ecosystem = :ecosystem AND s.name = :pkg AND s.version = :version
+"""
+"""One release's anomaly score, for the install check. Takes :ecosystem, :pkg and :version."""
+
 DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
+    "RELEASE_ANOMALY": {"lookback_days": "30", "min_score": "3"},
     "XZ_PATTERN": {"lookback_new_days": "180"},
     "SHAI_HULUD": {"lookback_days": "7"},
     "SLOPSQUATTING": {

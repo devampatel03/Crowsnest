@@ -34,7 +34,7 @@ incident object for EACH distinct package/pattern combination found.
 For each incident you MUST determine:
 - attack_pattern: one of maintainer_takeover | worm | slopsquat | slsa_poisoning |
   sleeper | identity_drift | typosquat | dep_confusion | ioc_match |
-  ci_cache_poisoning | oidc_misuse | abandoned_popular
+  ci_cache_poisoning | oidc_misuse | abandoned_popular | release_anomaly
 - confidence: 0..1 (how certain based only on the data — never speculate)
 - severity: CRITICAL | HIGH | MEDIUM | LOW
   * CRITICAL: active IOC match or runtime-confirmed exploitation
@@ -69,6 +69,7 @@ _QUERY_PATTERN_MAP: dict[str, AttackPattern] = {
     "CI_CACHE_POISONING": "ci_cache_poisoning",
     "IOC_MATCH": "ioc_match",
     "MALICIOUS_PACKAGE_MATCH": "ioc_match",
+    "RELEASE_ANOMALY": "release_anomaly",
     "MAINTAINER_REPUTATION": "maintainer_takeover",
 }
 
@@ -85,6 +86,7 @@ _SEVERITY_BY_PATTERN: dict[AttackPattern, Severity] = {
     "typosquat": "MEDIUM",
     "slopsquat": "MEDIUM",
     "abandoned_popular": "LOW",
+    "release_anomaly": "HIGH",
 }
 
 
@@ -478,6 +480,12 @@ def _default_remediations(pattern: AttackPattern) -> list[str]:
             "Evaluate a maintained fork or alternative",
             "Vendor the package at the last known-good version",
             "Pin to specific version to prevent accidental upgrades",
+        ],
+        "release_anomaly": [
+            "Pin to the previous release and do not upgrade until the change is explained",
+            "Compare this release with the previous one and read what changed",
+            "Check the package's issue tracker and security channels for a compromise report",
+            "If it already ran, rotate the secrets available in that environment",
         ],
     }
     return _map.get(pattern, ["Investigate further", "Pin to current version"])

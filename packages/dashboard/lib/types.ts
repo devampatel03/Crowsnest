@@ -11,7 +11,8 @@ export type AttackPattern =
   | 'ioc_match'
   | 'ci_cache_poisoning'
   | 'oidc_misuse'
-  | 'abandoned_popular';
+  | 'abandoned_popular'
+  | 'release_anomaly';
 
 /**
  * Every type below describes the NORMALISED shape: what `lib/api.ts` hands to

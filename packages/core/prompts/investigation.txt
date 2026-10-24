@@ -9,7 +9,7 @@ For EACH distinct incident you identify, output a JSON object with:
   - attack_pattern: one of:
       maintainer_takeover | worm | slopsquat | slsa_poisoning | sleeper |
       identity_drift | typosquat | dep_confusion | ioc_match |
-      ci_cache_poisoning | oidc_misuse | abandoned_popular
+      ci_cache_poisoning | oidc_misuse | abandoned_popular | release_anomaly
   - confidence: float 0..1 (how certain are you based solely on the data)
   - severity: CRITICAL | HIGH | MEDIUM | LOW
       CRITICAL: active IOC match OR runtime-confirmed exploitation

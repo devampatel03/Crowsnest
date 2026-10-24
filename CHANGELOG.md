@@ -28,6 +28,11 @@ All notable changes to Crowsnest are listed here. The format follows
   and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
 - Lockfile readers for `requirements.txt` (exact pins), `uv.lock`, `Pipfile.lock`, `composer.lock` and `Gemfile.lock`,
   and Yarn 2+ lockfiles. `pnpm` and Yarn packages named in `package.json` are now marked as direct dependencies.
+- Every scan now looks for hijacked releases without waiting for anyone to report them. A recent release is flagged
+  when its changes add up: the signed build record names a different repository than the last release, provenance was
+  dropped, a new publisher appears, an install script is added, a dependency is added, the size jumps, or the package
+  was silent for a year. It is checked against the previous version on the same major line. On 404 real recent
+  releases from 56 popular packages it flagged none.
 - Every scan now checks each exact package version in your lockfiles against the OpenSSF malicious-packages feed
   (through OSV.dev) and raises a critical finding for a match, in every ecosystem, without waiting for a third-party
   scanner. A feed that cannot be reached is logged as a failed step and never reads as all clear.
