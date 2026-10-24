@@ -22,14 +22,16 @@ log = structlog.get_logger(__name__)
 
 _NPM_REGISTRY = "https://registry.npmjs.org"
 _SKIMDB = "https://skimdb.npmjs.com/registry"
+_NPM_DOWNLOADS = "https://api.npmjs.org/downloads/point/last-week"
 
 
 class NpmRegistrySource(DataSource):
     name = "npm_registry"
     tables = ["npm_packages", "npm_versions", "npm_maintainers", "npm_publish_events"]
 
-    def __init__(self, token: str = "", cache_ttl: int = 300):
+    def __init__(self, token: str = "", cache_ttl: int = 300, transport: httpx.AsyncBaseTransport | None = None):
         self._token = token
+        self._transport = transport
         self._cache: dict[str, tuple[Any, float]] = {}
         self._cache_ttl = cache_ttl
         self._semaphore = asyncio.Semaphore(10)
@@ -42,7 +44,20 @@ class NpmRegistrySource(DataSource):
             headers=headers,
             timeout=httpx.Timeout(connect=30.0, read=60.0, write=30.0, pool=5.0),
             follow_redirects=True,
+            transport=self._transport,
         )
+
+    async def weekly_downloads(self, name: str) -> int | None:
+        """Last-week download count from the npm downloads API, or None when it cannot be read."""
+        try:
+            async with self._client() as client:
+                resp = await client.get(f"{_NPM_DOWNLOADS}/{name}")
+                resp.raise_for_status()
+                count = resp.json().get("downloads")
+        except (httpx.HTTPError, ValueError) as exc:
+            log.warning("npm.downloads_error", package=name, error=str(exc))
+            return None
+        return count if isinstance(count, int) else None
 
     async def fetch(self, package: str | None = None, **kwargs: Any) -> list[dict[str, Any]]:
         if package:
@@ -87,7 +102,7 @@ class NpmRegistrySource(DataSource):
             "name": name,
             "latest_version": latest_version,
             "total_versions": len(data.get("versions", {})),
-            "weekly_downloads": 0,  # filled by a separate downloads API call
+            "weekly_downloads": await self.weekly_downloads(name),
             "repo_url": _extract_repo_url(data),
             "license": latest_data.get("license", ""),
             "maintainers": maintainer_names,

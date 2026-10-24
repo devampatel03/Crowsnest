@@ -8,22 +8,40 @@ from typing import Any
 import httpx
 import structlog
 
+from ..ecosystems import PYPI, normalize_package_name
 from .base import DataSource
 
 log = structlog.get_logger(__name__)
 
 _PYPI_API = "https://pypi.org/pypi"
+_PYPI_STATS = "https://pypistats.org/api/packages"
 
 
 class PyPISource(DataSource):
     name = "pypi"
     tables = ["pypi_packages", "pypi_versions"]
 
+    def __init__(self, transport: httpx.AsyncBaseTransport | None = None):
+        self._transport = transport
+
     def _client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(
             headers={"User-Agent": "crowsnest/0.1 (supply-chain-security)"},
             timeout=httpx.Timeout(30.0),
+            transport=self._transport,
         )
+
+    async def weekly_downloads(self, name: str) -> int | None:
+        """Last-week download count from pypistats.org, or None when it cannot be read."""
+        try:
+            async with self._client() as client:
+                resp = await client.get(f"{_PYPI_STATS}/{name}/recent")
+                resp.raise_for_status()
+                count = (resp.json().get("data") or {}).get("last_week")
+        except (httpx.HTTPError, ValueError) as exc:
+            log.warning("pypi.downloads_error", package=name, error=str(exc))
+            return None
+        return count if isinstance(count, int) else None
 
     async def fetch(self, package: str = "", **kwargs: Any) -> list[dict[str, Any]]:
         if package:
@@ -31,6 +49,7 @@ class PyPISource(DataSource):
         return []
 
     async def _fetch_package_records(self, name: str) -> list[dict[str, Any]]:
+        name = normalize_package_name(PYPI, name)
         try:
             async with self._client() as client:
                 resp = await client.get(f"{_PYPI_API}/{name}/json")
@@ -45,35 +64,50 @@ class PyPISource(DataSource):
         info = data.get("info", {})
         records: list[dict[str, Any]] = []
 
-        maintainers = []
-        if info.get("author"):
-            maintainers.append(info["author"])
+        maintainers = [m for m in (info.get("author"), info.get("maintainer")) if m]
+
+        # A release's date is its earliest file upload; a package's first and last release bound its age.
+        published = {
+            ver: min(t for t in (_parse_ts(f.get("upload_time_iso_8601")) for f in files) if t)
+            for ver, files in data.get("releases", {}).items()
+            if files and any(_parse_ts(f.get("upload_time_iso_8601")) for f in files)
+        }
+        name = normalize_package_name(PYPI, name)
 
         pkg_record = {
             "name": name,
             "latest_version": info.get("version", ""),
-            "weekly_downloads": 0,   # PyPI stats API is separate
-            "repo_url": (info.get("project_urls") or {}).get("Source", info.get("home_page", "")),
-            "license": info.get("license", ""),
+            "weekly_downloads": await self.weekly_downloads(name),
+            "repo_url": _repo_url(info),
+            "license": info.get("license", "") or "",
             "maintainers": maintainers,
-            "created_at": None,
-            "updated_at": None,
+            "created_at": min(published.values()) if published else None,
+            "updated_at": max(published.values()) if published else None,
         }
         records.append({"_table": "pypi_packages", **pkg_record})
 
-        for ver, releases in data.get("releases", {}).items():
-            if not releases:
-                continue
-            first_release = releases[0]
+        for ver, published_at in published.items():
             records.append({"_table": "pypi_versions",
                 "name": name,
                 "version": ver,
-                "published_at": _parse_ts(first_release.get("upload_time_iso_8601")),
-                "published_by": first_release.get("uploader", ""),
-                "requires_python": info.get("requires_python", ""),
+                "published_at": published_at,
+                "published_by": "",  # PyPI's public API does not name the uploader
+                "requires_python": info.get("requires_python", "") or "",
             })
 
         return records
+
+
+def _repo_url(info: dict[str, Any]) -> str:
+    """The project's source repository, from whichever label its author used for it."""
+    urls = {k.lower(): v for k, v in (info.get("project_urls") or {}).items() if v}
+    for label in ("source", "source code", "repository", "code", "github", "homepage"):
+        if label in urls:
+            return urls[label].rstrip("/").removesuffix(".git")
+    for url in urls.values():
+        if "github.com" in url or "gitlab.com" in url:
+            return url.rstrip("/").removesuffix(".git")
+    return (info.get("home_page") or "").rstrip("/").removesuffix(".git")
 
 
 def _parse_ts(val: str | None) -> datetime | None:
