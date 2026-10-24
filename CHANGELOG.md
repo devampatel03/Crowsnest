@@ -68,6 +68,9 @@ All notable changes to Crowsnest are listed here. The format follows
 - A detection that failed to run was treated as "nothing found". Scans now record which checks could not run
   (`failed_queries`) and keep going with the others. Detection queries use DuckDB's current `lambda x: ...` syntax,
   which newer DuckDB versions require, and Crowsnest now needs DuckDB 1.3 or newer.
+- The npm publish feed behind the worm check moved addresses and had been returning nothing, so that check never saw
+  live data. It reads the new address, names each release's publisher, and gives up after 20 seconds so a scan never
+  waits on it. Publish events with no known publisher are no longer pooled as one account.
 - The install check counted an unknown download figure as "fewer than 1,000 downloads", so packages from registries
   that do not report downloads looked unpopular.
 - A project that uses two versions of the same package (common with nested npm dependencies) was stored as one, so a

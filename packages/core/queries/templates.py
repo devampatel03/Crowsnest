@@ -166,6 +166,8 @@ WITH burst AS (
     list(DISTINCT p.package)                                           AS package_list
   FROM npm_publish_events p
   WHERE p.published_at > CURRENT_TIMESTAMP - INTERVAL '{lookback_days} days'
+    -- Events with no known publisher must not be pooled into one imaginary account.
+    AND coalesce(p.published_by, '') <> ''
   GROUP BY p.published_by
   HAVING
     COUNT(DISTINCT p.package) > 10
