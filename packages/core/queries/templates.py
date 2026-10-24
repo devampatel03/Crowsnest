@@ -56,7 +56,7 @@ flagged AS (
       WHERE o.ecosystem = h.ecosystem AND o.name = h.name
         AND o.published_by = h.published_by AND o.published_at < h.published_at
     ), false) AS new_publisher,
-    coalesce(len(list_filter(h.dependency_names, x -> NOT list_contains(h.prev_dependencies, x))) > 0
+    coalesce(len(list_filter(h.dependency_names, lambda x: NOT list_contains(h.prev_dependencies, x))) > 0
       AND h.prev_dependencies IS NOT NULL, false) AS dependency_added,
     coalesce(h.has_install_script AND NOT h.prev_install_script, false) AS install_hook_added,
     coalesce(h.prev_provenance AND NOT h.has_provenance, false) AS provenance_dropped,
@@ -86,7 +86,7 @@ scored AS (
       CASE WHEN dependency_added THEN 'dependency_added' END,
       CASE WHEN size_jump THEN 'size_jump' END,
       CASE WHEN dormant_release THEN 'dormant_release' END
-    ], s -> s IS NOT NULL) AS signals
+    ], lambda s: s IS NOT NULL) AS signals
   FROM flagged f
 )
 """

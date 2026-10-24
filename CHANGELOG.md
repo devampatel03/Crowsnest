@@ -58,6 +58,9 @@ All notable changes to Crowsnest are listed here. The format follows
   re-scans straight away.
 
 - Docs and blog content now read correctly when files use Windows line endings.
+- A detection that failed to run was treated as "nothing found". Scans now record which checks could not run
+  (`failed_queries`) and keep going with the others. Detection queries use DuckDB's current `lambda x: ...` syntax,
+  which newer DuckDB versions require, and Crowsnest now needs DuckDB 1.3 or newer.
 - A project that uses two versions of the same package (common with nested npm dependencies) was stored as one, so a
   malicious version could be hidden by a clean one. Every version is now stored, and a re-scan replaces the project's
   previous rows. Existing databases are upgraded on start.

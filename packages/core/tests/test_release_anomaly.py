@@ -315,6 +315,25 @@ async def test_investigation_reports_a_release_anomaly_as_a_high_incident(engine
     assert incident["raw_findings"][0]["signals"]
 
 
+async def test_a_detection_that_cannot_run_is_reported_not_read_as_nothing_found(engine, monkeypatch):
+    from packages.core.agents import investigation
+
+    real_get = investigation.QueryLibrary.get
+    monkeypatch.setattr(
+        investigation.QueryLibrary, "get",
+        classmethod(lambda cls, name, params=None: "SELECT nonexistent_column FROM packages"
+                    if name == "RELEASE_ANOMALY" else real_get(name, params)),
+    )
+    result = await investigation_node(
+        {"pending_queries": ["RELEASE_ANOMALY", "MALICIOUS_PACKAGE_MATCH"], "token_usage": 0},
+        coral_engine=engine, llm=None,
+    )
+    assert result["incidents"] == []
+    assert list(result["query_errors"]) == ["RELEASE_ANOMALY"]
+    assert "nonexistent_column" in result["query_errors"]["RELEASE_ANOMALY"]
+    assert "MALICIOUS_PACKAGE_MATCH" in result["query_results"]  # the other checks still ran
+
+
 async def test_existing_databases_gain_the_new_columns_and_keep_their_rows(tmp_path):
     db = tmp_path / "old.duckdb"
     conn = duckdb.connect(str(db))

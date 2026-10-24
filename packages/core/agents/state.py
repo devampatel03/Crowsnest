@@ -68,6 +68,7 @@ class CrowsnestState(TypedDict):
     scan_context: ScanContext
     pending_queries: list[str]             # query names from QueryLibrary to run
     query_results: dict[str, list[dict]]   # query_name -> rows
+    query_errors: dict[str, str]           # query_name -> why it could not run (never read as "no findings")
     incidents: list[AlertObject]
     triage_output: list[AlertObject]       # deduplicated, severity-sorted
     remediation_drafts: list[RemediationDraft]

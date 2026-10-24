@@ -114,27 +114,39 @@ class CoralEngine:
             if re.search(rf"\b{kw}\b", _strip_literals_and_comments(sql).upper()):
                 raise ValueError(f"Forbidden keyword in query: {kw}")
 
-    def _sync_query(self, sql: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def _sync_query(self, sql: str, params: dict[str, Any], strict: bool = False) -> list[dict[str, Any]]:
         prepared = _replace_named_params(sql, params)
         self._validate_sql(prepared)
         try:
             with self._get_connection().cursor() as conn:
+                # DuckDB is dropping the `x -> expr` lambda for `lambda x: expr`. A cursor does not inherit the
+                # connection's settings, so refuse the old form here: a query that only works on some DuckDB
+                # versions must fail in every test run instead of in someone else's CI.
+                conn.execute("SET lambda_syntax = 'DISABLE_SINGLE_ARROW'")
                 rel = conn.execute(prepared)
                 columns = [desc[0] for desc in rel.description]
                 rows = rel.fetchall()
                 return [dict(zip(columns, row)) for row in rows]
         except duckdb.Error as exc:
             log.error("coral.query_error", error=str(exc), sql=sql[:200])
+            if strict:
+                raise
             return []
 
-    async def query(self, sql: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-        """Execute a read-only SQL query. Uses a thread-local cursor for concurrent safety."""
+    async def query(
+        self, sql: str, params: dict[str, Any] | None = None, *, strict: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Execute a read-only SQL query. Uses a thread-local cursor for concurrent safety.
+
+        A query that fails to run returns no rows, unless `strict`, which raises instead. Detections run strict:
+        a check that could not run must never read as a check that found nothing.
+        """
         if not self._initialized:
             async with self._write_lock:
                 if not self._initialized:
                     await asyncio.get_event_loop().run_in_executor(None, self._sync_initialize_schema)
         return await asyncio.get_event_loop().run_in_executor(
-            None, self._sync_query, sql, params or {}
+            None, self._sync_query, sql, params or {}, strict
         )
 
     def _sync_ingest(self, table: str, records: list[dict[str, Any]]) -> int:

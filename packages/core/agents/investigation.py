@@ -13,6 +13,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+import duckdb
 import structlog
 
 from ..coral.engine import CoralEngine
@@ -99,6 +100,7 @@ async def investigation_node(
     """LangGraph node: run detection queries and produce AlertObjects."""
     pending = state.get("pending_queries", [])
     query_results: dict[str, list[dict]] = {}
+    query_errors: dict[str, str] = {}
     incidents: list[AlertObject] = []
     total_tokens = state.get("token_usage", 0)
 
@@ -109,7 +111,13 @@ async def investigation_node(
             log.warning("investigation.unknown_query", name=query_name)
             continue
 
-        rows = await coral_engine.query(sql)
+        try:
+            rows = await coral_engine.query(sql, strict=True)
+        except (duckdb.Error, ValueError) as exc:
+            # A detection that could not run is reported, never silently treated as "nothing found".
+            log.error("investigation.query_failed", query=query_name, error=str(exc))
+            query_errors[query_name] = str(exc)
+            continue
         query_results[query_name] = rows
         rows = _significant_rows(query_name, rows)
 
@@ -145,6 +153,7 @@ async def investigation_node(
 
     return {
         "query_results": query_results,
+        "query_errors": query_errors,
         "incidents": incidents,
         "token_usage": total_tokens,
     }

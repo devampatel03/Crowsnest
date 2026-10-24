@@ -71,6 +71,7 @@ async def run_scan(
         "scan_context": scan_context,  # type: ignore[typeddict-item]
         "pending_queries": [],
         "query_results": {},
+        "query_errors": {},
         "incidents": [],
         "triage_output": [],
         "remediation_drafts": [],
