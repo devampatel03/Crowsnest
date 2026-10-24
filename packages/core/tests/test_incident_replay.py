@@ -187,6 +187,21 @@ async def test_the_keyv_worm_is_caught_when_one_account_publishes_a_burst(engine
     assert "keyv" in found["packages"]
 
 
+async def test_a_publish_burst_elsewhere_on_npm_is_not_an_incident_here(engine):
+    """A legitimate monorepo release publishes dozens of packages in a minute. It only matters to a project that
+    uses one of them."""
+    await engine.ingest("local_lockfiles", [_lock("npm", "left-pad", "1.3.0")])
+    await engine.ingest("npm_publish_events", [
+        {"package": f"@monorepo/pkg-{i}", "version": "2.0.0", "published_by": "release-bot",
+         "published_at": _ago(minutes=5, seconds=-2 * i), "publish_via": "npm"} for i in range(40)
+    ])
+    assert len(await engine.query(QueryLibrary.get("SHAI_HULUD"))) == 1  # the burst is seen...
+    result = await investigation_node({"pending_queries": ["SHAI_HULUD"], "token_usage": 0},
+                                      coral_engine=engine, llm=None)
+    assert result["incidents"] == []                                      # ...but is not reported
+    assert result["query_results"]["SHAI_HULUD"]
+
+
 async def test_publish_events_with_no_known_publisher_are_not_a_worm(engine):
     await engine.ingest("npm_publish_events", [
         {"package": f"pkg-{i}", "version": "1.0.0", "published_by": "", "published_at": _ago(minutes=30, seconds=-5 * i),

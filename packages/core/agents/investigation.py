@@ -166,7 +166,11 @@ _MAINTAINER_RISK_THRESHOLD = 0.7
 
 
 def _significant_rows(query_name: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Drop rows that are only a score table entry, so a clean project does not get an incident."""
+    """Drop rows that are not about this project, so a clean project does not get an incident."""
+    if query_name == "SHAI_HULUD":
+        # A burst of publishes anywhere on npm is news, not an incident here. It only matters when a package
+        # the project uses is part of it.
+        return [r for r in rows if int(r.get("our_projects_exposed") or 0) > 0]
     if query_name != "MAINTAINER_REPUTATION":
         return rows
     return [
