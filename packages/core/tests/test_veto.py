@@ -167,6 +167,19 @@ async def test_an_unreachable_malware_feed_is_reported_and_never_reads_as_clean(
     assert any("malware feed unreachable" in d for d in verdict["degraded"])
 
 
+async def test_a_release_check_that_cannot_run_is_reported(engine, monkeypatch):
+    from packages.core import veto
+
+    monkeypatch.setattr(veto, "RELEASE_CHECK_SQL", "SELECT nonexistent_column FROM packages")
+    ingestor = FakeIngestor({
+        "npm_packages": [_npm_package("axios", "1.14.0")],
+        "npm_versions": [_npm_version("axios", "1.14.0", _ago(days=400))],
+    })
+    verdict = await _veto(engine, ingestor, OSVSource(transport=FakeOSV({}).transport()), version="1.14.0")
+    assert verdict["blocked"] is False
+    assert any("release check could not run" in d for d in verdict["degraded"])
+
+
 async def test_a_registry_that_cannot_be_reached_is_reported(engine):
     verdict = await _veto(engine, FakeIngestor(fail=True), OSVSource(transport=FakeOSV({}).transport()),
                           package="mystery", version="1.0.0")

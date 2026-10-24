@@ -16,6 +16,7 @@ import weakref
 from datetime import UTC, datetime
 from typing import Any
 
+import duckdb
 import httpx
 import structlog
 
@@ -142,7 +143,14 @@ async def evaluate(
     # Check 7: does the release look hijacked?
     release_age_hours: float | None = None
     if resolved:
-        for row in await engine.query(RELEASE_CHECK_SQL, {"ecosystem": eco, "pkg": name, "version": resolved}):
+        try:
+            release_rows = await engine.query(
+                RELEASE_CHECK_SQL, {"ecosystem": eco, "pkg": name, "version": resolved}, strict=True,
+            )
+        except duckdb.Error:
+            release_rows = []
+            degraded.append("release check could not run: this version's changes were not compared with the last one")
+        for row in release_rows:
             if row["score"] >= 3:
                 probability += 0.6
                 signals.append(
