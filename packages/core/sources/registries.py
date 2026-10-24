@@ -200,7 +200,7 @@ class GoProxySource(RegistryAdapter):
             name=name,
             latest_version=(latest or {}).get("Version") or (wanted[-1] if wanted else ""),
             weekly_downloads=None,  # the proxy publishes no download counts
-            repo_url=f"https://{name}" if name.startswith("github.com/") else "",
+            repo_url=f"https://{name}" if name.split("/", 1)[0] == "github.com" else "",
             license="",
             maintainers=[],
             created_at=min(times) if times else None,

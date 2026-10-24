@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 import structlog
@@ -15,6 +16,7 @@ log = structlog.get_logger(__name__)
 
 _PYPI_API = "https://pypi.org/pypi"
 _PYPI_STATS = "https://pypistats.org/api/packages"
+_REPO_HOSTS = {"github.com", "www.github.com", "gitlab.com", "www.gitlab.com"}
 
 
 class PyPISource(DataSource):
@@ -105,7 +107,7 @@ def _repo_url(info: dict[str, Any]) -> str:
         if label in urls:
             return urls[label].rstrip("/").removesuffix(".git")
     for url in urls.values():
-        if "github.com" in url or "gitlab.com" in url:
+        if urlparse(url).hostname in _REPO_HOSTS:
             return url.rstrip("/").removesuffix(".git")
     return (info.get("home_page") or "").rstrip("/").removesuffix(".git")
 

@@ -158,6 +158,15 @@ async def test_weekly_downloads_are_read_when_the_stats_service_answers():
     assert await npm.weekly_downloads("missing") is None
 
 
+def test_a_repository_is_recognised_by_its_host_not_by_a_substring():
+    from packages.core.sources.pypi import _repo_url
+
+    assert _repo_url({"project_urls": {"Docs": "https://example.invalid/?mirror=github.com/a/b",
+                                       "Chat": "https://gitlab.com/a/b.git/"}}) == "https://gitlab.com/a/b"
+    assert _repo_url({"project_urls": {"Docs": "https://github.com.evil.example/a/b"},
+                      "home_page": "https://example.invalid/a"}) == "https://example.invalid/a"
+
+
 def test_parse_ts_returns_naive_utc():
     assert parse_ts("2026-10-21T11:39:00Z").isoformat() == "2026-10-21T11:39:00"
     assert parse_ts("2026-10-21T13:39:00+02:00").isoformat() == "2026-10-21T11:39:00"
