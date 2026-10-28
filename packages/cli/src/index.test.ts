@@ -18,7 +18,7 @@ describe('CLI command parsing (sanity)', () => {
       { cwd: path.resolve(__dirname, '..') },
     );
 
-    for (const cmd of ['scan', 'investigate', 'blast-radius', 'replay', 'watch', 'install', 'config']) {
+    for (const cmd of ['scan', 'investigate', 'blast-radius', 'replay', 'watch', 'install', 'check', 'config']) {
       expect(stdout).toContain(cmd);
     }
   }, 30000);

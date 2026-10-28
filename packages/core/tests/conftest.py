@@ -54,6 +54,8 @@ def api_client(tmp_path, monkeypatch, seeded_db_template):
     monkeypatch.setattr(api, "get_llm", lambda *a, **k: None)
     monkeypatch.setattr(api, "describe_llm", lambda *a, **k: {"configured": False})
     monkeypatch.setenv("DEMO_MODE", "false")
+    # Tests never reach a real registry or the malware feed.
+    monkeypatch.setenv("CROWSNEST_LIVE_LOOKUPS", "false")
     get_settings.cache_clear()
 
     api._incident_store.clear()

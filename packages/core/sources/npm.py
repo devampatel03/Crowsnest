@@ -62,10 +62,10 @@ class NpmRegistrySource(DataSource):
 
     async def fetch(self, package: str | None = None, **kwargs: Any) -> list[dict[str, Any]]:
         if package:
-            return await self._fetch_package_records(package)
+            return await self._fetch_package_records(package, kwargs.get("versions"))
         return []
 
-    async def _fetch_package_records(self, name: str) -> list[dict[str, Any]]:
+    async def _fetch_package_records(self, name: str, versions: list[str] | None = None) -> list[dict[str, Any]]:
         """Returns one npm_packages record + many npm_versions records."""
         async with self._semaphore:
             try:
@@ -138,7 +138,7 @@ class NpmRegistrySource(DataSource):
             }
             records.append({"_table": "npm_versions", **ver_record})
 
-        await self._add_provenance_repos(name, data, records, time_data)
+        await self._add_provenance_repos(name, data, records, time_data, versions)
 
         seen_maintainers: dict[str, str] = {}  # login → first version published
         for ver, vdata in sorted(
@@ -160,10 +160,11 @@ class NpmRegistrySource(DataSource):
 
     async def _add_provenance_repos(
         self, name: str, data: dict[str, Any], records: list[dict[str, Any]], time_data: dict[str, str],
+        versions: list[str] | None = None,
     ) -> None:
-        """Fill `provenance_repo` for recent releases that carry provenance (one small request each)."""
+        """Fill `provenance_repo` for the versions asked about (default: the newest) that carry provenance."""
         published = {v: _parse_ts(time_data.get(v)) for v in data.get("versions", {})}
-        wanted = recent_with_predecessor(published)
+        wanted = recent_with_predecessor(published, focus=versions)
         targets = {
             r["version"]: r for r in records
             if r["_table"] == "npm_versions" and r["version"] in wanted and r["has_provenance"]

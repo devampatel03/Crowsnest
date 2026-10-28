@@ -64,6 +64,25 @@ export interface VetoResult {
   signals: string[];
   reason: string;
   override_flag: string | null;
+  /** Lookups that could not be made. They are never a clean result. */
+  degraded: string[];
+  release_age_hours: number | null;
+  ecosystem?: string;
+}
+
+export interface ChangeResult extends VetoResult {
+  change: 'added' | 'updated';
+  previous_versions: string[];
+}
+
+export interface ChangeReport {
+  base_ref: string | null;
+  project_path: string;
+  checked: number;
+  unchanged: number;
+  blocked: ChangeResult[];
+  degraded: string[];
+  results: ChangeResult[];
 }
 
 export interface MaintainerScore {
@@ -165,10 +184,35 @@ export const api = {
     });
   },
 
-  async vetoCheck(pkg: string, version?: string, ecosystem = 'npm'): Promise<VetoResult> {
+  async vetoCheck(
+    pkg: string,
+    version?: string,
+    ecosystem = 'npm',
+    minReleaseAgeDays?: number,
+  ): Promise<VetoResult> {
     return request('/api/veto', {
       method: 'POST',
-      body: JSON.stringify({ package: pkg, version: version || null, ecosystem }),
+      body: JSON.stringify({
+        package: pkg,
+        version: version || null,
+        ecosystem,
+        min_release_age_days: minReleaseAgeDays ?? null,
+      }),
+    });
+  },
+
+  async checkChanges(
+    projectPath: string,
+    baseRef?: string,
+    minReleaseAgeDays?: number,
+  ): Promise<ChangeReport> {
+    return request('/api/check-changes', {
+      method: 'POST',
+      body: JSON.stringify({
+        project_path: projectPath,
+        base_ref: baseRef || null,
+        min_release_age_days: minReleaseAgeDays ?? null,
+      }),
     });
   },
 

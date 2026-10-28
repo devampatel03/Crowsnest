@@ -28,6 +28,13 @@ All notable changes to Crowsnest are listed here. The format follows
   and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
 - Lockfile readers for `requirements.txt` (exact pins), `uv.lock`, `Pipfile.lock`, `composer.lock` and `Gemfile.lock`,
   and Yarn 2+ lockfiles. `pnpm` and Yarn packages named in `package.json` are now marked as direct dependencies.
+- `crowsnest check --base <ref>` vets only the package versions a pull request adds, for every ecosystem Crowsnest
+  reads, and exits with 3 when one should not be merged. A GitHub Action (`.github/actions/dependency-check`) and
+  `python -m packages.core.checks` run the same check with no server.
+- `crowsnest install` now also stops a version a public malware list names, a version whose release looks hijacked,
+  and a version younger than two days (`--min-release-age <days>`, or `CROWSNEST_MIN_RELEASE_AGE_DAYS`; `0` turns it
+  off). It resolves the exact version first and installs that same version, and `--strict` refuses to install when
+  Crowsnest cannot be reached. Package names are checked for plain characters before they reach a shell.
 - Every scan now looks for hijacked releases without waiting for anyone to report them. A recent release is flagged
   when its changes add up: the signed build record names a different repository than the last release, provenance was
   dropped, a new publisher appears, an install script is added, a dependency is added, the size jumps, or the package
@@ -61,6 +68,8 @@ All notable changes to Crowsnest are listed here. The format follows
 - A detection that failed to run was treated as "nothing found". Scans now record which checks could not run
   (`failed_queries`) and keep going with the others. Detection queries use DuckDB's current `lambda x: ...` syntax,
   which newer DuckDB versions require, and Crowsnest now needs DuckDB 1.3 or newer.
+- The install check counted an unknown download figure as "fewer than 1,000 downloads", so packages from registries
+  that do not report downloads looked unpopular.
 - A project that uses two versions of the same package (common with nested npm dependencies) was stored as one, so a
   malicious version could be hidden by a clean one. Every version is now stored, and a re-scan replaces the project's
   previous rows. Existing databases are upgraded on start.
