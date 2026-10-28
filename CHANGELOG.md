@@ -26,6 +26,8 @@ All notable changes to Crowsnest are listed here. The format follows
 - The command line tool is ready to publish to npm (`packages/cli/PUBLISHING.md`).
 - One ecosystem-neutral view of every registry (`packages` and `package_versions`), with canonical ecosystem names
   and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
+- Registry data for PyPI, crates.io, Packagist, RubyGems and Go modules is now collected during a scan, next to npm.
+  Each scan reads up to 500 packages per ecosystem, direct dependencies first, and reports how many it skipped.
 
 ### Changed
 
@@ -46,6 +48,9 @@ All notable changes to Crowsnest are listed here. The format follows
   re-scans straight away.
 
 - Docs and blog content now read correctly when files use Windows line endings.
+- npm and PyPI weekly downloads were always recorded as 0, so every package looked unpopular. They are now read from
+  the registries' download services and stay empty when unknown. PyPI packages now carry their real first and last
+  release dates and are matched by their normalised name.
 - Maintainer history for npm packages was silently dropped, so the maintainer-takeover check and the account-age part
   of the maintainer risk score had no data. It is now stored, and existing databases are upgraded on start.
 
