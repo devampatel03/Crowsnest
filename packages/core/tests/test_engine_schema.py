@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import duckdb
+import pytest
 
 from packages.core.coral.engine import CoralEngine
 
@@ -32,6 +33,14 @@ async def _tables(engine):
         "WHERE table_schema = 'main' AND table_type = 'BASE TABLE' ORDER BY 1"
     )
     return [r["table_name"] for r in rows]
+
+
+async def test_queries_use_the_current_lambda_syntax_only(engine):
+    """`x -> expr` is rejected by newer DuckDB; the engine refuses it everywhere so that shows up in tests."""
+    assert await engine.query("SELECT list_filter([1, 2, 3], lambda x: x > 1) AS kept") == [{"kept": [2, 3]}]
+    with pytest.raises(duckdb.Error):
+        await engine.query("SELECT list_filter([1, 2, 3], x -> x > 1) AS kept", strict=True)
+    assert await engine.query("SELECT list_filter([1, 2, 3], x -> x > 1) AS kept") == []  # the lenient default
 
 
 async def test_every_table_round_trips_and_upserts(engine):

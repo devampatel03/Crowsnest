@@ -22,6 +22,7 @@ const HEADLINES: Record<string, string> = {
   ci_cache_poisoning: 'A package build reuses saved files, and those files could have been tampered with.',
   oidc_misuse: 'A build job got a sign-in pass it should not have had.',
   abandoned_popular: 'Many people use this package, but it has not been updated in over a year.',
+  release_anomaly: 'A new release of this package changed in ways that look like a hijacked account or build.',
 };
 
 /** The only 'What to do' text end users see by default. Backend prose never replaces it. */
@@ -38,6 +39,7 @@ const FALLBACK_ADVICE: Record<string, string> = {
   ci_cache_poisoning: 'Clear your build caches and look for files that changed.',
   oidc_misuse: 'Limit that sign-in pass to your main branch. Replace credentials it could have reached.',
   abandoned_popular: 'Look for a maintained alternative before you rely on it further.',
+  release_anomaly: 'Stay on the previous version until the changes are explained. If it already ran, replace the keys it could reach.',
 };
 
 export function headlineFor(pattern: string): string {
