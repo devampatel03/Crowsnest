@@ -29,6 +29,7 @@ from .coral.engine import CoralEngine
 from .llm import LLMClient, get_llm
 from .llm import describe as describe_llm
 from .queries.templates import QueryLibrary
+from .sources.lockfile import LOCKFILE_NAMES, has_supported_lockfile
 
 log = structlog.get_logger(__name__)
 
@@ -177,7 +178,7 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
 
 
-_LOCKFILE_NAMES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "Cargo.lock", "go.sum")
+_LOCKFILE_NAMES = LOCKFILE_NAMES
 
 
 def _check_scan_target(req: ScanRequest) -> None:
@@ -190,7 +191,7 @@ def _check_scan_target(req: ScanRequest) -> None:
     if req.lockfile_path:
         if not Path(req.lockfile_path).is_file():
             raise HTTPException(status_code=400, detail="That lockfile does not exist.")
-    elif not any((folder / name).is_file() for name in _LOCKFILE_NAMES):
+    elif not has_supported_lockfile(folder):
         raise HTTPException(
             status_code=400,
             detail="No supported lockfile in that folder (" + ", ".join(_LOCKFILE_NAMES) + ").",

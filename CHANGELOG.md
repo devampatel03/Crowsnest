@@ -26,6 +26,8 @@ All notable changes to Crowsnest are listed here. The format follows
 - The command line tool is ready to publish to npm (`packages/cli/PUBLISHING.md`).
 - One ecosystem-neutral view of every registry (`packages` and `package_versions`), with canonical ecosystem names
   and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
+- Lockfile readers for `requirements.txt` (exact pins), `uv.lock`, `Pipfile.lock`, `composer.lock` and `Gemfile.lock`,
+  and Yarn 2+ lockfiles. `pnpm` and Yarn packages named in `package.json` are now marked as direct dependencies.
 - Every scan now checks each exact package version in your lockfiles against the OpenSSF malicious-packages feed
   (through OSV.dev) and raises a critical finding for a match, in every ecosystem, without waiting for a third-party
   scanner. A feed that cannot be reached is logged as a failed step and never reads as all clear.
@@ -51,6 +53,11 @@ All notable changes to Crowsnest are listed here. The format follows
   re-scans straight away.
 
 - Docs and blog content now read correctly when files use Windows line endings.
+- A project that uses two versions of the same package (common with nested npm dependencies) was stored as one, so a
+  malicious version could be hidden by a clean one. Every version is now stored, and a re-scan replaces the project's
+  previous rows. Existing databases are upgraded on start.
+- Yarn 2+ lockfiles were read without versions. Go versions ending in `d`, `o`, `m`, `g` or `.` were cut short, and
+  Cargo crates that are not from the registry were listed as dependencies.
 - npm and PyPI weekly downloads were always recorded as 0, so every package looked unpopular. They are now read from
   the registries' download services and stay empty when unknown. PyPI packages now carry their real first and last
   release dates and are matched by their normalised name.

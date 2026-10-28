@@ -14,6 +14,7 @@ from typing import Any
 
 import structlog
 
+from ..ecosystems import COMPOSER, PYPI, RUBYGEMS, normalize_package_name
 from .base import DataSource
 
 log = structlog.get_logger(__name__)
@@ -32,6 +33,17 @@ except ImportError:
     yaml = None  # type: ignore[assignment]
 
 
+LOCKFILE_NAMES = (
+    "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "uv.lock", "Pipfile.lock",
+    "composer.lock", "Gemfile.lock", "Cargo.lock", "go.sum", "requirements.txt",
+)
+
+
+def has_supported_lockfile(folder: Path) -> bool:
+    """True when `folder` holds a file the readers understand (any requirements*.txt counts)."""
+    return any((folder / n).is_file() for n in LOCKFILE_NAMES) or any(folder.glob("requirements*.txt"))
+
+
 class LockfileSource(DataSource):
     name = "lockfile"
     tables = ["local_lockfiles", "local_source_packages_mentioned"]
@@ -46,16 +58,22 @@ class LockfileSource(DataSource):
         path = Path(project_path)
         records: list[dict[str, Any]] = []
 
-        for lockfile_name, parser in [
+        parsers: list[tuple[str, Any]] = [
             ("package-lock.json", self.parse_package_lock),
             ("pnpm-lock.yaml", self.parse_pnpm_lock),
             ("yarn.lock", self.parse_yarn_lock),
             ("poetry.lock", self.parse_poetry_lock),
+            ("uv.lock", self.parse_uv_lock),
+            ("Pipfile.lock", self.parse_pipfile_lock),
+            ("composer.lock", self.parse_composer_lock),
+            ("Gemfile.lock", self.parse_gemfile_lock),
             ("Cargo.lock", self.parse_cargo_lock),
             ("go.sum", self.parse_go_sum),
-        ]:
+        ]
+        parsers += [(f.name, self.parse_requirements) for f in sorted(path.glob("requirements*.txt"))]
+        for lockfile_name, parser in parsers:
             lockfile_path = path / lockfile_name
-            if lockfile_path.exists():
+            if lockfile_path.is_file():
                 try:
                     parsed = parser(str(lockfile_path))
                     for r in parsed:
@@ -65,7 +83,8 @@ class LockfileSource(DataSource):
                 except Exception as exc:
                     log.error("lockfile.parse_error", file=lockfile_name, error=str(exc))
 
-        return records
+        _mark_direct_from_manifest(records, path)
+        return _finalise(records)
 
     def parse_package_lock(self, path: str) -> list[dict[str, Any]]:
         with open(path, encoding="utf-8") as f:
@@ -178,39 +197,49 @@ class LockfileSource(DataSource):
         return records
 
     def parse_yarn_lock(self, path: str) -> list[dict[str, Any]]:
-        """Parse yarn.lock (classic v1 format)."""
-        records = []
-        current_pkg: dict[str, Any] = {}
-
+        """Parse yarn.lock, both the classic format and Yarn 2+ ("berry")."""
         with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.rstrip()
-                if not line or line.startswith("#"):
-                    continue
-                if not line.startswith(" "):
-                    # Package header: '"@org/pkg@^1.0.0":'
-                    if current_pkg.get("package"):
-                        records.append(current_pkg)
-                    name_match = re.match(r'"?(@?[^@"]+)@', line)
-                    current_pkg = {"package": name_match.group(1) if name_match else "",
-                                   "ecosystem": "npm", "declared_in": "transitive",
-                                   "parent_chain": [], "integrity_hash": "",
-                                   "resolved_url": "", "version": ""}
-                elif "version" in line:
-                    v_match = re.search(r'version "([^"]+)"', line)
-                    if v_match:
-                        current_pkg["version"] = v_match.group(1)
-                elif "resolved" in line:
-                    r_match = re.search(r'resolved "([^"]+)"', line)
-                    if r_match:
-                        current_pkg["resolved_url"] = r_match.group(1)
-                elif "integrity" in line:
-                    i_match = re.search(r'integrity (sha\S+)', line)
-                    if i_match:
-                        current_pkg["integrity_hash"] = i_match.group(1)
+            lines = f.read().splitlines()
+        berry = any(line.startswith("__metadata:") for line in lines)
+        records: list[dict[str, Any]] = []
+        current: dict[str, Any] = {}
 
-        if current_pkg.get("package"):
-            records.append(current_pkg)
+        def flush() -> None:
+            if current.get("package") and current.get("version"):
+                records.append(current)
+
+        for line in lines:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            if not line.startswith(" "):
+                flush()
+                current = {}
+                name_match = re.match(r'"?(@?[^@"\s,:]+)@', line)
+                if name_match and not line.startswith("__metadata"):
+                    current = {"package": name_match.group(1), "ecosystem": "npm", "declared_in": "transitive",
+                               "parent_chain": [], "integrity_hash": "", "resolved_url": "", "version": ""}
+                continue
+            if not current:
+                continue
+            if line.startswith("  version"):
+                v_match = re.match(r'  version:? "?([^"\s]+)"?\s*$', line)
+                if v_match:
+                    current["version"] = v_match.group(1)
+            elif line.startswith("  resolved "):
+                r_match = re.search(r'resolved "([^"]+)"', line)
+                if r_match:
+                    current["resolved_url"] = r_match.group(1)
+            elif line.startswith("  integrity "):
+                i_match = re.search(r"integrity (sha\S+)", line)
+                if i_match:
+                    current["integrity_hash"] = i_match.group(1)
+            elif berry and line.startswith("  checksum:"):
+                current["integrity_hash"] = line.split(":", 1)[1].strip()
+            elif berry and line.startswith("  resolution:") and (
+                "@workspace:" in line or "@file:" in line or "@portal:" in line or "@link:" in line
+            ):
+                current = {}  # the project's own packages are not registry packages
+        flush()
         return records
 
     def parse_poetry_lock(self, path: str) -> list[dict[str, Any]]:
@@ -238,7 +267,7 @@ class LockfileSource(DataSource):
         records = []
         with open(path, encoding="utf-8") as f:
             content = f.read()
-        for match in re.finditer(r'\[\[package\]\]\nname = "([^"]+)"\nversion = "([^"]+)"', content):
+        for match in re.finditer(r'\[\[package\]\]\r?\nname = "([^"]+)"\r?\nversion = "([^"]+)"', content):
             records.append({
                 "ecosystem": "pypi",
                 "package": match.group(1),
@@ -246,6 +275,134 @@ class LockfileSource(DataSource):
                 "integrity_hash": "", "resolved_url": "",
                 "declared_in": "transitive", "parent_chain": [],
             })
+        return records
+
+    def parse_requirements(self, path: str) -> list[dict[str, Any]]:
+        """Exactly pinned (``name==1.2.3``) requirements. Unpinned ones name no single version to check."""
+        with open(path, encoding="utf-8", errors="replace") as f:
+            text = f.read().replace("\\\n", " ")
+        records: list[dict[str, Any]] = []
+        unpinned = 0
+        for raw in text.splitlines():
+            line = re.sub(r"(^|\s)#.*$", "", raw).strip()
+            if not line or line.startswith("-"):
+                continue
+            m = _REQUIREMENT_PIN.match(line)
+            if m and not m.group(2).endswith("*"):
+                records.append({
+                    "ecosystem": PYPI, "package": m.group(1), "version": m.group(2), "integrity_hash": "",
+                    "resolved_url": "", "declared_in": "direct", "parent_chain": [],
+                })
+            else:
+                unpinned += 1
+        if unpinned:
+            log.warning("lockfile.requirements_unpinned", file=Path(path).name, count=unpinned)
+        return records
+
+    def parse_uv_lock(self, path: str) -> list[dict[str, Any]]:
+        if tomllib is None:
+            return []
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+        packages = data.get("package", [])
+        direct: set[str] = set()
+        roots: set[str] = set()
+        for pkg in packages:
+            source = pkg.get("source") or {}
+            if source.get("virtual") == "." or source.get("editable") == ".":
+                roots.add(pkg.get("name", ""))
+                direct.update(d.get("name", "") for d in pkg.get("dependencies", []))
+                for group in (pkg.get("dev-dependencies") or {}).values():
+                    direct.update(d.get("name", "") for d in group)
+                for group in (pkg.get("optional-dependencies") or {}).values():
+                    direct.update(d.get("name", "") for d in group)
+        records = []
+        for pkg in packages:
+            name = pkg.get("name", "")
+            if name in roots or "registry" not in (pkg.get("source") or {}):
+                continue  # the project itself, or a git/path dependency no registry feed covers
+            records.append({
+                "ecosystem": PYPI, "package": name, "version": pkg.get("version", ""),
+                "integrity_hash": ((pkg.get("sdist") or {}).get("hash") or ""),
+                "resolved_url": (pkg.get("source") or {}).get("registry", ""),
+                "declared_in": "direct" if name in direct else "transitive", "parent_chain": [],
+            })
+        return records
+
+    def parse_pipfile_lock(self, path: str) -> list[dict[str, Any]]:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        direct: set[str] = set()
+        pipfile = Path(path).parent / "Pipfile"
+        if pipfile.is_file() and tomllib is not None:
+            with open(pipfile, "rb") as f:
+                manifest = tomllib.load(f)
+            direct = {normalize_package_name(PYPI, n) for sec in ("packages", "dev-packages")
+                      for n in (manifest.get(sec) or {})}
+        records = []
+        for section in ("default", "develop"):
+            for name, info in (data.get(section) or {}).items():
+                info = info or {}
+                version = str(info.get("version", "")).removeprefix("==")
+                if not version:
+                    continue  # VCS and path dependencies carry no registry version
+                is_direct = normalize_package_name(PYPI, name) in direct
+                records.append({
+                    "ecosystem": PYPI, "package": name, "version": version,
+                    "integrity_hash": (info.get("hashes") or [""])[0], "resolved_url": "",
+                    "declared_in": "direct" if is_direct else "transitive", "parent_chain": [],
+                })
+        return records
+
+    def parse_composer_lock(self, path: str) -> list[dict[str, Any]]:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        direct: set[str] = set()
+        manifest = Path(path).parent / "composer.json"
+        if manifest.is_file():
+            try:
+                parsed = json.loads(manifest.read_text(encoding="utf-8"))
+                direct = {normalize_package_name(COMPOSER, n)
+                          for sec in ("require", "require-dev") for n in (parsed.get(sec) or {})}
+            except (OSError, ValueError):
+                pass
+        records = []
+        for section in ("packages", "packages-dev"):
+            for pkg in data.get(section) or []:
+                name = pkg.get("name", "")
+                is_direct = normalize_package_name(COMPOSER, name) in direct
+                records.append({
+                    "ecosystem": COMPOSER, "package": name, "version": pkg.get("version", ""),
+                    "integrity_hash": (pkg.get("dist") or {}).get("shasum", "") or "",
+                    "resolved_url": (pkg.get("dist") or {}).get("url", "") or "",
+                    "declared_in": "direct" if is_direct else "transitive", "parent_chain": [],
+                })
+        return records
+
+    def parse_gemfile_lock(self, path: str) -> list[dict[str, Any]]:
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+        records: list[dict[str, Any]] = []
+        direct: set[str] = set()
+        section = ""
+        for line in lines:
+            if line and not line.startswith(" "):
+                section = line.strip()
+                continue
+            if section == "GEM":
+                m = _GEM_SPEC.match(line)
+                if m:
+                    records.append({
+                        "ecosystem": RUBYGEMS, "package": m.group(1), "version": m.group(2), "integrity_hash": "",
+                        "resolved_url": "", "declared_in": "transitive", "parent_chain": [],
+                    })
+            elif section == "DEPENDENCIES":
+                m = re.match(r"^  ([A-Za-z0-9_.-]+)", line)
+                if m:
+                    direct.add(m.group(1))
+        for r in records:
+            if r["package"] in direct:
+                r["declared_in"] = "direct"
         return records
 
     def parse_cargo_lock(self, path: str) -> list[dict[str, Any]]:
@@ -257,6 +414,9 @@ class LockfileSource(DataSource):
 
         records = []
         for pkg in data.get("package", []):
+            # Crates without a registry source are the workspace's own or git/path dependencies.
+            if not str(pkg.get("source", "")).startswith("registry+"):
+                continue
             records.append({
                 "ecosystem": "cargo",
                 "package": pkg.get("name", ""),
@@ -275,9 +435,9 @@ class LockfileSource(DataSource):
                 parts = line.strip().split()
                 if len(parts) >= 3:
                     module_version = parts[0]
-                    version = parts[1].rstrip("/go.mod")
+                    version = parts[1]
                     integrity = parts[2]
-                    if "/go.mod" in parts[1]:
+                    if version.endswith("/go.mod"):
                         continue  # skip go.mod-only entries
                     records.append({
                         "ecosystem": "go",
@@ -359,6 +519,52 @@ class LockfileSource(DataSource):
                     })
 
         return records
+
+
+_REQUIREMENT_PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)\s*(?:\[[^\]]*\])?\s*==\s*([A-Za-z0-9._!+*-]+)")
+_GEM_SPEC = re.compile(r"^    ([A-Za-z0-9_.-]+) \((\d[^\s)-]*)(?:-[A-Za-z][^)]*)?\)\s*$")
+
+
+def _mark_direct_from_manifest(records: list[dict[str, Any]], path: Path) -> None:
+    """pnpm and yarn lockfiles do not say which packages are direct; package.json does."""
+    manifest = path / "package.json"
+    if not manifest.is_file():
+        return
+    try:
+        parsed = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    sections = ("dependencies", "devDependencies", "optionalDependencies")
+    direct = {n for sec in sections for n in (parsed.get(sec) or {})}
+    for r in records:
+        if r.get("ecosystem") == "npm" and r.get("package") in direct:
+            r["declared_in"] = "direct"
+
+
+def _finalise(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Canonical names, no version-less rows, and one row per (project, ecosystem, package, version).
+
+    A project can hold several versions of one package, and a bad one must not hide behind a good one,
+    so the version is part of the identity. A repeat of the same version keeps its 'direct' mark.
+    """
+    unique: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    dropped = 0
+    for r in records:
+        name = normalize_package_name(r.get("ecosystem", ""), str(r.get("package", "")))
+        version = str(r.get("version") or "").strip()
+        if not name or not version:
+            dropped += 1  # workspace links and VCS entries name no registry version
+            continue
+        r["package"], r["version"] = name, version
+        key = (r.get("project_path", ""), r["ecosystem"], name, version)
+        kept = unique.get(key)
+        if kept is None:
+            unique[key] = r
+        elif r.get("declared_in") == "direct":
+            kept["declared_in"] = "direct"
+    if dropped:
+        log.info("lockfile.skipped_entries", count=dropped)
+    return list(unique.values())
 
 
 def _extract_parent_chain(pkg_path: str) -> list[str]:
