@@ -32,7 +32,7 @@
     "tailwindcss": "^3.4.4"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.0.1",
     "@types/mdx": "^2.0.14",
     "@types/node": "^20.14.0",
