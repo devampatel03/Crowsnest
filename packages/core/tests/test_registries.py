@@ -235,11 +235,8 @@ async def test_full_ingest_caps_each_ecosystem_and_prefers_direct_dependencies(e
     service = IngestorService()
     npm = _FakeSource([])
     service._npm = npm
-    for name in ("_osv", "_socket"):
-        setattr(service, name, type("N", (), {
-            "fetch_batch": staticmethod(lambda *a, **k: _empty()),
-            "fetch_batch_scores": staticmethod(lambda *a, **k: _empty()),
-        })())
+    service._socket = type("N", (), {"fetch_batch_scores": staticmethod(lambda *a, **k: _empty())})()
+    service.ingest_malware_feed = lambda *a, **k: _zero()
     service.ingest_lockfile = lambda *a, **k: _zero()
     service.ingest_npm_publish_events = lambda *a, **k: _zero()
     totals = await service.full_ingest("/p", engine)

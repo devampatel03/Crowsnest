@@ -26,6 +26,9 @@ All notable changes to Crowsnest are listed here. The format follows
 - The command line tool is ready to publish to npm (`packages/cli/PUBLISHING.md`).
 - One ecosystem-neutral view of every registry (`packages` and `package_versions`), with canonical ecosystem names
   and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
+- Every scan now checks each exact package version in your lockfiles against the OpenSSF malicious-packages feed
+  (through OSV.dev) and raises a critical finding for a match, in every ecosystem, without waiting for a third-party
+  scanner. A feed that cannot be reached is logged as a failed step and never reads as all clear.
 - Registry data for PyPI, crates.io, Packagist, RubyGems and Go modules is now collected during a scan, next to npm.
   Each scan reads up to 500 packages per ecosystem, direct dependencies first, and reports how many it skipped.
 

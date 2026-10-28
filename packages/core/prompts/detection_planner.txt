@@ -16,6 +16,7 @@ in priority order (most urgent first) based on these rules:
 MANDATORY selections:
   1. If recent_ioc_campaigns is non-empty → include IOC_MATCH first, always.
   2. If ecosystem is 'npm' → include SHAI_HULUD (worm bursts target npm).
+  3. Always include MALICIOUS_PACKAGE_MATCH (versions a public malware feed lists).
 
 HIGH-VALUE selections (include if applicable):
   3. Always include SLOPSQUATTING — AI-hallucinated deps affect all ecosystems.

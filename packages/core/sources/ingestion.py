@@ -173,15 +173,20 @@ class IngestorService:
         log.info("ingest.github_complete", org=org, records=inserted)
         return inserted
 
-    async def ingest_osv_advisories(
-        self,
-        packages: list[tuple[str, str]],  # (ecosystem, package)
-        engine: CoralEngine,
-    ) -> int:
-        records = await self._osv.fetch_batch(packages)
-        if records:
-            return await engine.ingest("osv_advisories", records)
-        return 0
+    async def ingest_malware_feed(self, engine: CoralEngine) -> int:
+        """Ask OSV about every exact (ecosystem, package, version) in the lockfiles; store the malicious ones."""
+        rows = await engine.query(
+            "SELECT DISTINCT ecosystem, package, version FROM local_lockfiles "
+            "WHERE version IS NOT NULL AND version != '' ORDER BY ecosystem, package, version"
+        )
+        records = await self._osv.find_malicious([(r["ecosystem"], r["package"], r["version"]) for r in rows])
+        inserted = 0
+        # Advisories before the matches that cite them.
+        for table in ("osv_advisories", "ossf_malicious_packages"):
+            batch = [{k: v for k, v in r.items() if k != "_table"} for r in records if r["_table"] == table]
+            if batch:
+                inserted += await engine.ingest(table, batch)
+        return inserted
 
     async def ingest_socket_scores(
         self,
@@ -232,12 +237,11 @@ class IngestorService:
         if skipped:
             log.warning("ingest.registry_truncated", skipped=skipped, limit=_MAX_PACKAGES_PER_ECOSYSTEM)
         npm_packages = [p for e, p in enrich if e == NPM]
-        all_packages = [(r["ecosystem"], r["package"]) for r in lockfile_rows]
 
         # Phase 2: parallel enrichment
         results = await asyncio.gather(
             self.ingest_registry_metadata(enrich, engine),
-            self.ingest_osv_advisories(all_packages[:500], engine),
+            self.ingest_malware_feed(engine),
             self.ingest_socket_scores(
                 [("npm", p, "") for p in npm_packages[:50]],
                 engine,
@@ -246,11 +250,19 @@ class IngestorService:
             return_exceptions=True,
         )
 
+        step_names = ("registry", "malware_feed", "socket", "publish_events")
+        failed = [n for n, r in zip(step_names, results, strict=True) if isinstance(r, BaseException)]
+        for name, result in zip(step_names, results, strict=True):
+            if isinstance(result, BaseException):
+                # A feed that could not be read is not an all-clear: say so loudly.
+                log.error("ingest.step_failed", step=name, error=str(result))
+
         totals: dict[str, int] = {
+            "failed_steps": len(failed),
             "lockfile": lockfile_count,
             "registry": results[0] if isinstance(results[0], int) else 0,
             "registry_skipped": skipped,
-            "osv": results[1] if isinstance(results[1], int) else 0,
+            "malware_feed": results[1] if isinstance(results[1], int) else 0,
             "socket": results[2] if isinstance(results[2], int) else 0,
             "publish_events": results[3] if isinstance(results[3], int) else 0,
         }
