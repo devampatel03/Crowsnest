@@ -59,7 +59,6 @@ async def _seed_maintainer_data(engine: Any) -> None:
     Seed npm_maintainers and gh_commits with realistic varied data.
 
     Key constraints:
-    - npm_maintainers has NO primary key → use raw INSERT OR IGNORE via direct SQL
     - gh_commits.files_changed is TEXT[] → must pass None (not []) to avoid JSON string mismatch
     - Logins must match what UNNEST(npm_packages.maintainers) returns
     """
@@ -95,8 +94,6 @@ async def _seed_maintainer_data(engine: Any) -> None:
     rng = random.Random(42)  # reproducible, avoids polluting global state
     now = datetime.now(UTC)
 
-    # NOTE: npm_maintainers has NO PRIMARY KEY → engine.ingest() will fail on
-    # ON CONFLICT DO UPDATE. Use direct raw INSERT via the engine's connection.
     npm_maintainer_records: list[dict] = []
     for login in logins:
         # 10% new (<180 days), 90% established (500–2500 days)
@@ -115,9 +112,8 @@ async def _seed_maintainer_data(engine: Any) -> None:
             "performed_by":     None,
         })
 
-    # Seed npm_maintainers using raw SQL (bypasses ON CONFLICT issue on no-PK table)
     if npm_maintainer_records:
-        await _raw_insert_npm_maintainers(engine, npm_maintainer_records)
+        await engine.ingest("npm_maintainers", npm_maintainer_records)
         log.info("seed.npm_maintainers", count=len(npm_maintainer_records))
 
     # files_changed is TEXT[] in the schema.
@@ -195,40 +191,6 @@ async def _seed_maintainer_data(engine: Any) -> None:
     if shai_records:
         await engine.ingest("shai_hulud_iocs", shai_records)
         log.info("seed.shai_hulud_iocs_maintainer", count=len(shai_records))
-
-
-async def _raw_insert_npm_maintainers(engine: Any, records: list[dict]) -> None:
-    """
-    Insert npm_maintainer rows to avoid ON CONFLICT issues (npm_maintainers has
-    no PRIMARY KEY so engine.ingest()'s upsert fails). We use a SELECT-based
-    existence check per login instead.
-"""
-    # Check which logins are already present
-    existing_rows = await engine.query(
-        "SELECT DISTINCT maintainer_login FROM npm_maintainers"
-    )
-    existing_logins = {r["maintainer_login"] for r in existing_rows}
-
-    # Only insert truly new logins
-    new_records = [r for r in records if r["maintainer_login"] not in existing_logins]
-    if not new_records:
-        return
-
-    sql = (
-        "INSERT INTO npm_maintainers (package, maintainer_login, action, ts, performed_by) "
-        "VALUES (:package, :maintainer_login, :action, :ts, :performed_by)"
-    )
-    for r in new_records:
-        await engine.execute(
-            sql,
-            {
-                "package": r["package"],
-                "maintainer_login": r["maintainer_login"],
-                "action": r["action"],
-                "ts": r["ts"],
-                "performed_by": r.get("performed_by"),
-            },
-        )
 
 
 # Allow importing Any before full type resolution
