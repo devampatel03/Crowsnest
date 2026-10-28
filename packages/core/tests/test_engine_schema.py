@@ -28,7 +28,8 @@ async def _columns(engine, table):
 
 async def _tables(engine):
     rows = await engine.query(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main' ORDER BY 1"
+        "SELECT table_name FROM information_schema.tables "
+        "WHERE table_schema = 'main' AND table_type = 'BASE TABLE' ORDER BY 1"
     )
     return [r["table_name"] for r in rows]
 
