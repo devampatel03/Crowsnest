@@ -48,6 +48,8 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ### Changed
 
+- The Docker image now includes `git`, so `crowsnest check --base <ref>` works through it, and it reports the folder it
+  shares with the command line on `/health`.
 - The dashboard console (Horizon, Lookout, Hold, Log) opens only on the machine running Crowsnest. On a public
   website those pages answer 404. Set `CROWSNEST_CONSOLE=on` to override.
 - Slack bot no longer needs a signing secret, and stops with a clear message when a key is missing.

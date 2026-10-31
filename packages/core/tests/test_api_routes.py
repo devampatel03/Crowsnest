@@ -23,7 +23,18 @@ class TestHealthAndStats:
     def test_health(self, api_client):
         r = api_client.get("/health")
         assert r.status_code == 200
-        assert r.json() == {"status": "ok", "version": "0.1.0"}
+        assert r.json() == {"status": "ok", "version": "0.1.0", "projects_root": None}
+
+    def test_health_reports_the_shared_projects_folder(self, api_client, monkeypatch):
+        from packages.core.config import get_settings
+
+        monkeypatch.setenv("CROWSNEST_PROJECTS_ROOT", "/projects")
+        get_settings.cache_clear()
+        try:
+            assert api_client.get("/health").json()["projects_root"] == "/projects"
+        finally:
+            monkeypatch.delenv("CROWSNEST_PROJECTS_ROOT")
+            get_settings.cache_clear()
 
     def test_stats_shape_on_empty_state(self, api_client):
         r = api_client.get("/api/stats")
