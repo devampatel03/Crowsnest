@@ -6,9 +6,11 @@ WORKDIR /app
 
 # No compiler is installed: the dependencies ship wheels for python:3.12-slim. (build-essential pulled in
 # about 300 MB of OS packages, and a failed or killed apt step blocked the whole image.)
-# Pick up Debian security fixes published after the base image was built.
+# Pick up Debian security fixes published after the base image was built. git is there so `crowsnest check` can read
+# a lockfile as it was at the base of a pull request.
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only what the install needs first, to keep layer caching useful.
@@ -29,8 +31,14 @@ USER crowsnest
 
 # CROWSNEST_DB_PATH / CROWSNEST_SNAPSHOT_DIR are overridden by docker-compose to
 # point at the mounted /data volume; these are just sane container defaults.
+# The command line shares a folder of the user's projects at /projects (read only). git refuses a repository owned
+# by another user, which is what a shared folder is, so the check may read any repository there.
 ENV CROWSNEST_DB_PATH=/data/crowsnest.duckdb \
     CROWSNEST_SNAPSHOT_DIR=/data/snapshots \
+    CROWSNEST_PROJECTS_ROOT=/projects \
+    GIT_CONFIG_COUNT=1 \
+    GIT_CONFIG_KEY_0=safe.directory \
+    GIT_CONFIG_VALUE_0=* \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8000

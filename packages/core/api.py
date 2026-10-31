@@ -178,8 +178,8 @@ async def _push_event(event_type: str, data: dict[str, Any]) -> None:
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "version": "0.1.0"}
+async def health() -> dict[str, str | None]:
+    return {"status": "ok", "version": "0.1.0", "projects_root": get_settings().crowsnest_projects_root or None}
 
 
 _LOCKFILE_NAMES = LOCKFILE_NAMES

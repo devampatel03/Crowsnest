@@ -124,7 +124,7 @@ Checked 1 package version(s) changed since main.
 1 version(s) should not be merged.
 ```
 
-The command exits with 3 when a version should not be merged, so it can fail a build. It needs Crowsnest running and the folder to be a git repository. The Docker image does not include `git`, so against the Docker setup use the GitHub Action below instead, or run Crowsnest from source.
+The command exits with 3 when a version should not be merged, so it can fail a build. It needs Crowsnest running and the folder to be a git repository. The Docker image includes `git`, so the check works against the Docker setup as long as the folder is one the Docker setup can see.
 
 ## How do I check pull requests in GitHub?
 
