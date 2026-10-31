@@ -89,7 +89,7 @@ describe('quickVeto', () => {
     const fetcher = fakeFetch({ [OSV]: osvAnswers({ 'axios@1.14.1': ['MAL-1'] }) });
     const v = await quickVeto('axios', '1.14.1', { fetcher, now, skipRegistry: true });
     expect(v.blocked).toBe(true);
-    expect(fetcher.calls.every((u) => u.startsWith('https://api.osv.dev'))).toBe(true);
+    expect(fetcher.calls.every((u) => new URL(u).hostname === 'api.osv.dev')).toBe(true);
     const clean = await quickVeto('axios', '1.7.9', { fetcher, now, skipRegistry: true });
     expect(clean).toMatchObject({ blocked: false, degraded: [] });
   });

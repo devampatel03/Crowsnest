@@ -20,9 +20,18 @@ export interface Packument {
   repository?: string | { url?: string };
 }
 
+/**
+ * The address of a package's document. The name comes from a lockfile, which may be someone else's, so every character
+ * that could change the path is encoded; only the scope's leading @ stays, as the registry expects.
+ */
+export function packumentUrl(name: string): string {
+  const encoded = name.startsWith('@') ? `@${encodeURIComponent(name.slice(1))}` : encodeURIComponent(name);
+  return `${REGISTRY}/${encoded}`;
+}
+
 /** The registry's full document for a package, or null when the registry has no such package. */
 export async function fetchPackument(name: string, fetcher: Fetcher = fetch): Promise<Packument | null> {
-  const response = await fetcher(`${REGISTRY}/${name.replace('/', '%2F')}`, {
+  const response = await fetcher(packumentUrl(name), {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(30_000),
   });

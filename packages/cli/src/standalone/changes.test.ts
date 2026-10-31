@@ -95,7 +95,7 @@ describe('quickChanges', () => {
     const report = await quickChanges(dir, { fetcher, now: NOW });
     expect(report.blocked).toHaveLength(1);
     expect(report.degraded.join('\n')).toContain('only the malware list was checked');
-    expect(fetcher.calls.some((u) => u.includes('registry.npmjs.org'))).toBe(false);
+    expect(fetcher.calls.some((u) => new URL(u).hostname === 'registry.npmjs.org')).toBe(false);
   });
 
   it('says which lockfiles it did not read instead of reading as clean', async () => {

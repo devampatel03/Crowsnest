@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { assessRelease, previousVersion, scoreRelease } from './release.js';
 import { attestations, fakeFetch, json, packument } from './registry.fixture.js';
-import { provenanceRepo, repoSlug } from './registry.js';
+import { packumentUrl, provenanceRepo, repoSlug } from './registry.js';
 
 const signed = { dist: { attestations: { url: 'https://registry.npmjs.org/-/npm/v1/attestations/p@1' } } };
 
@@ -150,6 +150,17 @@ describe('assessRelease', () => {
       'https://reg.example/att/new': () => json(attestations('https://github.com/attacker/lib')),
     });
     expect((await assessRelease(p, '1.0.1', fetcher)).signals).not.toContain('provenance_repo_changed');
+  });
+});
+
+describe('packumentUrl', () => {
+  it('keeps a scope readable and encodes every character that could change the path', () => {
+    expect(packumentUrl('axios')).toBe('https://registry.npmjs.org/axios');
+    expect(packumentUrl('@scope/pkg')).toBe('https://registry.npmjs.org/@scope%2Fpkg');
+    expect(packumentUrl('a/b/c')).toBe('https://registry.npmjs.org/a%2Fb%2Fc');
+    expect(packumentUrl('../../etc')).toBe('https://registry.npmjs.org/..%2F..%2Fetc');
+    expect(packumentUrl('x?y=1#z')).toBe('https://registry.npmjs.org/x%3Fy%3D1%23z');
+    expect(new URL(packumentUrl('@a/b/c/d')).hostname).toBe('registry.npmjs.org');
   });
 });
 
