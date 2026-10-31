@@ -11,20 +11,30 @@ import { theme } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { parseMinReleaseAge, iconFor } from './install.js';
 import { backendPath } from '../backend/shared.js';
+import { quickChanges } from '../standalone/changes.js';
+import { QUICK_NOTE, chooseMode } from '../standalone/mode.js';
 
 export interface CheckOptions {
   base?: string;
   minReleaseAge?: string;
   format?: string;
+  /** Use the built-in quick check even when the Crowsnest backend answers. */
+  quick?: boolean;
+  /** Require the Crowsnest backend; do not fall back to the quick check. */
+  full?: boolean;
 }
 
 export async function checkCommand(projectPath: string, options: CheckOptions = {}): Promise<void> {
   const minAge = parseMinReleaseAge(options.minReleaseAge);
+  const mode = await chooseMode(options);
   const spinner = ora({ text: theme.muted('Checking changed packages...'), color: 'cyan' }).start();
 
   let report: ChangeReport;
   try {
-    report = await api.checkChanges(await backendPath(projectPath), options.base, minAge);
+    report =
+      mode === 'full'
+        ? await api.checkChanges(await backendPath(projectPath), options.base, minAge)
+        : await quickChanges(projectPath, { base: options.base, minReleaseAgeDays: minAge });
   } catch (err) {
     spinner.fail(theme.error('The check could not run'));
     throw err;
@@ -32,11 +42,13 @@ export async function checkCommand(projectPath: string, options: CheckOptions = 
   spinner.stop();
 
   if (options.format === 'json') {
-    console.log(JSON.stringify(report, null, 2));
+    console.log(JSON.stringify({ mode, ...report }, null, 2));
   } else {
+    if (mode === 'quick') console.log(theme.muted(QUICK_NOTE));
     console.log(renderReport(report));
   }
-  if (report.blocked.length > 0) process.exit(3);
+  // Not process.exit(): on Windows it can abort while the lookups' connections are still closing.
+  if (report.blocked.length > 0) process.exitCode = 3;
 }
 
 export function renderReport(report: ChangeReport): string {

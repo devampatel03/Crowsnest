@@ -9,6 +9,7 @@ question: How do I use the crowsnest command?
 answer: Run crowsnest scan to check a project, crowsnest investigate to check one package, crowsnest install to check before npm installs, and crowsnest check to vet the packages a pull request adds. Install and check exit with 3 when they stop something. A scan exits with 1 when it finds something, so it works in a build check.
 facts:
   - "Eleven commands: start, stop, doctor, scan, investigate, blast-radius, replay, watch, install, check and config (crowsnest --help, 2026-10-31)."
+  - "Without Crowsnest running, install and check use a quick check: the public malware list, release changes against the previous version, and release age; --quick and --full choose a mode (CLI source, 2026-10-31)."
   - "crowsnest start runs the backend in Docker, listening on this machine only, and shares one folder with it read only; stored data is kept in a Docker volume (CLI source, 2026-10-31)."
   - "Install stops at risk 0.6 or above, shown as 60 percent in the terminal; that limit is fixed. It also stops a version a public malware list names, and a version younger than two days unless you change that (install check, 2026-10-24)."
   - "Exit codes: scan returns 0 when clean, 1 when it finds something, 2 when it fails; a stopped install or check returns 3 (CLI source, 2026-10-24)."
@@ -21,7 +22,7 @@ related:
   - /docs/troubleshooting
 ---
 
-The `crowsnest` command scans a project, checks one package, vets pull requests, and stops risky installs. It needs Crowsnest running on port 8000. A scan exits with 1 when it finds something, which makes it usable in a build check.
+The `crowsnest` command scans a project, checks one package, vets pull requests, and stops risky installs. Most commands need Crowsnest running on port 8000 (`crowsnest start` runs it); `install` and `check` also work without it, as a quick check. A scan exits with 1 when it finds something, which makes it usable in a build check.
 
 ## What do I need first?
 
@@ -112,7 +113,8 @@ Real output on 2026-10-24, for a version on the malicious list (nothing is insta
 A stopped install exits with 3. To install anyway, run the override line shown, and only after you have read the reasons.
 
 - If Crowsnest could not look something up, the result says "Not checked" and names it, for example when the malware list cannot be reached. A lookup that failed is never shown as a clean result.
-- If Crowsnest itself cannot be reached, it prints a warning and installs anyway, so nothing is checked. Add `--strict` to refuse to install instead.
+- If Crowsnest is not running, `crowsnest install` still checks the version with a **quick check** that needs nothing installed: the public malware list, what changed since the previous release, and how long the version has been public. It says "Quick check" when it does this. Start Crowsnest (`crowsnest start`) for the full check, which adds look-alike names, invented names and the registry's history. `--quick` uses the quick check even when Crowsnest is running, and `--full` refuses to run without Crowsnest.
+- `--strict` refuses to install when any check could not be completed, for example when the malware list cannot be reached. Without it, Crowsnest installs on what it could check and says what it could not.
 - Package names and versions are checked for plain characters before anything reaches your shell. Quote nothing: a name such as `left-pad` or `@scope/name`, with a version such as `1.2.3` or `^1.2.0`, is accepted.
 - Only `crowsnest install` is checked. A plain `npm install` is not.
 
@@ -133,7 +135,7 @@ Checked 1 package version(s) changed since main.
 1 version(s) should not be merged.
 ```
 
-The command exits with 3 when a version should not be merged, so it can fail a build. It needs Crowsnest running and the folder to be a git repository. The Docker image includes `git`, so the check works against the Docker setup as long as the folder is one the Docker setup can see.
+The command exits with 3 when a version should not be merged, so it can fail a build. The folder must be a git repository. With Crowsnest running it uses the full check. Without it, the command falls back to a quick check that reads `package-lock.json` only; it says which other lockfiles it did not read, and without `--base` it can check only the malware list. `--quick` and `--full` choose one or the other. The Docker image includes `git`, so the full check works against the Docker setup as long as the folder is one the Docker setup can see.
 
 ## How do I check pull requests in GitHub?
 

@@ -117,16 +117,26 @@ program
     'Proceed with install despite a risk block',
   )
   .option('--min-release-age <days>', 'days a version must have been public (0 turns the rule off)')
-  .option('--strict', 'refuse to install if the Crowsnest API cannot be reached')
+  .option('--strict', 'refuse to install if any check could not be completed')
+  .option('--quick', 'use the built-in quick check even when Crowsnest is running')
+  .option('--full', 'require Crowsnest to be running; do not fall back to the quick check')
   .action(
     async (
       pkg: string,
-      opts: { crowsnestAcknowledgeRisk?: boolean; minReleaseAge?: string; strict?: boolean },
+      opts: {
+        crowsnestAcknowledgeRisk?: boolean;
+        minReleaseAge?: string;
+        strict?: boolean;
+        quick?: boolean;
+        full?: boolean;
+      },
     ) => {
       await installCommand(pkg, {
         acknowledgeRisk: Boolean(opts.crowsnestAcknowledgeRisk),
         minReleaseAge: opts.minReleaseAge,
         strict: Boolean(opts.strict),
+        quick: Boolean(opts.quick),
+        full: Boolean(opts.full),
       });
     },
   );
@@ -137,9 +147,16 @@ program
   .option('-b, --base <ref>', 'git ref to compare with, such as origin/main (omit to check every version)')
   .option('--min-release-age <days>', 'days a version must have been public (0 turns the rule off)')
   .option('-f, --format <fmt>', 'output format (table|json)', 'table')
-  .action(async (path: string | undefined, opts: { base?: string; minReleaseAge?: string; format?: string }) => {
-    await checkCommand(path || process.cwd(), opts);
-  });
+  .option('--quick', 'use the built-in quick check (package-lock.json only) even when Crowsnest is running')
+  .option('--full', 'require Crowsnest to be running; do not fall back to the quick check')
+  .action(
+    async (
+      path: string | undefined,
+      opts: { base?: string; minReleaseAge?: string; format?: string; quick?: boolean; full?: boolean },
+    ) => {
+      await checkCommand(path || process.cwd(), opts);
+    },
+  );
 
 const configCmd = program.command('config').description('Manage Crowsnest configuration');
 

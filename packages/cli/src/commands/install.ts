@@ -12,13 +12,19 @@ import { api, VetoResult } from '../api.js';
 import { theme } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { banner } from '../display/banner.js';
+import { QUICK_NOTE, chooseMode } from '../standalone/mode.js';
+import { quickVeto } from '../standalone/verdict.js';
 
 export interface InstallOptions {
   acknowledgeRisk?: boolean;
   /** Days a version must have been public. Unset uses the server's setting; 0 turns the rule off. */
   minReleaseAge?: string;
-  /** Refuse to install when the Crowsnest API cannot be reached, instead of installing unchecked. */
+  /** Refuse to install when any check could not be completed, instead of installing on what could be checked. */
   strict?: boolean;
+  /** Use the built-in quick check even when the Crowsnest backend answers. */
+  quick?: boolean;
+  /** Require the Crowsnest backend; do not fall back to the quick check. */
+  full?: boolean;
 }
 
 export async function installCommand(
@@ -33,6 +39,7 @@ export async function installCommand(
     process.exit(2);
   }
   const minAge = parseMinReleaseAge(options.minReleaseAge);
+  const mode = await chooseMode(options);
 
   const spinner = ora({
     text: theme.muted(`Checking ${pkgName} before install...`),
@@ -44,24 +51,40 @@ export async function installCommand(
 
   let result: VetoResult;
   try {
-    result = await api.vetoCheck(pkgName, version, 'npm', minAge);
+    result =
+      mode === 'full'
+        ? await api.vetoCheck(pkgName, version, 'npm', minAge)
+        : await quickVeto(pkgName, version, { minReleaseAgeDays: minAge });
   } catch {
+    // Only the full check can fail here: Crowsnest answered a moment ago and then stopped.
     if (options.strict) {
-      spinner.fail(theme.error('Crowsnest API unreachable — not installing (--strict)'));
-      console.log(theme.muted('Start the API, or run without --strict to install unchecked.'));
-      process.exit(3);
+      spinner.fail(theme.error('Crowsnest stopped answering — not installing (--strict)'));
+      console.log(theme.muted('Start it with: crowsnest start, or run without --strict to install unchecked.'));
+      process.exitCode = 3;
+      return;
     }
-    spinner.fail(theme.error('Crowsnest API unreachable — proceeding without veto check'));
+    spinner.fail(theme.error('Crowsnest stopped answering — proceeding without a check'));
     console.log(theme.muted('Start it with: crowsnest start'));
     await runNpmInstall(packageSpec);
     return;
   }
 
+  if (options.strict && !result.blocked && result.degraded.length > 0) {
+    spinner.fail(theme.error('Some checks could not be completed — not installing (--strict)'));
+    for (const note of result.degraded) console.log(theme.muted(`  Not checked: ${note}`));
+    process.exitCode = 3;
+    return;
+  }
+
   const target = installTarget(pkgName, requested, result.version);
+  const quickNote = (): void => {
+    if (mode === 'quick') console.log(theme.muted(QUICK_NOTE));
+  };
 
   if (result.blocked) {
     spinner.fail(theme.status.blocked(`Blocked: ${result.package}${result.version ? '@' + result.version : ''}`));
     renderBlockScreen(result);
+    quickNote();
     if (options.acknowledgeRisk) {
       const probPct = Math.round(result.probability * 100);
       console.log(
@@ -73,9 +96,12 @@ export async function installCommand(
       await runNpmInstall(target);
       return;
     }
-    process.exit(3);
+    // Not process.exit(): on Windows it can abort while the lookups' connections are still closing, which turns
+    // this exit code into a crash.
+    process.exitCode = 3;
   } else {
     spinner.succeed(theme.status.approved(`Approved: ${result.package}${result.version ? '@' + result.version : ''}`));
+    quickNote();
     renderApprovalScreen(result);
     await runNpmInstall(target);
   }
