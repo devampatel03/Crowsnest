@@ -46,6 +46,13 @@ All notable changes to Crowsnest are listed here. The format follows
 - Registry data for PyPI, crates.io, Packagist, RubyGems and Go modules is now collected during a scan, next to npm.
   Each scan reads up to 500 packages per ecosystem, direct dependencies first, and reports how many it skipped.
 
+- `crowsnest start` runs the Crowsnest backend in Docker with one command: it downloads the matching version once,
+  listens on this machine only, shares one folder of your projects read only (the current folder, or `--projects`),
+  and keeps its data between runs. `crowsnest stop` stops it (`--delete-data` also removes what it stored), and
+  `crowsnest doctor` checks Docker, the backend and the internet lookups and says how to fix what is wrong. Scanning a
+  folder outside the shared one is refused with a message that says how to share it.
+- A command that cannot reach Crowsnest now says to run `crowsnest start` instead of pointing at the README.
+
 ### Changed
 
 - The Docker image now includes `git`, so `crowsnest check --base <ref>` works through it, and it reports the folder it

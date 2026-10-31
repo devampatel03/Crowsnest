@@ -4,6 +4,7 @@ import { theme, severityColor } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { sectionHeader } from '../display/banner.js';
 import { renderTable } from '../display/table.js';
+import { backendPath } from '../backend/shared.js';
 
 export async function scanCommand(
   projectPath: string,
@@ -19,7 +20,7 @@ export async function scanCommand(
   let scanId: string;
   try {
     const result = await api.scan({
-      projectPath: path,
+      projectPath: await backendPath(path),
       ecosystem: opts.ecosystem || 'npm',
     });
     scanId = result.scan_id;

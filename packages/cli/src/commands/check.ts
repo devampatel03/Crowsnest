@@ -10,6 +10,7 @@ import { api, ChangeReport } from '../api.js';
 import { theme } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { parseMinReleaseAge, iconFor } from './install.js';
+import { backendPath } from '../backend/shared.js';
 
 export interface CheckOptions {
   base?: string;
@@ -23,7 +24,7 @@ export async function checkCommand(projectPath: string, options: CheckOptions = 
 
   let report: ChangeReport;
   try {
-    report = await api.checkChanges(projectPath, options.base, minAge);
+    report = await api.checkChanges(await backendPath(projectPath), options.base, minAge);
   } catch (err) {
     spinner.fail(theme.error('The check could not run'));
     throw err;

@@ -6,6 +6,8 @@ export interface CrowsnestConfig {
   npmToken: string;
   socketApiKey: string;
   anthropicApiKey: string;
+  /** Folder on this machine that `crowsnest start` shares with Docker. Set by start and stop, not by hand. */
+  sharedFolder: string;
 }
 
 const conf = new Conf<CrowsnestConfig>({ projectName: 'crowsnest' });
@@ -17,6 +19,7 @@ export function getConfig(): CrowsnestConfig {
     npmToken: conf.get('npmToken', process.env.NPM_TOKEN || ''),
     socketApiKey: conf.get('socketApiKey', process.env.SOCKET_API_KEY || ''),
     anthropicApiKey: conf.get('anthropicApiKey', process.env.ANTHROPIC_API_KEY || ''),
+    sharedFolder: conf.get('sharedFolder', ''),
   };
 }
 

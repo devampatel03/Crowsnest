@@ -13,13 +13,24 @@ crowsnest --help
 
 Needs Node.js 18 or newer.
 
-## You also need a Crowsnest backend
+## You need Docker to run Crowsnest
 
-The CLI is a thin client. The checks run in the Crowsnest backend, which runs on your own machine. Follow the
-[quickstart in the main README](https://github.com/devampatel03/Crowsnest#quickstart) to start it (it listens on
-`http://localhost:8000` by default). It works without any API keys.
+The checks run in the Crowsnest backend, on your own machine, and the easiest way to run it is Docker. One command
+downloads it (once) and starts it:
 
-If your backend lives somewhere else:
+```bash
+crowsnest start                         # shares the current folder with it, read only
+crowsnest scan .
+crowsnest stop
+```
+
+`crowsnest start --projects <folder>` shares a different folder. Crowsnest can only read inside the folder you share,
+and it never listens on your network, only on this machine. It works without any API keys, and your stored data is kept
+between runs (`crowsnest stop --delete-data` removes it). `crowsnest doctor` checks Docker, the backend and the internet
+lookups and says how to fix what is wrong.
+
+Without Docker, run the backend from source with the
+[main README](https://github.com/devampatel03/Crowsnest#quickstart). If your backend lives somewhere else:
 
 ```bash
 crowsnest config set apiUrl http://my-host:8000
@@ -29,6 +40,10 @@ crowsnest config set apiUrl http://my-host:8000
 
 | Command | What it does |
 | --- | --- |
+| `crowsnest start` | Start the backend in Docker. `--projects <folder>` to share another folder, `--port <port>`, `--env-file <file>` for optional keys. |
+| `crowsnest stop` | Stop it. `--delete-data` also deletes what it stored. |
+| `crowsnest doctor` | Check Docker, the backend and the internet lookups, and say how to fix problems. |
+| `crowsnest check [path]` | Vet only the versions a pull request adds (`--base <ref>`). Exits 3 when one should not be merged. |
 | `crowsnest scan [path]` | Scan a project's lockfile. `-f json` for machine output, `--watch` to repeat every 5 minutes. |
 | `crowsnest investigate <package>` | Look closely at one package. `--deep` runs follow-up checks. |
 | `crowsnest install <package>` | A safe `npm install`: stops on a risky package. `--crowsnest-acknowledge-risk` overrides. |
