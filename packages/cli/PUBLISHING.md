@@ -23,7 +23,13 @@ Everything in the repo is ready. These are the steps only you can do, in order.
    (root, cli, dashboard, slack-bot, vscode-extension, `pyproject.toml`) and `CHANGELOG.md` to agree with the
    `vX.Y.Z` tag, so bump them together. For the very first release the versions already read `0.1.0`; rename
    `## [Unreleased]` in `CHANGELOG.md` to `## [0.1.0] - <date>`. Check with `node scripts/release-check.mjs v0.1.0`.
-2. Push the tag. The existing `Release` workflow creates the GitHub release.
+2. Push the tag. The existing `Release` workflow creates the GitHub release, and the `Publish API image` workflow
+   pushes the backend image to `ghcr.io/devampatel03/crowsnest-api:<version>`. `crowsnest start` pulls exactly that
+   image, so **publish the CLI only after the image exists and is public**:
+   - Wait for the `Publish API image` run to finish (it builds, scans and starts the image before pushing).
+   - The first time only: GitHub, your profile, Packages, `crowsnest-api`, Package settings, change visibility to
+     **Public**. GitHub creates new packages as private.
+   - Check it anonymously: `docker logout ghcr.io && docker pull ghcr.io/devampatel03/crowsnest-api:<version>`.
 3. Actions, **Publish CLI to npm**, Run workflow.
    - Leave *Dry run* ticked first. It lints, tests, builds and prints exactly which files would ship.
    - Run it again with *Dry run* unticked to publish. It refuses to republish a version that already exists.
