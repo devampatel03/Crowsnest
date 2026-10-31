@@ -52,7 +52,7 @@ export async function installCommand(
       process.exit(3);
     }
     spinner.fail(theme.error('Crowsnest API unreachable — proceeding without veto check'));
-    console.log(theme.muted('Start the API with: uvicorn packages.core.api:app --reload'));
+    console.log(theme.muted('Start it with: crowsnest start'));
     await runNpmInstall(packageSpec);
     return;
   }
