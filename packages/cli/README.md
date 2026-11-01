@@ -11,7 +11,7 @@ npm install -g @crowsnest/cli
 crowsnest --help
 ```
 
-Needs Node.js 18 or newer.
+Needs Node.js 20 or newer.
 
 ## You also need a Crowsnest backend
 

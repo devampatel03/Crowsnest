@@ -4,12 +4,12 @@ description: "Install Crowsnest with Docker or from source on macOS, Linux or Wi
 slug: installation
 order: 3
 section: Get started
-updated: 2026-10-07
+updated: 2026-11-01
 howTo: true
 question: How do I install Crowsnest?
-answer: Use Docker, or install from source with Python 3.12 or newer and Node 18 or newer. Docker is the shorter path. The command line tool and VS Code extension are built from source, because neither is published to a package store yet.
+answer: Use Docker, or install from source with Python 3.12 or newer and Node 20 or newer. Docker is the shorter path. The command line tool and VS Code extension are built from source, because neither is published to a package store yet.
 facts:
-  - "Source requirements: Python 3.12 or newer, Node 18 or newer, pnpm or npm (pyproject.toml and README, 2026-10-07)."
+  - "Source requirements: Python 3.12 or newer, Node 20 or newer, pnpm or npm (pyproject.toml and README, 2026-10-07)."
   - "Docker images use Python 3.12 and Node 20 (infra/Dockerfile.api and the dashboard Dockerfile, 2026-10-07)."
   - "Ports: 8000 for Crowsnest, 3000 for the dashboard (infra/docker-compose.yml, 2026-10-07)."
   - "The command line tool is not published to npm; build it from source (owner confirmation, 2026-10-07)."
@@ -21,13 +21,13 @@ related:
   - /docs/troubleshooting
 ---
 
-Run Crowsnest with Docker, or from source with Python 3.12 or newer and Node 18 or newer. Docker is the shorter path. Both give you the same Crowsnest.
+Run Crowsnest with Docker, or from source with Python 3.12 or newer and Node 20 or newer. Docker is the shorter path. Both give you the same Crowsnest.
 
 ## Which install should I pick?
 
 | | Docker | From source |
 |---|---|---|
-| You need | Docker with Docker Compose | Python 3.12 or newer, Node 18 or newer, pnpm or npm |
+| You need | Docker with Docker Compose | Python 3.12 or newer, Node 20 or newer, pnpm or npm |
 | Ports | 8000 (Crowsnest), 3000 (dashboard) | The same |
 | Best for | Trying it, or running it on one machine | Changing the code, or using the terminal command |
 
