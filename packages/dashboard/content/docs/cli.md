@@ -4,7 +4,7 @@ description: "Use the crowsnest command to scan a project, check one package and
 slug: cli
 order: 4
 section: Use
-updated: 2026-10-07
+updated: 2026-11-01
 question: How do I use the crowsnest command?
 answer: Run crowsnest scan to check a project, crowsnest investigate to check one package, and crowsnest install to check before npm installs. Install stops at risk 0.6 or above and exits with 3. A scan exits with 1 when it finds something, so it works in a build check.
 facts:
@@ -155,7 +155,6 @@ Keys you can set: `apiUrl`, `githubToken`, `npmToken`, `socketApiKey`, `anthropi
 - `scan --watch` appears in `--help` but does not repeat the scan yet. Run the scan again yourself.
 - The 0.6 stop limit is fixed. You cannot change it.
 - A package Crowsnest has no data on adds 0.2 risk and still installs.
-- The built-in lists of known harmful packages and known AI-invented names are not included in the Docker image as of 2026-10-07 (checked: both lists were empty in a fresh container). Those two checks have nothing to match in the Docker setup. From source, the lists load from the project's seed folder.
 - A scan on a fresh install can fail in 0.1.0 as of 2026-10-07. See [Troubleshooting](/docs/troubleshooting) for the exact message and what to do.
 - It does not check a plain `npm install` or `pip install`.
 

@@ -5,7 +5,7 @@ description: "Slopsquatting is when attackers register package names that AI ass
 slug: what-is-slopsquatting
 order: 1
 published: 2026-10-07
-updated: 2026-10-07
+updated: 2026-11-01
 author: Crowsnest contributors
 dek: An AI assistant can suggest a package that does not exist. An attacker can make it exist.
 question: What is slopsquatting?
@@ -72,7 +72,6 @@ That is the limit in one screen. A name Crowsnest has never seen scores 20 perce
 
 - If nobody has registered an invented name yet, there is no package to check, and the install simply fails.
 - Crowsnest cannot judge a package it has no data on. It adds a small amount of risk (0.2) for that and carries on, as the output above shows.
-- The built-in list of invented names is not included in the Docker image as of 2026-10-07, so that one check does nothing in the Docker setup.
 - A plain `npm install` is not checked at all.
 
 Read the other posts in this series: [How to stay safe from malicious packages](/blog/how-to-stay-safe-from-malicious-packages) and [What to do when Crowsnest says Hold](/blog/what-to-do-when-crowsnest-says-hold). The [glossary entry](/glossary/slopsquatting) has the short definition, and [CLI usage](/docs/cli) covers the install command. [Install Crowsnest](/#install) to try it.
