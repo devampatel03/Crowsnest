@@ -20,6 +20,8 @@ log = structlog.get_logger(__name__)
 
 # All available query names in priority-first ordering within each category
 _ALL_QUERIES = QueryLibrary.list_queries()
+# Run on every scan, whatever a model plans: they need only lockfile and registry data.
+_MANDATORY_QUERIES = ("MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH")
 
 _SYSTEM_PROMPT = """\
 You are Crowsnest's Detection Planner. Your job is to select and prioritise
@@ -44,6 +46,8 @@ PRIORITISATION RULES:
 7. Never output a query name not in the provided list.
 8. ALWAYS include MAINTAINER_REPUTATION — it scores every dependency maintainer
    and catches account-takeover and ghost-maintainer risks in any project.
+9. ALWAYS include MALICIOUS_PACKAGE_MATCH — it finds exact versions that a public
+   malware feed already lists as malicious, in every ecosystem.
 
 Respond with ONLY a raw JSON array of strings, e.g.:
 ["IOC_MATCH", "SHAI_HULUD", "SLOPSQUATTING", "XZ_PATTERN", "MAINTAINER_REPUTATION"]
@@ -81,9 +85,10 @@ async def detection_planner_node(
         # Validate — only return names that actually exist
         valid_queries = [q for q in queries if q in _ALL_QUERIES]
 
-        # MAINTAINER_REPUTATION is always mandatory — append if the LLM didn't pick it
-        if "MAINTAINER_REPUTATION" not in valid_queries:
-            valid_queries.append("MAINTAINER_REPUTATION")
+        # These checks are always mandatory — append any the LLM didn't pick
+        for required in _MANDATORY_QUERIES:
+            if required not in valid_queries:
+                valid_queries.append(required)
 
         token_delta = response.total_tokens
         log.info(
@@ -106,7 +111,10 @@ async def detection_planner_node(
 def _default_queries(ctx: ScanContext) -> list[str]:
     """Deterministic fallback when the LLM call fails."""
     # MAINTAINER_REPUTATION is always included: it needs only lockfile and registry data.
-    queries = ["MAINTAINER_REPUTATION", "IOC_MATCH", "SLOPSQUATTING", "SHAI_HULUD", "ABANDONED_POPULAR", "TYPOSQUAT_DISTANCE"]
+    queries = [
+        "MALICIOUS_PACKAGE_MATCH", "MAINTAINER_REPUTATION", "IOC_MATCH", "SLOPSQUATTING", "SHAI_HULUD",
+        "ABANDONED_POPULAR", "TYPOSQUAT_DISTANCE",
+    ]
     if ctx.get("github_org"):
         queries += ["XZ_PATTERN", "SLSA_POISONING", "OIDC_TOKEN_MISUSE"]
     if ctx.get("recent_ioc_campaigns"):

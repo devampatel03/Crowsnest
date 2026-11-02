@@ -68,6 +68,7 @@ _QUERY_PATTERN_MAP: dict[str, AttackPattern] = {
     "DEP_CONFUSION": "dep_confusion",
     "CI_CACHE_POISONING": "ci_cache_poisoning",
     "IOC_MATCH": "ioc_match",
+    "MALICIOUS_PACKAGE_MATCH": "ioc_match",
     "MAINTAINER_REPUTATION": "maintainer_takeover",
 }
 

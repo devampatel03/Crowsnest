@@ -442,7 +442,35 @@ JOIN shai_hulud_iocs i
 ORDER BY i.first_seen DESC
 """
 
-    #  Maintainer reputation score query                                  
+    #  Known-malicious versions (OpenSSF malicious-packages via OSV)
+
+    MALICIOUS_PACKAGE_MATCH = """
+-- Exact package versions in your lockfiles that a public malware feed lists as malicious.
+-- No third-party scanner needs to have flagged them: the feed is checked per version, so a clean
+-- release of the same package never matches. Works for every ecosystem the lockfile readers cover.
+SELECT
+  l.package,
+  l.version,
+  l.ecosystem,
+  l.project_path,
+  l.declared_in,
+  l.parent_chain,
+  m.classification,
+  m.first_reported,
+  m.sources                AS advisory_ids,
+  a.summary                AS advisory_summary,
+  a.published              AS advisory_published
+FROM local_lockfiles l
+JOIN ossf_malicious_packages m
+  ON m.ecosystem = l.ecosystem
+  AND m.package = l.package
+  AND m.version = l.version
+LEFT JOIN osv_advisories a
+  ON list_contains(m.sources, a.osv_id)
+ORDER BY m.first_reported DESC, l.project_path, l.package
+"""
+
+    #  Maintainer reputation score query
     
     MAINTAINER_REPUTATION = """
 -- Score every maintainer in your transitive dep graph.
