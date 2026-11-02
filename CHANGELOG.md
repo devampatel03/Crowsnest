@@ -24,6 +24,8 @@ All notable changes to Crowsnest are listed here. The format follows
   `npm run doctor` to check it.
 - VS Code extension: Marketplace-ready package with an icon, and an end-to-end test that runs in a real VS Code.
 - The command line tool is ready to publish to npm (`packages/cli/PUBLISHING.md`).
+- One ecosystem-neutral view of every registry (`packages` and `package_versions`), with canonical ecosystem names
+  and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
 
 ### Changed
 

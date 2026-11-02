@@ -271,7 +271,8 @@ class CoralEngine:
     async def table_stats(self) -> dict[str, int]:
         """Return row counts per table for observability."""
         tables = [row["table_name"] for row in await self.query(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'main' AND table_type = 'BASE TABLE'"
         )]
         counts = {}
         for t in tables:
@@ -658,6 +659,51 @@ CREATE TABLE IF NOT EXISTS pypi_versions (
     requires_python TEXT,
     PRIMARY KEY (name, version)
 );
+
+-- Registries without a dedicated table pair (crates.io, Packagist, RubyGems, Go, Maven).
+CREATE TABLE IF NOT EXISTS registry_packages (
+    ecosystem TEXT,
+    name TEXT,
+    latest_version TEXT,
+    weekly_downloads BIGINT,
+    repo_url TEXT,
+    license TEXT,
+    maintainers TEXT[],
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    PRIMARY KEY (ecosystem, name)
+);
+
+CREATE TABLE IF NOT EXISTS registry_versions (
+    ecosystem TEXT,
+    name TEXT,
+    version TEXT,
+    published_at TIMESTAMP,
+    published_by TEXT,
+    PRIMARY KEY (ecosystem, name, version)
+);
+
+-- One ecosystem-neutral view of every registry. New detections read these, never npm_* or pypi_* directly,
+-- so supporting another ecosystem means writing an adapter, not new queries.
+CREATE OR REPLACE VIEW packages AS
+    SELECT 'npm' AS ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM npm_packages
+    UNION ALL
+    SELECT 'pypi', name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM pypi_packages
+    UNION ALL
+    SELECT ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM registry_packages;
+
+CREATE OR REPLACE VIEW package_versions AS
+    SELECT 'npm' AS ecosystem, name, version, published_at, published_by FROM npm_versions
+    UNION ALL
+    SELECT 'pypi', name, version, published_at, published_by FROM pypi_versions
+    UNION ALL
+    SELECT ecosystem, name, version, published_at, published_by FROM registry_versions;
 
 -- ─────────────────────────────────────────────
 -- THREAT INTEL
