@@ -4,11 +4,12 @@ description: "Use the crowsnest command to scan a project, check one package, ve
 slug: cli
 order: 4
 section: Use
-updated: 2026-10-24
+updated: 2026-10-31
 question: How do I use the crowsnest command?
 answer: Run crowsnest scan to check a project, crowsnest investigate to check one package, crowsnest install to check before npm installs, and crowsnest check to vet the packages a pull request adds. Install and check exit with 3 when they stop something. A scan exits with 1 when it finds something, so it works in a build check.
 facts:
-  - "Eight commands: scan, investigate, blast-radius, replay, watch, install, check and config (crowsnest --help, 2026-10-24)."
+  - "Eleven commands: start, stop, doctor, scan, investigate, blast-radius, replay, watch, install, check and config (crowsnest --help, 2026-10-31)."
+  - "crowsnest start runs the backend in Docker, listening on this machine only, and shares one folder with it read only; stored data is kept in a Docker volume (CLI source, 2026-10-31)."
   - "Install stops at risk 0.6 or above, shown as 60 percent in the terminal; that limit is fixed. It also stops a version a public malware list names, and a version younger than two days unless you change that (install check, 2026-10-24)."
   - "Exit codes: scan returns 0 when clean, 1 when it finds something, 2 when it fails; a stopped install or check returns 3 (CLI source, 2026-10-24)."
   - "Scan checks for completion every 2 seconds (CLI source, 2026-10-07)."
@@ -24,7 +25,15 @@ The `crowsnest` command scans a project, checks one package, vets pull requests,
 
 ## What do I need first?
 
-Build the command ([Installation](/docs/installation)) and start Crowsnest ([Quickstart](/docs/quickstart)). From source, replace `crowsnest` below with `node dist/index.js`, run from `packages/cli`. Run `crowsnest --help` for the command list, or `crowsnest <command> --help` for one command.
+Install the command ([Installation](/docs/installation)), then start Crowsnest. With Docker installed, one command does it:
+
+```bash
+crowsnest start
+```
+
+It downloads Crowsnest the first time, starts it on port 8000 and shares the current folder with it, read only. Share a different folder with `crowsnest start --projects /path/to/folder`; Crowsnest can only read inside it, so scan folders within it. Stop it with `crowsnest stop` (your stored data is kept; add `--delete-data` to remove it). If something does not work, `crowsnest doctor` checks Docker, Crowsnest and the internet lookups and says how to fix what it finds. You can also start Crowsnest another way ([Quickstart](/docs/quickstart)).
+
+From source, replace `crowsnest` below with `node dist/index.js`, run from `packages/cli`. Run `crowsnest --help` for the command list, or `crowsnest <command> --help` for one command.
 
 ## How do I scan a project?
 
@@ -46,7 +55,7 @@ Options:
   -h, --help             display help for command
 ```
 
-Exit codes: **0** nothing found, **1** one or more problems found, **2** the scan failed. With `-f json` the command prints the result and exits 0 even when problems were found, so read the output instead of the exit code. In Docker, the path must be one the Crowsnest service can see (see the [Quickstart](/docs/quickstart)).
+Exit codes: **0** nothing found, **1** one or more problems found, **2** the scan failed. With `-f json` the command prints the result and exits 0 even when problems were found, so read the output instead of the exit code. If you started Crowsnest with `crowsnest start`, scan a folder inside the one you shared; any other folder is refused with a message saying how to share it. With the Docker Compose setup, the path must be one the Crowsnest service can see (see the [Quickstart](/docs/quickstart)).
 
 ## How do I check one package?
 
