@@ -4,7 +4,7 @@ description: "Install Crowsnest with Docker or from source on macOS, Linux or Wi
 slug: installation
 order: 3
 section: Get started
-updated: 2026-10-07
+updated: 2026-11-01
 howTo: true
 question: How do I install Crowsnest?
 answer: Use Docker, or install from source with Python 3.12 or newer and Node 18 or newer. Docker is the shorter path. The command line tool and VS Code extension are built from source, because neither is published to a package store yet.
@@ -117,7 +117,6 @@ Then delete the `Crowsnest` folder. The `-v` deletes the stored data. If you use
 ## What this does not do
 
 - It does not install the terminal command or the VS Code extension for you. Both are built from source.
-- It does not include the lists of known harmful packages and known AI-invented names in the Docker image as of 2026-10-07. Install from source if you want those checks.
 - It does not provide a hosted version. You run Crowsnest on your own machine.
 - It does not check your versions of Python or Node. A version that is too old shows up as an error during setup.
 

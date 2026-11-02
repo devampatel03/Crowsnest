@@ -42,7 +42,6 @@ const FACTS: string[] = [
   'Known fault in 0.1.0: a scan on a fresh install with no API keys failed in a real run on 2026-10-07. `crowsnest install <package>` and `/health` worked the same day. See ' +
     abs('/docs/troubleshooting') +
     '.',
-  'Docker image note, as of 2026-10-07: the built-in lists of known harmful packages and known AI-invented names were empty in a fresh Docker container, so those two checks have nothing to match there.',
   'Every API key is optional. Without keys Crowsnest uses cached data. Optional: Anthropic, GitHub, Socket, npm. Slack keys are needed only for the bot.',
   'Requirements: Docker, or Python 3.12+ and Node 18+. Crowsnest listens on port 8000 and the dashboard on port 3000.',
   'Slack has four commands: `/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius` and `/crowsnest-status`. It posts only the most serious calls to `#security` by default.',
