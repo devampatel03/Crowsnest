@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     crowsnest_min_release_age_days: float = 2.0
     # Look up the registry and the malware feed live during an install check. Turn off for offline use.
     crowsnest_live_lookups: bool = True
+    # Set by the Docker image: the folder inside the container where the user's projects are shared. The command line
+    # reads it from /health to turn a path on the user's machine into a path the container can read.
+    crowsnest_projects_root: str = ""
     # Accept both DEMO_MODE=true and CROWSNEST_DEMO_MODE=true
     crowsnest_demo_mode: bool = Field(default=False, validation_alias="DEMO_MODE")
 
