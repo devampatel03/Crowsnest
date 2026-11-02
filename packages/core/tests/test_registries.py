@@ -177,9 +177,11 @@ class _FakeSource:
     def __init__(self, records):
         self.records = records
         self.asked: list[str] = []
+        self.versions: dict[str, list[str] | None] = {}
 
-    async def fetch(self, package: str = "", **_):
+    async def fetch(self, package: str = "", versions=None, **_):
         self.asked.append(package)
+        self.versions[package] = versions
         return [dict(r) for r in self.records]
 
 
@@ -242,6 +244,8 @@ async def test_full_ingest_caps_each_ecosystem_and_prefers_direct_dependencies(e
     totals = await service.full_ingest("/p", engine)
     assert sorted(npm.asked) == ["y-direct", "z-direct"]
     assert totals["registry_skipped"] == 2
+    # Release details are collected for the versions the project actually uses.
+    assert npm.versions == {"y-direct": ["1.0.0"], "z-direct": ["1.0.0"]}
 
 
 async def _empty():

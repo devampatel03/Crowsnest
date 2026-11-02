@@ -28,6 +28,8 @@ log = structlog.get_logger(__name__)
 
 # Registry metadata is fetched for at most this many packages per ecosystem in one scan, direct dependencies first.
 _MAX_PACKAGES_PER_ECOSYSTEM = 500
+# Release details are collected for the versions a project uses; a package resolved to dozens of versions is capped.
+_MAX_VERSIONS_PER_PACKAGE = 10
 _REGISTRY_TABLE_ORDER = (
     "npm_packages", "npm_versions", "npm_maintainers",
     "pypi_packages", "pypi_versions",
@@ -90,16 +92,26 @@ class IngestorService:
             return self._pypi
         return self._registries.get(ecosystem)
 
-    async def ingest_registry_metadata(self, packages: list[tuple[str, str]], engine: CoralEngine) -> int:
-        """Fetch registry metadata for (ecosystem, package) pairs of any ecosystem and ingest it."""
+    async def ingest_registry_metadata(
+        self,
+        packages: list[tuple[str, str]],
+        engine: CoralEngine,
+        focus: dict[tuple[str, str], list[str]] | None = None,
+    ) -> int:
+        """Fetch registry metadata for (ecosystem, package) pairs of any ecosystem and ingest it.
+
+        `focus` names the versions that matter for a package (the ones installed or being installed). Per-release
+        details are then collected for those and their predecessors instead of the newest releases.
+        """
         semaphore = asyncio.Semaphore(10)
 
         async def fetch_one(ecosystem: str, pkg: str) -> list[dict]:
             source = self._registry_source(ecosystem)
             if source is None:
                 return []
+            versions = (focus or {}).get((ecosystem, pkg))
             async with semaphore:
-                return await source.fetch(package=pkg)
+                return await source.fetch(package=pkg, versions=versions) if versions else await source.fetch(package=pkg)
 
         results = await asyncio.gather(*[fetch_one(e, p) for e, p in packages], return_exceptions=True)
 
@@ -223,10 +235,12 @@ class IngestorService:
 
         # Get packages from lockfile for enrichment
         lockfile_rows = await engine.query(
-            "SELECT ecosystem, package, MIN(CASE WHEN declared_in = 'direct' THEN 0 ELSE 1 END) AS rank "
+            "SELECT ecosystem, package, MIN(CASE WHEN declared_in = 'direct' THEN 0 ELSE 1 END) AS rank, "
+            "list(DISTINCT version) AS versions "
             "FROM local_lockfiles GROUP BY ecosystem, package ORDER BY rank, package"
         )
         enrich: list[tuple[str, str]] = []
+        focus: dict[tuple[str, str], list[str]] = {}
         skipped = 0
         taken: dict[str, int] = {}
         for r in lockfile_rows:
@@ -238,13 +252,14 @@ class IngestorService:
                 continue
             taken[eco] = taken.get(eco, 0) + 1
             enrich.append((eco, r["package"]))
+            focus[(eco, r["package"])] = [v for v in r["versions"] if v][:_MAX_VERSIONS_PER_PACKAGE]
         if skipped:
             log.warning("ingest.registry_truncated", skipped=skipped, limit=_MAX_PACKAGES_PER_ECOSYSTEM)
         npm_packages = [p for e, p in enrich if e == NPM]
 
         # Phase 2: parallel enrichment
         results = await asyncio.gather(
-            self.ingest_registry_metadata(enrich, engine),
+            self.ingest_registry_metadata(enrich, engine, focus),
             self.ingest_malware_feed(engine),
             self.ingest_socket_scores(
                 [("npm", p, "") for p in npm_packages[:50]],

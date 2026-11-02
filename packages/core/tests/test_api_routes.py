@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from packages.core import api
+from packages.core.veto import levenshtein_approx
 
 
 def _incident(id_="inc-1", severity="HIGH", pkgs=("evil-pkg",)):
@@ -171,7 +172,7 @@ class TestLevenshteinApprox:
         ("abc", "abc", 0), ("lodash", "lodahs", 2), ("lodash", "lodashh", 1), ("a", "abcdef", 99),
     ])
     def test_values(self, a, b, expected):
-        assert api._levenshtein_approx(a, b) == expected
+        assert levenshtein_approx(a, b) == expected
 
 
 class TestLockfilesAndOthers:

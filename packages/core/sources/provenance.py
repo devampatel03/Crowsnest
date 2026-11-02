@@ -11,39 +11,53 @@ from __future__ import annotations
 import base64
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-# Per-release details (provenance, dependencies, size) are fetched only for releases this recent and the one
-# before each, which is what a "what changed" comparison needs. Older releases are not re-examined.
+# Per-release details (provenance, dependencies, size) are fetched only where a "what changed" comparison needs
+# them: for the versions asked about and the release before each. With no versions named, the newest few releases
+# from the last DETAIL_WINDOW_DAYS days. A package that publishes daily (litellm) would otherwise cost dozens of
+# requests per lookup.
 DETAIL_WINDOW_DAYS = 30
+DETAIL_RECENT_LIMIT = 5
 
 _VERSION_NUMBERS = re.compile(r"^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?")
 
 
 def recent_with_predecessor(
-    published: Mapping[str, datetime | None], days: int = DETAIL_WINDOW_DAYS, now: datetime | None = None,
+    published: Mapping[str, datetime | None],
+    days: int = DETAIL_WINDOW_DAYS,
+    now: datetime | None = None,
+    focus: Iterable[str] | None = None,
+    limit: int = DETAIL_RECENT_LIMIT,
 ) -> set[str]:
-    """Versions published within `days`, plus the next lower version on the same major line for each.
+    """The versions to collect details for: those asked about (`focus`), else the newest recent ones, and the
+    next lower version on the same major line for each.
 
     The predecessor matches the RELEASE_ANOMALY query: a release is compared with the previous version on its own
     major line (pre-releases only with pre-releases), so a 2.0.55 backport published after 2.1.4 brings in 2.0.54.
     """
-    cutoff = (now or datetime.now(UTC).replace(tzinfo=None)) - timedelta(days=days)
     lines: dict[tuple[int, bool], list[tuple[tuple[int, int, int], str]]] = {}
     for version in published:
         line, order = _line_and_order(version)
         lines.setdefault(line, []).append((order, version))
-    chosen: set[str] = set()
+    previous: dict[str, str] = {}
     for members in lines.values():
         members.sort()
-        for i, (_, version) in enumerate(members):
-            when = published[version]
-            if when and _naive(when) >= cutoff:
-                chosen.add(version)
-                if i > 0:
-                    chosen.add(members[i - 1][1])
+        for i in range(1, len(members)):
+            previous[members[i][1]] = members[i - 1][1]
+
+    if focus is not None:
+        asked = [v for v in focus if v in published]
+    else:
+        cutoff = (now or datetime.now(UTC).replace(tzinfo=None)) - timedelta(days=days)
+        recent = sorted(
+            ((_naive(t), v) for v, t in published.items() if t and _naive(t) >= cutoff), reverse=True,
+        )
+        asked = [v for _, v in recent[:limit]]
+    chosen = set(asked)
+    chosen.update(previous[v] for v in asked if v in previous)
     return chosen
 
 

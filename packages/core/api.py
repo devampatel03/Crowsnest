@@ -20,16 +20,18 @@ import structlog
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .agents.graph import run_scan
 from .agents.state import AlertObject
+from .checks import CheckError, check_changes
 from .config import get_settings
 from .coral.engine import CoralEngine
 from .llm import LLMClient, get_llm
 from .llm import describe as describe_llm
 from .queries.templates import QueryLibrary
 from .sources.lockfile import LOCKFILE_NAMES, has_supported_lockfile
+from .veto import evaluate as evaluate_veto
 
 log = structlog.get_logger(__name__)
 
@@ -152,6 +154,8 @@ class VetoRequest(BaseModel):
     package: str
     version: str | None = None
     ecosystem: str = "npm"
+    # Days a version must have been public before it is allowed; None uses the server setting.
+    min_release_age_days: float | None = Field(default=None, ge=0, le=365)
 
 
 class CoralQueryRequest(BaseModel):
@@ -527,105 +531,38 @@ async def maintainer_reputation(
 @app.post("/api/veto")
 async def veto_check(req: VetoRequest) -> dict[str, Any]:
     """
-    Pre-install veto check for one package. Returns { blocked, reason, probability, signals }.
+    Pre-install veto check for one package version.
+    Returns { blocked, reason, probability, signals, degraded, release_age_hours }.
     """
-    engine = _get_engine()
-    package = req.package
-    signals: list[str] = []
-    probability = 0.0
-
-    # Check 1: npm package metadata (age, downloads, repo)
-    npm_rows = await engine.query(
-        "SELECT * FROM npm_packages WHERE name = :pkg LIMIT 1",
-        {"pkg": package},
+    settings = get_settings()
+    return await evaluate_veto(
+        _get_engine(),
+        package=req.package,
+        version=req.version,
+        ecosystem=req.ecosystem,
+        min_release_age_days=(
+            settings.crowsnest_min_release_age_days if req.min_release_age_days is None else req.min_release_age_days
+        ),
+        live=settings.crowsnest_live_lookups,
     )
 
-    if npm_rows:
-        pkg_data = npm_rows[0]
-        created_at = pkg_data.get("created_at")
-        downloads = pkg_data.get("weekly_downloads", 0) or 0
-        repo_url = pkg_data.get("repo_url", "")
 
-        if created_at:
-            from datetime import datetime
-            try:
-                if isinstance(created_at, str):
-                    created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                else:
-                    created_dt = created_at.replace(tzinfo=UTC) if created_at.tzinfo is None else created_at
-                age_days = (datetime.now(UTC) - created_dt).days
-                if age_days < 30:
-                    probability += 0.4
-                    signals.append(f"Package registered {age_days} days ago (< 30 days)")
-            except (ValueError, AttributeError):
-                pass
+class CheckChangesRequest(BaseModel):
+    project_path: str
+    base_ref: str | None = None
+    min_release_age_days: float | None = Field(default=None, ge=0, le=365)
 
-        if downloads < 1000:
-            probability += 0.3
-            signals.append(f"Only {downloads:,} weekly downloads")
 
-        if not repo_url:
-            probability += 0.2
-            signals.append("No GitHub repository linked")
-    else:
-        probability += 0.2
-        signals.append("Package not found in Crowsnest database (may be new)")
-
-    # Check 2: Known hallucination patterns
-    halluc_rows = await engine.query(
-        "SELECT * FROM known_hallucination_patterns WHERE package = :pkg LIMIT 1",
-        {"pkg": package},
-    )
-    if halluc_rows:
-        conf = halluc_rows[0].get("confidence", 0.8)
-        probability += 0.3 * conf
-        signals.append(f"Matches known AI hallucination pattern (confidence: {conf:.0%})")
-
-    # Check 3: Active IOC match
-    ioc_rows = await engine.query(
-        "SELECT * FROM shai_hulud_iocs WHERE ioc_type = 'package_name' AND value = :pkg LIMIT 1",
-        {"pkg": package},
-    )
-    if ioc_rows:
-        probability = 1.0
-        signals.append(f"ACTIVE IOC: {ioc_rows[0].get('campaign_name')} — {ioc_rows[0].get('attack_wave')}")
-
-    # Check 4: Socket alerts
-    socket_rows = await engine.query(
-        "SELECT * FROM socket_alerts WHERE package = :pkg AND severity IN ('high', 'critical') LIMIT 1",
-        {"pkg": package},
-    )
-    if socket_rows:
-        probability += 0.4
-        signals.append(f"Socket.dev alert: {socket_rows[0].get('alert_type')}")
-
-    # Check 5: Typosquat heuristic — are we close to a very popular package?
-    popular_rows = await engine.query("""
-        SELECT name, weekly_downloads FROM npm_packages
-        WHERE weekly_downloads > 1000000
-          AND name != :pkg
-          AND LENGTH(name) BETWEEN LENGTH(:pkg) - 2 AND LENGTH(:pkg) + 2
-        LIMIT 5
-    """, {"pkg": package})
-    for pop in popular_rows:
-        pop_name = pop.get("name", "")
-        if _levenshtein_approx(package, pop_name) <= 2:
-            probability += 0.35
-            signals.append(f"Typosquat risk: similar to '{pop_name}' ({pop.get('weekly_downloads', 0):,} downloads)")
-            break
-
-    probability = min(probability, 1.0)
-    blocked = probability >= 0.6 or any("ACTIVE IOC" in s for s in signals)
-
-    return {
-        "blocked": blocked,
-        "package": package,
-        "version": req.version,
-        "probability": round(probability, 2),
-        "signals": signals,
-        "reason": signals[0] if signals else "No specific signals detected",
-        "override_flag": "--crowsnest-acknowledge-risk" if blocked else None,
-    }
+@app.post("/api/check-changes")
+async def check_dependency_changes(req: CheckChangesRequest) -> dict[str, Any]:
+    """Vet the package versions a change adds: those in the lockfiles now but not at `base_ref`."""
+    try:
+        return await check_changes(
+            req.project_path, base_ref=req.base_ref, engine=_get_engine(),
+            min_release_age_days=req.min_release_age_days,
+        )
+    except CheckError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/api/query")
@@ -700,18 +637,6 @@ async def _get_active_campaigns(engine: CoralEngine) -> list[str]:
         "SELECT DISTINCT campaign_name FROM shai_hulud_iocs ORDER BY first_seen DESC LIMIT 10"
     )
     return [r["campaign_name"] for r in rows]
-
-
-def _levenshtein_approx(a: str, b: str) -> int:
-    """Approximate edit distance — only exact for differences ≤ 3."""
-    if a == b:
-        return 0
-    if abs(len(a) - len(b)) > 3:
-        return 99
-    if a in b or b in a:
-        return abs(len(a) - len(b))
-    mismatches = sum(ca != cb for ca, cb in zip(a, b))
-    return mismatches + abs(len(a) - len(b))
 
 
 def main() -> None:
