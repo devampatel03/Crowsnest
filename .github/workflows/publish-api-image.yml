@@ -1,0 +1,154 @@
+name: Publish API image
+
+# Pushes the backend image to GitHub's container registry so `crowsnest start` can pull it in seconds instead of
+# building it from source. It runs when a version tag is pushed. A pull request that changes this file or the
+# Dockerfile runs every step except the push, and so does a manual run, so a broken change shows up before a release.
+on:
+  push:
+    tags: ["v*.*.*"]
+  pull_request:
+    paths:
+      - .github/workflows/publish-api-image.yml
+      - infra/Dockerfile.api
+  workflow_dispatch:
+
+concurrency:
+  group: publish-api-image-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: Build, scan and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io with the workflow's own token
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Work out the image name and tags
+        id: meta
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          IS_TAG: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/crowsnest-api"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          if [ "$IS_TAG" = "true" ]; then
+            VERSION="${REF_NAME#v}"
+            TAGS="$IMAGE:$VERSION"
+            # A pre-release (1.0.0-rc.1) never moves "latest".
+            case "$VERSION" in *-*) ;; *) TAGS="$TAGS"$'\n'"$IMAGE:latest" ;; esac
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            {
+              echo "tags<<EOF"
+              echo "$TAGS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "version=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: The tag must match the version in pyproject.toml
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          FILE=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -n 1)
+          if [ "$FILE" != "$VERSION" ]; then
+            echo "::error::Tag is v$VERSION but pyproject.toml says $FILE."
+            exit 1
+          fi
+
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      # The image that is scanned and started is built for this machine and loaded locally.
+      - name: Build for scanning
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: infra/Dockerfile.api
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: crowsnest-api:release-check
+          cache-from: type=gha,scope=api-image
+          cache-to: type=gha,mode=max,scope=api-image
+
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: crowsnest-api:release-check
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+          exit-code: "1"
+
+      - name: Start it and check it answers
+        run: |
+          docker run -d --name api -p 127.0.0.1:8000:8000 crowsnest-api:release-check
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health; then echo; exit 0; fi
+            sleep 3
+          done
+          docker logs api
+          echo "::error::The image did not answer /health within 90 seconds."
+          exit 1
+
+      - name: The shared folder and git work inside the image
+        run: |
+          mkdir -p /tmp/shared/demo && cd /tmp/shared/demo
+          git init -q && git config user.email ci@example.invalid && git config user.name ci
+          echo '{"name":"demo","version":"1.0.0","lockfileVersion":3,"packages":{"":{"name":"demo","version":"1.0.0"}}}' > package-lock.json
+          git add . && git commit -q -m base
+          docker run --rm -v /tmp/shared:/projects:ro --entrypoint git crowsnest-api:release-check \
+            -C /projects/demo show HEAD:package-lock.json > /dev/null
+          curl -fsS http://127.0.0.1:8000/health | grep -q '"projects_root":"/projects"'
+
+      # Both architectures are built, so Apple Silicon and ARM servers do not run an emulated image. Nothing is
+      # pushed unless a version tag started this run.
+      - name: Sign in to the registry
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build for both architectures and publish on a tag
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: infra/Dockerfile.api
+          platforms: linux/amd64,linux/arm64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags || 'crowsnest-api:dry-run' }}
+          provenance: mode=max
+          sbom: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Crowsnest backend: supply chain checks that run on your own machine
+            org.opencontainers.image.licenses=Apache-2.0
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=api-image
+
+      - name: Say what was published
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo "### Published"
+            echo
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+            echo "Make the package public once (GitHub, your profile, Packages, crowsnest-api, Package settings)."
+          } >> "$GITHUB_STEP_SUMMARY"

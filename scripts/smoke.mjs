@@ -56,6 +56,9 @@ async function startBackend() {
     CROWSNEST_DB_PATH: join(tmp, 'smoke.duckdb'),
     CROWSNEST_SNAPSHOT_DIR: join(tmp, 'snap'),
     ANTHROPIC_API_KEY: '', GITHUB_TOKEN: '', SOCKET_API_KEY: '', NPM_TOKEN: '',
+    // The install check normally asks the npm registry and the malware list. A smoke test must not depend on the
+    // public internet answering in time (a slow answer failed a run once), and the live path has its own tests.
+    CROWSNEST_LIVE_LOOKUPS: 'false',
   };
   child = spawn(findPython(), ['-m', 'uvicorn', 'packages.core.api:app', '--host', '127.0.0.1', '--port', port],
     { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
