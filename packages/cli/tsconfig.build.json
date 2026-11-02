@@ -1,4 +1,1 @@
-{
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
-}
+{"extends":"./tsconfig.json","exclude":["node_modules","dist","src/**/*.test.ts","src/**/*.fixture.ts"]}

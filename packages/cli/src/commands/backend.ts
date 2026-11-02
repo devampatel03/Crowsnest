@@ -222,7 +222,7 @@ export async function doctorCommand(deps: Deps = realDeps): Promise<number> {
 
   const health = await deps.health(apiUrl);
   if (!health) {
-    add('fail', `Crowsnest at ${apiUrl}`, 'nothing answers. Start it with: crowsnest start');
+    add('fail', `Crowsnest at ${apiUrl}`, 'nothing answers. Start it with: crowsnest start (install and check still work as a quick check)');
   } else {
     add('ok', `Crowsnest at ${apiUrl}`, `answering (version ${health.version})`);
     if (health.version !== cliVersion) {
