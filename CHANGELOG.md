@@ -52,9 +52,16 @@ All notable changes to Crowsnest are listed here. The format follows
   `crowsnest doctor` checks Docker, the backend and the internet lookups and says how to fix what is wrong. Scanning a
   folder outside the shared one is refused with a message that says how to share it.
 - A command that cannot reach Crowsnest now says to run `crowsnest start` instead of pointing at the README.
+- `crowsnest install` and `crowsnest check` work with no backend running. They fall back to a quick check that needs
+  nothing installed: the public malware list, what changed since the previous release (the same rules and weights as the
+  full check, including the signed build repository), and release age. The output says "Quick check", and `check` names
+  every lockfile it did not read (it reads `package-lock.json`). `--quick` forces it and `--full` refuses to fall back.
+  On 214 real releases from the last 30 days of 29 popular npm packages it flagged none.
 
 ### Changed
 
+- `crowsnest install --strict` now refuses to install when any check could not be completed (for example the malware
+  list could not be reached), not only when Crowsnest could not be reached.
 - The Docker image now includes `git`, so `crowsnest check --base <ref>` works through it, and it reports the folder it
   shares with the command line on `/health`.
 - The dashboard console (Horizon, Lookout, Hold, Log) opens only on the machine running Crowsnest. On a public
