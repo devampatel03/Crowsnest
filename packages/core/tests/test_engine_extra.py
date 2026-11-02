@@ -231,12 +231,12 @@ async def test_ingest_is_fast_and_upserts(engine):
     started = time.monotonic()
     assert await engine.ingest("local_lockfiles", rows) == 2000
     assert time.monotonic() - started < 10, "bulk ingest regressed to per-row speed"
-    rows[5]["version"] = "2.0.0"
+    rows[5]["resolved_url"] = "https://example.invalid/pkg5-2.0.0.tgz"
     rows.append(dict(rows[0]))  # duplicate primary key inside one batch
     await engine.ingest("local_lockfiles", rows)
     assert (await engine.query("SELECT COUNT(*) AS n FROM local_lockfiles"))[0]["n"] == 2000
-    got = await engine.query("SELECT version, parent_chain FROM local_lockfiles WHERE package = 'pkg5'")
-    assert got == [{"version": "2.0.0", "parent_chain": ["a", "b'c"]}]
+    got = await engine.query("SELECT resolved_url, parent_chain FROM local_lockfiles WHERE package = 'pkg5'")
+    assert got == [{"resolved_url": "https://example.invalid/pkg5-2.0.0.tgz", "parent_chain": ["a", "b'c"]}]
 
 
 @pytest.mark.asyncio

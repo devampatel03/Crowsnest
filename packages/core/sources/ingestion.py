@@ -65,6 +65,10 @@ class IngestorService:
             log.warning("ingest.lockfile_empty", path=project_path)
             return 0
 
+        # A scan describes the project as it is now. Without this, a version the project has since moved
+        # off would stay in the table and keep raising findings for a package that is no longer installed.
+        for project in {r["project_path"] for r in records}:
+            await engine.execute("DELETE FROM local_lockfiles WHERE project_path = :p", {"p": project})
         await engine.ingest("local_lockfiles", records)
 
         # Also scan source imports in executor

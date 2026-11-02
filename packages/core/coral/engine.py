@@ -73,6 +73,7 @@ class CoralEngine:
         conn.executemany("", [])  # no-op touch to ensure open
         conn.execute(_SCHEMA_DDL)
         _migrate_npm_maintainers_key(conn)
+        _migrate_lockfile_key(conn)
         self._initialized = True
         log.info("coral.schema_initialized", db_path=self.db_path)
 
@@ -426,6 +427,42 @@ def _migrate_npm_maintainers_key(conn: duckdb.DuckDBPyConnection) -> None:
     log.info("coral.npm_maintainers_key_added")
 
 
+def _migrate_lockfile_key(conn: duckdb.DuckDBPyConnection) -> None:
+    """Rebuild local_lockfiles so a package's version is part of its key.
+
+    The old key was (project, ecosystem, package): a project that resolves two versions of one package
+    (common with nested node_modules) kept only the last one written, so a malicious version could be
+    overwritten by a clean one and never checked.
+    """
+    row = conn.execute(
+        "SELECT constraint_column_names FROM duckdb_constraints() "
+        "WHERE table_name = 'local_lockfiles' AND constraint_type = 'PRIMARY KEY'"
+    ).fetchone()
+    if row and "version" in list(row[0]):
+        return
+    conn.execute("BEGIN")
+    try:
+        conn.execute(
+            "CREATE TABLE local_lockfiles_new ("
+            "project_path TEXT, ecosystem TEXT, package TEXT, version TEXT, integrity_hash TEXT, "
+            "resolved_url TEXT, declared_in TEXT, parent_chain TEXT[], "
+            "PRIMARY KEY (project_path, ecosystem, package, version))"
+        )
+        conn.execute(
+            "INSERT INTO local_lockfiles_new "
+            "SELECT project_path, ecosystem, package, COALESCE(version, ''), integrity_hash, resolved_url, "
+            "declared_in, parent_chain FROM local_lockfiles "
+            "WHERE project_path IS NOT NULL AND ecosystem IS NOT NULL AND package IS NOT NULL"
+        )
+        conn.execute("DROP TABLE local_lockfiles")
+        conn.execute("ALTER TABLE local_lockfiles_new RENAME TO local_lockfiles")
+        conn.execute("COMMIT")
+    except duckdb.Error:
+        conn.execute("ROLLBACK")
+        raise
+    log.info("coral.local_lockfiles_key_changed")
+
+
 def _replace_named_params(sql: str, params: dict[str, Any]) -> str:
     """
     Replace :name placeholders with literal values (safe for DuckDB).
@@ -559,7 +596,7 @@ CREATE TABLE IF NOT EXISTS local_lockfiles (
     resolved_url TEXT,
     declared_in TEXT,
     parent_chain TEXT[],
-    PRIMARY KEY (project_path, ecosystem, package)
+    PRIMARY KEY (project_path, ecosystem, package, version)
 );
 
 CREATE TABLE IF NOT EXISTS local_source_packages_mentioned (
