@@ -215,7 +215,7 @@ class IngestorService:
         return 0
 
     async def ingest_npm_publish_events(self, engine: CoralEngine) -> int:
-        records = await self._npm.fetch_publish_events_recent(limit=200)
+        records = await self._npm.fetch_publish_events_recent(limit=100)
         if records:
             return await engine.ingest("npm_publish_events", records)
         return 0

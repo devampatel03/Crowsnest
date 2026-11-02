@@ -255,3 +255,58 @@ async def _empty():
 async def _zero():
     return 0
 
+
+
+def _changes_transport(changed, docs, slow=0.0):
+    """The npm changes feed (ids only) and each package's registry document."""
+    import asyncio
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "replicate.npmjs.com" and request.url.path == "/_changes":
+            return httpx.Response(200, json={"results": [{"seq": i, "id": n, "changes": []}
+                                                         for i, n in enumerate(changed)]})
+        if request.url.host == "registry.npmjs.org":
+            if slow:
+                await asyncio.sleep(slow)
+            doc = docs.get(request.url.path.lstrip("/"))
+            return httpx.Response(200, json=doc) if doc else httpx.Response(404)
+        return httpx.Response(404)
+
+    return httpx.MockTransport(handler)
+
+
+def _doc(name, releases):
+    """releases: (version, ISO time, publisher) in any order."""
+    return {"name": name, "time": {"created": "2020-01-01T00:00:00.000Z", "modified": "2026-10-21T00:00:00.000Z",
+                                   **{v: t for v, t, _ in releases}},
+            "versions": {v: {"_npmUser": {"name": by}} for v, _, by in releases}}
+
+
+async def test_publish_events_name_the_newest_release_and_who_published_it():
+    docs = {
+        "left-pad": _doc("left-pad", [("1.0.0", "2020-01-01T00:00:00.000Z", "stevemao"),
+                                      ("1.3.0", "2026-10-21T11:00:00.000Z", "attacker")]),
+        "@scope/pkg": _doc("@scope/pkg", [("2.0.0", "2026-10-21T10:00:00.000Z", "alice")]),
+    }
+    transport = _changes_transport(["left-pad", "@scope/pkg", "left-pad", "_design/app", "gone"], docs)
+    events = await NpmRegistrySource(transport=transport).fetch_publish_events_recent(limit=5)
+    by_name = {e["package"]: e for e in events}
+    assert set(by_name) == {"left-pad", "@scope/pkg"}  # a repeat, a design document and a 404 are dropped
+    assert (by_name["left-pad"]["version"], by_name["left-pad"]["published_by"]) == ("1.3.0", "attacker")
+    assert by_name["left-pad"]["published_at"].hour == 11
+    assert by_name["@scope/pkg"]["npm_org"] == "@scope"
+
+
+async def test_publish_events_stop_waiting_after_the_time_budget():
+    docs = {f"p{i}": _doc(f"p{i}", [("1.0.0", "2026-10-21T10:00:00.000Z", "x")]) for i in range(30)}
+    transport = _changes_transport(list(docs), docs, slow=0.3)
+    source = NpmRegistrySource(transport=transport)  # ten documents are read at a time
+    events = await source.fetch_publish_events_recent(limit=30, time_budget=0.5)
+    assert 0 < len(events) < 30
+
+
+async def test_an_unreachable_changes_feed_gives_no_events_not_an_error():
+    def down(request):
+        raise httpx.ConnectError("offline", request=request)
+
+    assert await NpmRegistrySource(transport=httpx.MockTransport(down)).fetch_publish_events_recent() == []
