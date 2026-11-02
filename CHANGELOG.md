@@ -31,6 +31,7 @@ All notable changes to Crowsnest are listed here. The format follows
   website those pages answer 404. Set `CROWSNEST_CONSOLE=on` to override.
 - Slack bot no longer needs a signing secret, and stops with a clear message when a key is missing.
 - Documentation links in the README point to the public site, https://crowsnest.co.in/docs.
+- Node.js 20 is now the minimum for the command line tool and for running from source. CI already tested only 20 and 22, the dashboard (Next.js 16) needs 20.9 or newer, and the command line tool is about to depend on packages that need 20.
 
 ### Fixed
 
