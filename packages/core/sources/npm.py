@@ -17,6 +17,7 @@ import httpx
 import structlog
 
 from .base import DataSource
+from .provenance import npm_provenance_repo, recent_with_predecessor
 
 log = structlog.get_logger(__name__)
 
@@ -126,13 +127,18 @@ class NpmRegistrySource(DataSource):
                 "integrity": vdata.get("dist", {}).get("integrity", ""),
                 "dependencies": json.dumps(vdata.get("dependencies", {})),
                 "dev_dependencies": json.dumps(vdata.get("devDependencies", {})),
-                "has_install_script": "install" in scripts_v,
+                "has_install_script": any(k in scripts_v for k in ("preinstall", "install", "postinstall")),
                 "has_postinstall": "postinstall" in scripts_v,
                 "has_prepare": "prepare" in scripts_v,
                 "attestation_subject_uri": None,   # filled by sigstore source
                 "attestation_predicate_type": None,
+                "unpacked_size": (vdata.get("dist") or {}).get("unpackedSize"),
+                "has_provenance": bool((vdata.get("dist") or {}).get("attestations")),
+                "provenance_repo": None,
             }
             records.append({"_table": "npm_versions", **ver_record})
+
+        await self._add_provenance_repos(name, data, records, time_data)
 
         seen_maintainers: dict[str, str] = {}  # login → first version published
         for ver, vdata in sorted(
@@ -151,6 +157,34 @@ class NpmRegistrySource(DataSource):
                 })
 
         return records
+
+    async def _add_provenance_repos(
+        self, name: str, data: dict[str, Any], records: list[dict[str, Any]], time_data: dict[str, str],
+    ) -> None:
+        """Fill `provenance_repo` for recent releases that carry provenance (one small request each)."""
+        published = {v: _parse_ts(time_data.get(v)) for v in data.get("versions", {})}
+        wanted = recent_with_predecessor(published)
+        targets = {
+            r["version"]: r for r in records
+            if r["_table"] == "npm_versions" and r["version"] in wanted and r["has_provenance"]
+        }
+        if not targets:
+            return
+
+        async def one(version: str) -> None:
+            url = ((data["versions"][version].get("dist") or {}).get("attestations") or {}).get("url")
+            if not url:
+                return
+            async with self._semaphore:
+                try:
+                    async with self._client() as client:
+                        resp = await client.get(url)
+                        resp.raise_for_status()
+                        targets[version]["provenance_repo"] = npm_provenance_repo(resp.json())
+                except (httpx.HTTPError, ValueError) as exc:
+                    log.warning("npm.provenance_error", package=name, version=version, error=str(exc))
+
+        await asyncio.gather(*[one(v) for v in targets])
 
     async def fetch_publish_events_recent(self, limit: int = 100) -> list[dict[str, Any]]:
         """Fetch recent publish events from the npm changes feed."""

@@ -149,6 +149,7 @@ function formatPattern(pattern: string): string {
     ci_cache_poisoning: 'CI Cache Poison',
     oidc_misuse: 'OIDC Misuse',
     abandoned_popular: 'Abandoned Pkg',
+    release_anomaly: 'Odd Release',
   };
   return labels[pattern] || pattern;
 }

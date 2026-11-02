@@ -283,6 +283,7 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) 
             "incidents": new_incidents,
             "token_usage": result.get("token_usage", 0),
             "remediation_drafts": result.get("remediation_drafts", []),
+            "failed_queries": result.get("query_errors", {}),
         })
 
         # Bust the reputation cache so Lookout shows fresh data after scan

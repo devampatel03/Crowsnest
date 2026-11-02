@@ -21,7 +21,7 @@ log = structlog.get_logger(__name__)
 # All available query names in priority-first ordering within each category
 _ALL_QUERIES = QueryLibrary.list_queries()
 # Run on every scan, whatever a model plans: they need only lockfile and registry data.
-_MANDATORY_QUERIES = ("MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH")
+_MANDATORY_QUERIES = ("MAINTAINER_REPUTATION", "MALICIOUS_PACKAGE_MATCH", "RELEASE_ANOMALY")
 
 _SYSTEM_PROMPT = """\
 You are Crowsnest's Detection Planner. Your job is to select and prioritise
@@ -48,6 +48,8 @@ PRIORITISATION RULES:
    and catches account-takeover and ghost-maintainer risks in any project.
 9. ALWAYS include MALICIOUS_PACKAGE_MATCH — it finds exact versions that a public
    malware feed already lists as malicious, in every ecosystem.
+10. ALWAYS include RELEASE_ANOMALY — it finds recent releases whose changes (new publisher,
+   changed build repository, dropped provenance) look like a hijacked account or build.
 
 Respond with ONLY a raw JSON array of strings, e.g.:
 ["IOC_MATCH", "SHAI_HULUD", "SLOPSQUATTING", "XZ_PATTERN", "MAINTAINER_REPUTATION"]
@@ -112,7 +114,7 @@ def _default_queries(ctx: ScanContext) -> list[str]:
     """Deterministic fallback when the LLM call fails."""
     # MAINTAINER_REPUTATION is always included: it needs only lockfile and registry data.
     queries = [
-        "MALICIOUS_PACKAGE_MATCH", "MAINTAINER_REPUTATION", "IOC_MATCH", "SLOPSQUATTING", "SHAI_HULUD",
+        "MALICIOUS_PACKAGE_MATCH", "RELEASE_ANOMALY", "MAINTAINER_REPUTATION", "IOC_MATCH", "SLOPSQUATTING", "SHAI_HULUD",
         "ABANDONED_POPULAR", "TYPOSQUAT_DISTANCE",
     ]
     if ctx.get("github_org"):
