@@ -14,15 +14,25 @@ import structlog
 
 from ..config import get_settings
 from ..coral.engine import CoralEngine
+from ..ecosystems import NPM, PYPI
 from .github import GitHubSource
 from .lockfile import LockfileSource
 from .npm import NpmRegistrySource
 from .osv import OSVSource
 from .pypi import PyPISource
+from .registries import REGISTRY_SOURCES
 from .sigstore import SigstoreRekorSource
 from .socket import SocketSource
 
 log = structlog.get_logger(__name__)
+
+# Registry metadata is fetched for at most this many packages per ecosystem in one scan, direct dependencies first.
+_MAX_PACKAGES_PER_ECOSYSTEM = 500
+_REGISTRY_TABLE_ORDER = (
+    "npm_packages", "npm_versions", "npm_maintainers",
+    "pypi_packages", "pypi_versions",
+    "registry_packages", "registry_versions",
+)
 
 
 class IngestorService:
@@ -42,6 +52,7 @@ class IngestorService:
         self._socket = SocketSource(api_key=settings.socket_api_key)
         self._sigstore = SigstoreRekorSource()
         self._pypi = PyPISource()
+        self._registries = {eco: cls() for eco, cls in REGISTRY_SOURCES.items()}
         self._lockfile = LockfileSource()
 
     async def ingest_lockfile(self, project_path: str, engine: CoralEngine) -> int:
@@ -67,43 +78,49 @@ class IngestorService:
         log.info("ingest.lockfile_complete", path=project_path, records=total)
         return total
 
-    async def ingest_npm_packages(self, packages: list[str], engine: CoralEngine) -> int:
-        """Fetch npm metadata for a list of packages and ingest into CoralDB."""
+    def _registry_source(self, ecosystem: str) -> Any | None:
+        """The adapter that reads this ecosystem's registry, or None when none exists."""
+        if ecosystem == NPM:
+            return self._npm
+        if ecosystem == PYPI:
+            return self._pypi
+        return self._registries.get(ecosystem)
+
+    async def ingest_registry_metadata(self, packages: list[tuple[str, str]], engine: CoralEngine) -> int:
+        """Fetch registry metadata for (ecosystem, package) pairs of any ecosystem and ingest it."""
         semaphore = asyncio.Semaphore(10)
 
-        async def fetch_one(pkg: str) -> list[dict]:
+        async def fetch_one(ecosystem: str, pkg: str) -> list[dict]:
+            source = self._registry_source(ecosystem)
+            if source is None:
+                return []
             async with semaphore:
-                return await self._npm.fetch(package=pkg)
+                return await source.fetch(package=pkg)
 
-        results = await asyncio.gather(*[fetch_one(p) for p in packages], return_exceptions=True)
+        results = await asyncio.gather(*[fetch_one(e, p) for e, p in packages], return_exceptions=True)
 
-        npm_packages: list[dict] = []
-        npm_versions: list[dict] = []
-        npm_maintainers: list[dict] = []
-
+        by_table: dict[str, list[dict]] = {}
         for result in results:
-            if isinstance(result, Exception):
-                log.error("ingest.npm_error", error=str(result))
+            if isinstance(result, BaseException):
+                log.error("ingest.registry_error", error=str(result))
                 continue
             for record in result:
                 table = record.pop("_table", None)
-                if table == "npm_packages":
-                    npm_packages.append(record)
-                elif table == "npm_versions":
-                    npm_versions.append(record)
-                elif table == "npm_maintainers":
-                    npm_maintainers.append(record)
+                if table:
+                    by_table.setdefault(table, []).append(record)
 
         inserted = 0
-        if npm_packages:
-            inserted += await engine.ingest("npm_packages", npm_packages)
-        if npm_versions:
-            inserted += await engine.ingest("npm_versions", npm_versions)
-        if npm_maintainers:
-            inserted += await engine.ingest("npm_maintainers", npm_maintainers)
+        # Packages before versions and maintainers, so a reader never sees a version without its package.
+        for table in _REGISTRY_TABLE_ORDER:
+            if by_table.get(table):
+                inserted += await engine.ingest(table, by_table[table])
 
-        log.info("ingest.npm_complete", packages=len(packages), records=inserted)
+        log.info("ingest.registry_complete", packages=len(packages), records=inserted)
         return inserted
+
+    async def ingest_npm_packages(self, packages: list[str], engine: CoralEngine) -> int:
+        """Fetch npm metadata for a list of packages and ingest into CoralDB."""
+        return await self.ingest_registry_metadata([(NPM, p) for p in packages], engine)
 
     async def ingest_github_org(self, org: str, engine: CoralEngine) -> int:
         """Fetch org repos, commits, and workflows; ingest into CoralDB."""
@@ -196,14 +213,30 @@ class IngestorService:
         lockfile_count = await self.ingest_lockfile(project_path, engine)
 
         # Get packages from lockfile for enrichment
-        lockfile_rows = await engine.query("SELECT DISTINCT package, ecosystem FROM local_lockfiles LIMIT 500")
-        npm_packages = [r["package"] for r in lockfile_rows if r.get("ecosystem") == "npm"]
-        pypi_packages = [r["package"] for r in lockfile_rows if r.get("ecosystem") == "pypi"]
+        lockfile_rows = await engine.query(
+            "SELECT ecosystem, package, MIN(CASE WHEN declared_in = 'direct' THEN 0 ELSE 1 END) AS rank "
+            "FROM local_lockfiles GROUP BY ecosystem, package ORDER BY rank, package"
+        )
+        enrich: list[tuple[str, str]] = []
+        skipped = 0
+        taken: dict[str, int] = {}
+        for r in lockfile_rows:
+            eco = r["ecosystem"]
+            if self._registry_source(eco) is None:
+                continue
+            if taken.get(eco, 0) >= _MAX_PACKAGES_PER_ECOSYSTEM:
+                skipped += 1
+                continue
+            taken[eco] = taken.get(eco, 0) + 1
+            enrich.append((eco, r["package"]))
+        if skipped:
+            log.warning("ingest.registry_truncated", skipped=skipped, limit=_MAX_PACKAGES_PER_ECOSYSTEM)
+        npm_packages = [p for e, p in enrich if e == NPM]
         all_packages = [(r["ecosystem"], r["package"]) for r in lockfile_rows]
 
         # Phase 2: parallel enrichment
         results = await asyncio.gather(
-            self.ingest_npm_packages(npm_packages[:100], engine),
+            self.ingest_registry_metadata(enrich, engine),
             self.ingest_osv_advisories(all_packages[:500], engine),
             self.ingest_socket_scores(
                 [("npm", p, "") for p in npm_packages[:50]],
@@ -215,7 +248,8 @@ class IngestorService:
 
         totals: dict[str, int] = {
             "lockfile": lockfile_count,
-            "npm": results[0] if isinstance(results[0], int) else 0,
+            "registry": results[0] if isinstance(results[0], int) else 0,
+            "registry_skipped": skipped,
             "osv": results[1] if isinstance(results[1], int) else 0,
             "socket": results[2] if isinstance(results[2], int) else 0,
             "publish_events": results[3] if isinstance(results[3], int) else 0,
