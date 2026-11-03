@@ -64,6 +64,25 @@ export interface VetoResult {
   signals: string[];
   reason: string;
   override_flag: string | null;
+  /** Lookups that could not be made. They are never a clean result. */
+  degraded: string[];
+  release_age_hours: number | null;
+  ecosystem?: string;
+}
+
+export interface ChangeResult extends VetoResult {
+  change: 'added' | 'updated';
+  previous_versions: string[];
+}
+
+export interface ChangeReport {
+  base_ref: string | null;
+  project_path: string;
+  checked: number;
+  unchanged: number;
+  blocked: ChangeResult[];
+  degraded: string[];
+  results: ChangeResult[];
 }
 
 export interface MaintainerScore {
@@ -112,9 +131,10 @@ async function request<T>(
     });
   } catch (err) {
     throw new APIError(
-      `Could not connect to Crowsnest API at ${apiUrl}.\n` +
-      `The CLI talks to a Crowsnest backend. Start one (see https://github.com/devampatel03/Crowsnest#readme),\n` +
-      `or point the CLI at a running one: crowsnest config set apiUrl <url>\n` +
+      `Crowsnest is not running (nothing answered at ${apiUrl}).\n` +
+      `Start it with:  crowsnest start      (needs Docker)\n` +
+      `Already running it somewhere else?  crowsnest config set apiUrl <address>\n` +
+      `Not sure what is wrong?  crowsnest doctor\n` +
       `Error: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
@@ -127,7 +147,18 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
+export interface Health {
+  status: string;
+  version: string;
+  /** Where the backend sees the folder shared from the user's machine, when it runs in Docker. */
+  projects_root?: string | null;
+}
+
 export const api = {
+  async health(): Promise<Health> {
+    return request('/health', { signal: AbortSignal.timeout(3000) });
+  },
+
   async scan(options: { projectPath: string; ecosystem?: string; lockfilePath?: string; githubOrg?: string }): Promise<{ scan_id: string }> {
     return request('/api/scan', {
       method: 'POST',
@@ -165,10 +196,35 @@ export const api = {
     });
   },
 
-  async vetoCheck(pkg: string, version?: string, ecosystem = 'npm'): Promise<VetoResult> {
+  async vetoCheck(
+    pkg: string,
+    version?: string,
+    ecosystem = 'npm',
+    minReleaseAgeDays?: number,
+  ): Promise<VetoResult> {
     return request('/api/veto', {
       method: 'POST',
-      body: JSON.stringify({ package: pkg, version: version || null, ecosystem }),
+      body: JSON.stringify({
+        package: pkg,
+        version: version || null,
+        ecosystem,
+        min_release_age_days: minReleaseAgeDays ?? null,
+      }),
+    });
+  },
+
+  async checkChanges(
+    projectPath: string,
+    baseRef?: string,
+    minReleaseAgeDays?: number,
+  ): Promise<ChangeReport> {
+    return request('/api/check-changes', {
+      method: 'POST',
+      body: JSON.stringify({
+        project_path: projectPath,
+        base_ref: baseRef || null,
+        min_release_age_days: minReleaseAgeDays ?? null,
+      }),
     });
   },
 

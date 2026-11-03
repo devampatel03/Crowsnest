@@ -163,5 +163,6 @@ def _pattern_label(pattern: AttackPattern) -> str:
         "ci_cache_poisoning": "CI Cache Poisoning",
         "oidc_misuse": "OIDC Token Misuse",
         "abandoned_popular": "Abandoned Popular Package",
+        "release_anomaly": "Suspicious Release",
     }
     return labels.get(pattern, pattern.replace("_", " ").title())

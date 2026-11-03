@@ -73,6 +73,9 @@ class CoralEngine:
         conn.executemany("", [])  # no-op touch to ensure open
         conn.execute(_SCHEMA_DDL)
         _migrate_npm_maintainers_key(conn)
+        _migrate_lockfile_key(conn)
+        _add_missing_columns(conn)
+        conn.execute(_VIEWS_DDL)
         self._initialized = True
         log.info("coral.schema_initialized", db_path=self.db_path)
 
@@ -111,27 +114,39 @@ class CoralEngine:
             if re.search(rf"\b{kw}\b", _strip_literals_and_comments(sql).upper()):
                 raise ValueError(f"Forbidden keyword in query: {kw}")
 
-    def _sync_query(self, sql: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def _sync_query(self, sql: str, params: dict[str, Any], strict: bool = False) -> list[dict[str, Any]]:
         prepared = _replace_named_params(sql, params)
         self._validate_sql(prepared)
         try:
             with self._get_connection().cursor() as conn:
+                # DuckDB is dropping the `x -> expr` lambda for `lambda x: expr`. A cursor does not inherit the
+                # connection's settings, so refuse the old form here: a query that only works on some DuckDB
+                # versions must fail in every test run instead of in someone else's CI.
+                conn.execute("SET lambda_syntax = 'DISABLE_SINGLE_ARROW'")
                 rel = conn.execute(prepared)
                 columns = [desc[0] for desc in rel.description]
                 rows = rel.fetchall()
                 return [dict(zip(columns, row)) for row in rows]
         except duckdb.Error as exc:
             log.error("coral.query_error", error=str(exc), sql=sql[:200])
+            if strict:
+                raise
             return []
 
-    async def query(self, sql: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-        """Execute a read-only SQL query. Uses a thread-local cursor for concurrent safety."""
+    async def query(
+        self, sql: str, params: dict[str, Any] | None = None, *, strict: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Execute a read-only SQL query. Uses a thread-local cursor for concurrent safety.
+
+        A query that fails to run returns no rows, unless `strict`, which raises instead. Detections run strict:
+        a check that could not run must never read as a check that found nothing.
+        """
         if not self._initialized:
             async with self._write_lock:
                 if not self._initialized:
                     await asyncio.get_event_loop().run_in_executor(None, self._sync_initialize_schema)
         return await asyncio.get_event_loop().run_in_executor(
-            None, self._sync_query, sql, params or {}
+            None, self._sync_query, sql, params or {}, strict
         )
 
     def _sync_ingest(self, table: str, records: list[dict[str, Any]]) -> int:
@@ -271,7 +286,8 @@ class CoralEngine:
     async def table_stats(self) -> dict[str, int]:
         """Return row counts per table for observability."""
         tables = [row["table_name"] for row in await self.query(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'main' AND table_type = 'BASE TABLE'"
         )]
         counts = {}
         for t in tables:
@@ -387,6 +403,62 @@ def _contains_unquoted_char(sql: str, ch: str) -> bool:
     return False
 
 
+# Columns added after the first release, as (table, column, type). Databases created earlier are upgraded in place.
+_ADDED_COLUMNS = (
+    ("npm_versions", "unpacked_size", "BIGINT"),
+    ("npm_versions", "has_provenance", "BOOLEAN"),
+    ("npm_versions", "provenance_repo", "TEXT"),
+    ("pypi_versions", "dependencies", "JSON"),
+    ("pypi_versions", "unpacked_size", "BIGINT"),
+    ("pypi_versions", "has_provenance", "BOOLEAN"),
+    ("pypi_versions", "provenance_repo", "TEXT"),
+)
+
+# Views and macros are rebuilt on every start, after the tables and column upgrades, so they always match.
+_VIEWS_DDL = r"""
+-- "owner/repo" of a source repository however a registry or CI writes it (https, ssh, git+, .git, subpaths).
+CREATE OR REPLACE MACRO repo_slug(u) AS lower(coalesce(regexp_extract(
+    u, '(?:github\.com|gitlab\.com|bitbucket\.org)[/:]([^/:]+/[^/#?]+?)(?:\.git)?(?:[/#?].*)?$', 1), ''));
+
+-- One ecosystem-neutral view of every registry. New detections read these, never npm_* or pypi_* directly,
+-- so supporting another ecosystem means writing an adapter, not new queries.
+CREATE OR REPLACE VIEW packages AS
+    SELECT 'npm' AS ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM npm_packages
+    UNION ALL
+    SELECT 'pypi', name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM pypi_packages
+    UNION ALL
+    SELECT ecosystem, name, latest_version, weekly_downloads, repo_url, license,
+           maintainers, created_at, updated_at
+    FROM registry_packages;
+
+-- NULL means "not collected", never "no": a release's dependencies, provenance and size are read for recent
+-- releases only, and a detection must not treat a missing value as a change.
+CREATE OR REPLACE VIEW package_versions AS
+    SELECT 'npm' AS ecosystem, name, version, published_at, published_by,
+           CAST(json_keys(CAST(dependencies ->> '$' AS JSON)) AS TEXT[]) AS dependency_names,
+           has_install_script, has_provenance, provenance_repo, unpacked_size
+    FROM npm_versions
+    UNION ALL
+    SELECT 'pypi', name, version, published_at, published_by,
+           CAST(from_json(CAST(dependencies ->> '$' AS JSON), '["VARCHAR"]') AS TEXT[]),
+           NULL, has_provenance, provenance_repo, unpacked_size
+    FROM pypi_versions
+    UNION ALL
+    SELECT ecosystem, name, version, published_at, published_by,
+           NULL, NULL, NULL, NULL, NULL
+    FROM registry_versions;
+"""
+
+
+def _add_missing_columns(conn: duckdb.DuckDBPyConnection) -> None:
+    for table, column, sql_type in _ADDED_COLUMNS:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type}")
+
+
 def _migrate_npm_maintainers_key(conn: duckdb.DuckDBPyConnection) -> None:
     """Rebuild npm_maintainers with its primary key in databases created before it had one.
 
@@ -423,6 +495,42 @@ def _migrate_npm_maintainers_key(conn: duckdb.DuckDBPyConnection) -> None:
         conn.execute("ROLLBACK")
         raise
     log.info("coral.npm_maintainers_key_added")
+
+
+def _migrate_lockfile_key(conn: duckdb.DuckDBPyConnection) -> None:
+    """Rebuild local_lockfiles so a package's version is part of its key.
+
+    The old key was (project, ecosystem, package): a project that resolves two versions of one package
+    (common with nested node_modules) kept only the last one written, so a malicious version could be
+    overwritten by a clean one and never checked.
+    """
+    row = conn.execute(
+        "SELECT constraint_column_names FROM duckdb_constraints() "
+        "WHERE table_name = 'local_lockfiles' AND constraint_type = 'PRIMARY KEY'"
+    ).fetchone()
+    if row and "version" in list(row[0]):
+        return
+    conn.execute("BEGIN")
+    try:
+        conn.execute(
+            "CREATE TABLE local_lockfiles_new ("
+            "project_path TEXT, ecosystem TEXT, package TEXT, version TEXT, integrity_hash TEXT, "
+            "resolved_url TEXT, declared_in TEXT, parent_chain TEXT[], "
+            "PRIMARY KEY (project_path, ecosystem, package, version))"
+        )
+        conn.execute(
+            "INSERT INTO local_lockfiles_new "
+            "SELECT project_path, ecosystem, package, COALESCE(version, ''), integrity_hash, resolved_url, "
+            "declared_in, parent_chain FROM local_lockfiles "
+            "WHERE project_path IS NOT NULL AND ecosystem IS NOT NULL AND package IS NOT NULL"
+        )
+        conn.execute("DROP TABLE local_lockfiles")
+        conn.execute("ALTER TABLE local_lockfiles_new RENAME TO local_lockfiles")
+        conn.execute("COMMIT")
+    except duckdb.Error:
+        conn.execute("ROLLBACK")
+        raise
+    log.info("coral.local_lockfiles_key_changed")
 
 
 def _replace_named_params(sql: str, params: dict[str, Any]) -> str:
@@ -558,7 +666,7 @@ CREATE TABLE IF NOT EXISTS local_lockfiles (
     resolved_url TEXT,
     declared_in TEXT,
     parent_chain TEXT[],
-    PRIMARY KEY (project_path, ecosystem, package)
+    PRIMARY KEY (project_path, ecosystem, package, version)
 );
 
 CREATE TABLE IF NOT EXISTS local_source_packages_mentioned (
@@ -616,6 +724,9 @@ CREATE TABLE IF NOT EXISTS npm_versions (
     has_prepare BOOLEAN,
     attestation_subject_uri TEXT,
     attestation_predicate_type TEXT,
+    unpacked_size BIGINT,
+    has_provenance BOOLEAN,
+    provenance_repo TEXT,
     PRIMARY KEY (name, version)
 );
 
@@ -656,7 +767,34 @@ CREATE TABLE IF NOT EXISTS pypi_versions (
     published_at TIMESTAMP,
     published_by TEXT,
     requires_python TEXT,
+    dependencies JSON,
+    unpacked_size BIGINT,
+    has_provenance BOOLEAN,
+    provenance_repo TEXT,
     PRIMARY KEY (name, version)
+);
+
+-- Registries without a dedicated table pair (crates.io, Packagist, RubyGems, Go, Maven).
+CREATE TABLE IF NOT EXISTS registry_packages (
+    ecosystem TEXT,
+    name TEXT,
+    latest_version TEXT,
+    weekly_downloads BIGINT,
+    repo_url TEXT,
+    license TEXT,
+    maintainers TEXT[],
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    PRIMARY KEY (ecosystem, name)
+);
+
+CREATE TABLE IF NOT EXISTS registry_versions (
+    ecosystem TEXT,
+    name TEXT,
+    version TEXT,
+    published_at TIMESTAMP,
+    published_by TEXT,
+    PRIMARY KEY (ecosystem, name, version)
 );
 
 -- ─────────────────────────────────────────────

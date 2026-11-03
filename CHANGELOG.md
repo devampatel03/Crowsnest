@@ -24,9 +24,46 @@ All notable changes to Crowsnest are listed here. The format follows
   `npm run doctor` to check it.
 - VS Code extension: Marketplace-ready package with an icon, and an end-to-end test that runs in a real VS Code.
 - The command line tool is ready to publish to npm (`packages/cli/PUBLISHING.md`).
+- One ecosystem-neutral view of every registry (`packages` and `package_versions`), with canonical ecosystem names
+  and PyPI-style name matching, so a new ecosystem needs an adapter and no new queries.
+- Lockfile readers for `requirements.txt` (exact pins), `uv.lock`, `Pipfile.lock`, `composer.lock` and `Gemfile.lock`,
+  and Yarn 2+ lockfiles. `pnpm` and Yarn packages named in `package.json` are now marked as direct dependencies.
+- `crowsnest check --base <ref>` vets only the package versions a pull request adds, for every ecosystem Crowsnest
+  reads, and exits with 3 when one should not be merged. A GitHub Action (`.github/actions/dependency-check`) and
+  `python -m packages.core.checks` run the same check with no server.
+- `crowsnest install` now also stops a version a public malware list names, a version whose release looks hijacked,
+  and a version younger than two days (`--min-release-age <days>`, or `CROWSNEST_MIN_RELEASE_AGE_DAYS`; `0` turns it
+  off). It resolves the exact version first and installs that same version, and `--strict` refuses to install when
+  Crowsnest cannot be reached. Package names are checked for plain characters before they reach a shell.
+- Every scan now looks for hijacked releases without waiting for anyone to report them. A recent release is flagged
+  when its changes add up: the signed build record names a different repository than the last release, provenance was
+  dropped, a new publisher appears, an install script is added, a dependency is added, the size jumps, or the package
+  was silent for a year. It is checked against the previous version on the same major line. On 404 real recent
+  releases from 56 popular packages it flagged none.
+- Every scan now checks each exact package version in your lockfiles against the OpenSSF malicious-packages feed
+  (through OSV.dev) and raises a critical finding for a match, in every ecosystem, without waiting for a third-party
+  scanner. A feed that cannot be reached is logged as a failed step and never reads as all clear.
+- Registry data for PyPI, crates.io, Packagist, RubyGems and Go modules is now collected during a scan, next to npm.
+  Each scan reads up to 500 packages per ecosystem, direct dependencies first, and reports how many it skipped.
+
+- `crowsnest start` runs the Crowsnest backend in Docker with one command: it downloads the matching version once,
+  listens on this machine only, shares one folder of your projects read only (the current folder, or `--projects`),
+  and keeps its data between runs. `crowsnest stop` stops it (`--delete-data` also removes what it stored), and
+  `crowsnest doctor` checks Docker, the backend and the internet lookups and says how to fix what is wrong. Scanning a
+  folder outside the shared one is refused with a message that says how to share it.
+- A command that cannot reach Crowsnest now says to run `crowsnest start` instead of pointing at the README.
+- `crowsnest install` and `crowsnest check` work with no backend running. They fall back to a quick check that needs
+  nothing installed: the public malware list, what changed since the previous release (the same rules and weights as the
+  full check, including the signed build repository), and release age. The output says "Quick check", and `check` names
+  every lockfile it did not read (it reads `package-lock.json`). `--quick` forces it and `--full` refuses to fall back.
+  On 214 real releases from the last 30 days of 29 popular npm packages it flagged none.
 
 ### Changed
 
+- `crowsnest install --strict` now refuses to install when any check could not be completed (for example the malware
+  list could not be reached), not only when Crowsnest could not be reached.
+- The Docker image now includes `git`, so `crowsnest check --base <ref>` works through it, and it reports the folder it
+  shares with the command line on `/health`.
 - The dashboard console (Horizon, Lookout, Hold, Log) opens only on the machine running Crowsnest. On a public
   website those pages answer 404. Set `CROWSNEST_CONSOLE=on` to override.
 - Slack bot no longer needs a signing secret, and stops with a clear message when a key is missing.
@@ -45,6 +82,23 @@ All notable changes to Crowsnest are listed here. The format follows
   re-scans straight away.
 
 - Docs and blog content now read correctly when files use Windows line endings.
+- A detection that failed to run was treated as "nothing found". Scans now record which checks could not run
+  (`failed_queries`) and keep going with the others. Detection queries use DuckDB's current `lambda x: ...` syntax,
+  which newer DuckDB versions require, and Crowsnest now needs DuckDB 1.3 or newer.
+- The npm publish feed behind the worm check moved addresses and had been returning nothing, so that check never saw
+  live data. It reads the new address, names each release's publisher, and gives up after 20 seconds so a scan never
+  waits on it. Publish events with no known publisher are no longer pooled as one account, and a burst of publishes
+  is only reported when a package your project uses is part of it, so another team's monorepo release is not an alert.
+- The install check counted an unknown download figure as "fewer than 1,000 downloads", so packages from registries
+  that do not report downloads looked unpopular.
+- A project that uses two versions of the same package (common with nested npm dependencies) was stored as one, so a
+  malicious version could be hidden by a clean one. Every version is now stored, and a re-scan replaces the project's
+  previous rows. Existing databases are upgraded on start.
+- Yarn 2+ lockfiles were read without versions. Go versions ending in `d`, `o`, `m`, `g` or `.` were cut short, and
+  Cargo crates that are not from the registry were listed as dependencies.
+- npm and PyPI weekly downloads were always recorded as 0, so every package looked unpopular. They are now read from
+  the registries' download services and stay empty when unknown. PyPI packages now carry their real first and last
+  release dates and are matched by their normalised name.
 - Maintainer history for npm packages was silently dropped, so the maintainer-takeover check and the account-age part
   of the maintainer risk score had no data. It is now stored, and existing databases are upgraded on start.
 

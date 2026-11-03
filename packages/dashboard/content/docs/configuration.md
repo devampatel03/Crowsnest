@@ -4,7 +4,7 @@ description: "Crowsnest runs with no settings. See which API keys are optional, 
 slug: configuration
 order: 8
 section: Reference
-updated: 2026-10-07
+updated: 2026-10-24
 question: Which settings and API keys does Crowsnest need?
 answer: None. Crowsnest runs with no settings, and every API key is optional. Put keys in a file named .env in the Crowsnest folder, or save them with crowsnest config set. Without keys, Crowsnest uses cached data and fixed rules.
 facts:
@@ -34,7 +34,7 @@ All of these are optional.
 | `SOCKET_API_KEY` | Live threat alerts from Socket. | Package names (up to 50 npm packages per scan) go to Socket. |
 | `NPM_TOKEN` | Signed-in requests to the npm registry. | Sent to the npm registry with package lookups. |
 
-Without any key, a scan still sends package names to public services: the npm registry (up to 100 npm packages per scan) and the OSV vulnerability database (up to 500 packages per scan). Crowsnest sends no usage data to its authors.
+Without any key, a scan still sends package names to public services: the registries your packages come from (npm, PyPI, crates.io, Packagist, RubyGems and the Go module proxy; up to 500 packages per kind per scan), and the OSV malicious-package list, which is asked about every package name and exact version in your lockfiles. Crowsnest sends no usage data to its authors.
 
 ## Which Slack keys do I need?
 
@@ -50,6 +50,8 @@ Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `CROWSNEST_ALERT_
 | `CROWSNEST_API_PORT` | `8000` | Crowsnest, when started by its own entry point |
 | `CROWSNEST_DB_PATH` | `./crowsnest.duckdb` | Where Crowsnest keeps its data file (Docker: `/data/crowsnest.duckdb`) |
 | `CROWSNEST_SNAPSHOT_DIR` | `./snapshots` | Where saved snapshots go (Docker: `/data/snapshots`) |
+| `CROWSNEST_MIN_RELEASE_AGE_DAYS` | `2` | Crowsnest. Days a package version must have been public before `crowsnest install` and `crowsnest check` allow it. `0` turns it off |
+| `CROWSNEST_LIVE_LOOKUPS` | `true` | Crowsnest. Set to `false` to stop install and pull request checks from calling registries and the malicious-package list, for offline use |
 | `crowsnest.apiUrl`, `crowsnest.enabled`, `crowsnest.riskThreshold` | See the [VS Code page](/docs/integrations/vscode) | The VS Code extension |
 
 ## How do I save settings in the terminal command?

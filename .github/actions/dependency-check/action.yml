@@ -1,0 +1,51 @@
+name: Crowsnest dependency check
+description: >
+  Fail a pull request that adds a package version Crowsnest would not let you install: one a public malware list
+  names, one whose release looks hijacked, or one published too recently. Needs no server.
+
+inputs:
+  path:
+    description: Project folder, relative to the workspace.
+    default: "."
+  base:
+    description: Git ref to compare with. Defaults to the pull request's base commit, which must be fetched.
+    default: ${{ github.event.pull_request.base.sha }}
+  min-release-age:
+    description: Days a version must have been public. Empty uses the default of 2; 0 turns the rule off.
+    default: ""
+  crowsnest-ref:
+    description: Tag or commit of Crowsnest to run. Pin a tag or a commit in your workflow.
+    default: main
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      with:
+        python-version: "3.12"
+
+    - name: Get Crowsnest
+      shell: bash
+      env:
+        CROWSNEST_REF: ${{ inputs.crowsnest-ref }}
+      run: |
+        set -euo pipefail
+        dir="$RUNNER_TEMP/crowsnest"
+        git init --quiet "$dir"
+        git -C "$dir" fetch --quiet --depth 1 https://github.com/devampatel03/Crowsnest.git "$CROWSNEST_REF"
+        git -C "$dir" checkout --quiet FETCH_HEAD
+        python -m pip install --quiet "$dir"
+
+    - name: Check the packages this change adds
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_MIN_AGE: ${{ inputs.min-release-age }}
+      run: |
+        set -euo pipefail
+        args=()
+        if [ -n "$INPUT_BASE" ]; then args+=(--base "$INPUT_BASE"); fi
+        if [ -n "$INPUT_MIN_AGE" ]; then args+=(--min-release-age "$INPUT_MIN_AGE"); fi
+        PYTHONPATH="$RUNNER_TEMP/crowsnest" python -m packages.core.checks "$GITHUB_WORKSPACE/$INPUT_PATH" "${args[@]}"
