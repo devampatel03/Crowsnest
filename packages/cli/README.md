@@ -1,8 +1,8 @@
 # @crowsnest/cli
 
-The terminal tool for [Crowsnest](https://github.com/devampatel03/Crowsnest), a free, open-source check for the
-packages you install. It looks at a project's dependencies and gives each one a plain verdict: **Clear**, **Watch** or
-**Hold**.
+The terminal command for [Crowsnest](https://github.com/devampatel03/Crowsnest), a lookout for what you install. It
+checks your project's packages and gives each one a plain call: **Clear**, **Watch** or **Hold**. A Hold means stop and
+look before you install it or keep it.
 
 ## Install
 
@@ -11,20 +11,19 @@ npm install -g @crowsnest/cli
 crowsnest --help
 ```
 
-Use **`-g`**. This is a command, not a library, and without `-g` npm puts it in the current folder's
-`node_modules` where your shell cannot find it. The install box on the right of the npm page leaves `-g` out, so
-copy the line above instead.
+Install with **`-g`**. This is a command, and without `-g` npm leaves it in the current folder's `node_modules`, where
+your shell will not find it. The install box on the right of the npm page leaves `-g` out, so copy the line above.
 
-If you see `crowsnest: command not found` (or "not recognized" on Windows), you most likely installed it without `-g`.
-Run the line above, or run it once without installing: `npx @crowsnest/cli doctor`. After installing, open a new
-terminal window if the command is still not found.
+If you see `crowsnest: command not found`, or "not recognized" on Windows, you most likely installed without `-g`. Run
+the line above, or try it once with no install: `npx @crowsnest/cli doctor`. If the command is still missing after a
+global install, open a new terminal window.
 
 Needs Node.js 20 or newer.
 
 ## You need Docker to run Crowsnest
 
-The checks run in the Crowsnest backend, on your own machine, and the easiest way to run it is Docker. One command
-downloads it (once) and starts it:
+The checks run in the Crowsnest backend, on your own machine, and Docker is the easy way to run it. One command
+downloads it the first time and starts it:
 
 ```bash
 crowsnest start                         # shares the current folder with it, read only
@@ -32,16 +31,16 @@ crowsnest scan .
 crowsnest stop
 ```
 
-`crowsnest start --projects <folder>` shares a different folder. Crowsnest can only read inside the folder you share,
-and it never listens on your network, only on this machine. It works without any API keys, and your stored data is kept
-between runs (`crowsnest stop --delete-data` removes it). `crowsnest doctor` checks Docker, the backend and the internet
-lookups and says how to fix what is wrong.
+`crowsnest start --projects <folder>` shares a different folder. Crowsnest can read only inside the folder you share, and
+it listens on this machine and nowhere else. It works without API keys, and what it stores is kept between runs
+(`crowsnest stop --delete-data` removes it). If something is off, `crowsnest doctor` checks Docker, the backend and the
+internet lookups, and says how to fix what it finds.
 
-`crowsnest install` and `crowsnest check` also work **without** the backend. They fall back to a quick check (the public
-malware list, what changed since the previous release, and release age; `package-lock.json` only for `check`) and say
-that they did. Start the backend for the full check and for every other command.
+`crowsnest install` and `crowsnest check` also work without the backend. They fall back to a quick check: the public
+malware list, what changed since the previous release, and how new the release is (`package-lock.json` only, for
+`check`). They tell you when they did. Start the backend for the full check and for every other command.
 
-Without Docker, run the backend from source with the
+No Docker? Run the backend from source, following the
 [main README](https://github.com/devampatel03/Crowsnest#quickstart). If your backend lives somewhere else:
 
 ```bash
@@ -77,10 +76,10 @@ wins over the environment variable.
 | `socketApiKey` | `SOCKET_API_KEY` | none |
 | `anthropicApiKey` | `ANTHROPIC_API_KEY` | none |
 
-All keys are optional. Without them Crowsnest falls back to cached data.
+Every key is optional. Without one, Crowsnest falls back to saved data.
 
-Values saved with `config set` are stored in plain text in your user config folder. Prefer environment variables
-for secrets on shared machines.
+`config set` saves values as plain text in your user config folder. On a shared machine, use environment variables for
+secrets.
 
 ## Licence
 
