@@ -4,7 +4,7 @@ description: "Fix common Crowsnest problems: a dashboard showing Offline, port 8
 slug: troubleshooting
 order: 10
 section: Help
-updated: 2026-10-07
+updated: 2026-11-04
 question: Why is Crowsnest not working?
 answer: "Most problems are one of three: another process is using port 8000, Crowsnest is not running, or a folder is not visible to it. Find your symptom below. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
 facts:
@@ -12,7 +12,7 @@ facts:
   - "Health check: http://localhost:8000/health (API source, 2026-10-07)."
   - "Windows fix for a locked data file: netstat -ano | findstr :8000, then taskkill /PID <pid> /F (project notes, 2026-10-07)."
   - "macOS and Linux fix: lsof -i :8000, then kill <pid> (project notes, 2026-10-07)."
-  - "A scan on a fresh install failed with 'Forbidden keyword in query: REPLACE' on 2026-10-07 (real run, version 0.1.0)."
+  - "A scan with no API keys finished normally on the published 0.1.1 image on 2026-11-04 (real run). The older 'Forbidden keyword in query: REPLACE' failure is fixed."
 related:
   - /docs/quickstart
   - /docs/configuration
@@ -62,14 +62,22 @@ Crowsnest reads the folder from where it runs. With Docker, the service cannot s
 
 ## My scan failed with "Forbidden keyword in query: REPLACE". What now?
 
-This is a known fault in version 0.1.0, seen on 2026-10-07 on a fresh install with no API keys. Real output from the command line:
+This came from an early build of 0.1.0 and is fixed. A scan with no API keys on the published 0.1.1 image, checked on 2026-11-04, finished normally. If you still see it, you are running an older image. Update, then start again:
+
+```bash
+npm install -g @crowsnest/cli@latest
+crowsnest stop
+crowsnest start
+```
+
+The old output, from the command line:
 
 ```text
 - Initiating Crowsnest scan on /projects/my-app...
 ✖ Scan failed: Forbidden keyword in query: REPLACE
 ```
 
-Your project and your setup are fine. What still works, checked the same day against the same running service: `crowsnest install <package>` and the `/health` check. The dashboard scan button, the Slack scan command and the VS Code extension were not checked, so do not assume they are unaffected. Running with an Anthropic key set may change which checks run, but that is not verified either.
+Your project and your setup were fine. I checked the command line scan only. The dashboard scan button and the Slack scan command use the same service, but I did not run them for this note.
 
 For any other failed scan, run `crowsnest scan /path -f json` and read the `error` line, then open an issue with it and remove any keys first.
 

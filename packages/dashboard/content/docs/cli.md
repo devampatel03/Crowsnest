@@ -4,7 +4,7 @@ description: "Use the crowsnest command to scan a project, check one package, ve
 slug: cli
 order: 4
 section: Use
-updated: 2026-11-01
+updated: 2026-11-04
 question: How do I use the crowsnest command?
 answer: Run crowsnest scan to check a project, crowsnest investigate to check one package, crowsnest install to check before npm installs, and crowsnest check to vet the packages a pull request adds. Install and check exit with 3 when they stop something. A scan exits with 1 when it finds something, so it works in a build check.
 facts:
@@ -217,7 +217,6 @@ Keys you can set: `apiUrl`, `githubToken`, `npmToken`, `socketApiKey`, `anthropi
 - The 0.6 stop limit is fixed. You cannot change it.
 - A package Crowsnest cannot find in any registry adds 0.2 risk and still goes to npm, which then reports that it does not exist.
 - `crowsnest check` compares lockfiles, so a dependency named only in `package.json` or an unpinned `requirements.txt` line is not checked.
-- A scan on a fresh install can fail in 0.1.0 as of 2026-10-07. See [Troubleshooting](/docs/troubleshooting) for the exact message and what to do.
 - It does not check a plain `npm install` or `pip install`. For other ecosystems, use `crowsnest check` on the pull request.
 
 See also [Configuration](/docs/configuration), [Using the dashboard](/docs/dashboard) and the [VS Code extension](/docs/integrations/vscode).

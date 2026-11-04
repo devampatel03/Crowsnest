@@ -4,7 +4,7 @@ description: "Learn what Crowsnest is, who it is for, and how to read a call: Cl
 slug: introduction
 order: 1
 section: Get started
-updated: 2026-10-08
+updated: 2026-11-04
 question: What is Crowsnest?
 answer: "Crowsnest is a free, open-source supply chain security tool that you run yourself. It checks the packages in your software project and gives each one a plain call: Clear, Watch or Hold. A Hold means stop and check before you install or keep it."
 facts:
@@ -56,7 +56,7 @@ Who publishes a package, how new it is, how many people download it, whether it 
 - It does not stop a plain `npm install`. Only installs run as `crowsnest install <package>` are checked.
 - It does not send your lockfile to Crowsnest's authors. Crowsnest runs on your machine and sends them no usage data.
 - It needs setup: you run it yourself. There is no hosted version and no account.
-- **It is early.** Version 0.1.0 can fail on a first scan with no keys. See [Troubleshooting](/docs/troubleshooting).
+- **It is early.** Version 0.1.1 is young, and the API may change between minor versions. See [Troubleshooting](/docs/troubleshooting) if something goes wrong.
 
 ## Where do I go next?
 

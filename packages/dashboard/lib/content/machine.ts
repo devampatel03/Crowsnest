@@ -39,9 +39,6 @@ const FACTS: string[] = [
   'Every call is Clear, Watch or Hold, with a plain sentence for what happened and a first step. "No flags" is not the same as Clear.',
   '`crowsnest install <package>` stops at risk 0.6 or above and on any known harmful package. The limit is fixed. A plain `npm install` is not checked. If Crowsnest cannot be reached, the install proceeds with a warning.',
   'The install check looks at how new the package is (under 30 days), weekly downloads (under 1,000), a link to a code repository, a name close to a package with over 1,000,000 weekly downloads, names AI assistants are known to invent, and known harmful packages.',
-  'Known fault in 0.1.0: a scan on a fresh install with no API keys failed in a real run on 2026-10-07. `crowsnest install <package>` and `/health` worked the same day. See ' +
-    abs('/docs/troubleshooting') +
-    '.',
   'Every API key is optional. Without keys Crowsnest uses cached data. Optional: Anthropic, GitHub, Socket, npm. Slack keys are needed only for the bot.',
   'Requirements: Docker, or Python 3.12+ and Node 20+. Crowsnest listens on port 8000 and the dashboard on port 3000.',
   'Slack has four commands: `/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius` and `/crowsnest-status`. It posts only the most serious calls to `#security` by default.',
