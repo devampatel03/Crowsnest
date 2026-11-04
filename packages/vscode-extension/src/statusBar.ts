@@ -22,7 +22,7 @@ export class CrowsnestStatusBar {
 
     this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     this.item.command = 'crowsnest.openDashboard';
-    this.item.tooltip = 'Crowsnest Supply Chain Sentinel — click to open dashboard';
+    this.item.tooltip = 'Crowsnest: click to open the dashboard';
 
     context.subscriptions.push(this.item);
 

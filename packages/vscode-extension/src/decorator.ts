@@ -436,7 +436,7 @@ export class ImportDecoratorProvider {
     // Build the hover markdown string
     const md = new vscode.MarkdownString(
       [
-        `**${severity} — Crowsnest: Supply Chain Risk**`,
+        `**${severity} risk: Crowsnest flagged this package**`,
         '',
         `Package: \`${result.packageName}\``,
         `Risk score: **${pct}%**  _(threshold: ${Math.round(threshold * 100)}%)_`,

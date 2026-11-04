@@ -1,6 +1,6 @@
 {
   "name": "crowsnest-vscode",
-  "displayName": "Crowsnest: Supply Chain Sentinel",
+  "displayName": "Crowsnest: Risky Package Warnings",
   "description": "Flags risky npm and PyPI imports right in your editor: look-alike names, made-up packages and hijacked packages, before they reach your lockfile.",
   "icon": "media/icon.png",
   "homepage": "https://github.com/devampatel03/Crowsnest#readme",

@@ -1,60 +1,64 @@
-# Crowsnest: Supply Chain Sentinel
+# Crowsnest: Risky Package Warnings
 
-See a risky package before it reaches your lockfile. Crowsnest puts a coloured dot in the gutter and a wavy
-underline on any `import` or `require` line that names a package that looks wrong, and tells you why when you hover.
+Crowsnest marks the `import` and `require` lines in your code when they name a package that looks risky. A coloured
+dot appears in the gutter and the line gets a wavy underline. Hover over it to read why.
 
-It catches the things ordinary vulnerability scanners miss:
+It looks for four things that a normal vulnerability scanner does not:
 
-- **Look-alike names** that imitate a popular package and wait for a typing mistake.
-- **Made-up packages**, the names an AI assistant invented that an attacker can then register.
-- **Hijacked packages**, where a new publisher appears or build files change.
-- **Brand-new packages** with almost no history.
+- names that are one typo away from a popular package
+- names an AI assistant made up, which someone may have registered since
+- packages whose publisher or build files changed recently, a common sign of a hijacked account
+- packages that are only a few days old and have almost no history
 
-| Dot | Meaning |
+| Dot | Score |
 | --- | --- |
-| Red | Critical: score above 80% |
-| Orange | High: above 60% |
-| Yellow | Medium: above your threshold (50% by default) |
+| Red | above 80% |
+| Orange | above 60% |
+| Yellow | above your threshold (50% unless you change it) |
 
-Imports that look fine get no mark at all. Node built-ins (`fs`, `node:path`) and the Python standard library are
-skipped.
+Imports with nothing wrong get no mark. Node built-ins such as `fs` and `node:path`, and Python's standard library, are
+skipped. The extension reads JavaScript, TypeScript, JSX, TSX and Python files. Python imports are checked against
+PyPI and everything else against npm.
 
-Works in JavaScript, TypeScript, React (`.jsx`, `.tsx`) and Python files. Python imports are checked against PyPI,
-the rest against npm.
+## Set it up
 
-## You need the Crowsnest backend
+The extension only displays results. The checking happens in a small service that runs on your own computer, so you
+need that running first. You need [Docker](https://www.docker.com/products/docker-desktop/) and Node.js 20 or newer.
 
-This extension is a viewer. The checks run in the Crowsnest backend on your own machine, free and open source, with
-no account and no API keys required. Start it by following the
-[quickstart](https://github.com/devampatel03/Crowsnest#quickstart). It listens on `http://localhost:8000`, which
-is what the extension expects.
+```bash
+npm install -g @crowsnest/cli
+crowsnest start
+```
 
-If the backend is not running, the status bar shows **Crowsnest (offline)**, nothing is flagged, and nothing breaks.
+`crowsnest start` downloads the service the first time (about 430 MB) and then runs it at `http://localhost:8000`,
+which is where the extension looks. No account or API key is needed. To stop it, run `crowsnest stop`.
+
+If the service is not running, the status bar shows **Crowsnest (offline)**, nothing is marked, and the rest of VS Code
+carries on as normal.
 
 ## Commands
 
-Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+Open the Command Palette with `Ctrl+Shift+P` (`Cmd+Shift+P` on a Mac) and type "Crowsnest".
 
-- **Crowsnest: Scan Current File** lists every package in the file with its score in the Crowsnest output panel.
-- **Crowsnest: Investigate Package Under Cursor** opens a full report for one package.
-- **Crowsnest: Open Dashboard** opens the dashboard on your machine.
+- **Crowsnest: Scan Current File** lists every package in the file with its score, in the Crowsnest output panel.
+- **Crowsnest: Investigate Package Under Cursor** opens a full report on one package.
+- **Crowsnest: Open Dashboard** opens the dashboard that runs on your machine.
 
 ## Settings
 
-| Setting | Default | What it does |
+| Setting | Default | Meaning |
 | --- | --- | --- |
-| `crowsnest.apiUrl` | `http://localhost:8000` | Where the backend runs. |
-| `crowsnest.dashboardUrl` | `http://localhost:3000` | Where the dashboard runs. |
-| `crowsnest.enabled` | `true` | Turn the inline marks on or off. |
-| `crowsnest.riskThreshold` | `0.5` | Only mark packages scoring above this (0 to 1). |
+| `crowsnest.apiUrl` | `http://localhost:8000` | Where the service runs |
+| `crowsnest.dashboardUrl` | `http://localhost:3000` | Where the dashboard runs |
+| `crowsnest.enabled` | `true` | Turns the marks on or off |
+| `crowsnest.riskThreshold` | `0.5` | Only mark packages scoring above this, from 0 to 1 |
 
-## Privacy
+## What it sends
 
-The extension sends only package names, such as `lodash`, and whether each is an npm or PyPI package, to the backend
-you configured. It never sends your code or file paths. It also asks that same backend for its status every minute.
-It makes no other network requests and collects no usage data. With the default settings the backend is on your own
-machine.
+Only package names (for example `lodash`) and whether each is an npm or a PyPI package, and only to the service you
+configured. Your code and file paths are never sent. It also asks that service for its status once a minute. There are
+no other network requests and no usage tracking. With the default settings the service is on your own computer.
 
 ## Links
 
-[Source and issues](https://github.com/devampatel03/Crowsnest) · Apache-2.0 licence
+[Source code and issue tracker](https://github.com/devampatel03/Crowsnest). Licensed under Apache-2.0.
