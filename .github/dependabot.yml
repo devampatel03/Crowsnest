@@ -11,6 +11,9 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # vsce refuses to package when these typings are newer than engines.vscode (^1.85.0). Raise both together by hand.
+      - dependency-name: "@types/vscode"
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly }

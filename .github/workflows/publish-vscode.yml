@@ -1,7 +1,8 @@
 name: Publish VS Code extension
 
-# Manual on purpose: a published version cannot be changed. One-time setup (publisher, token, secrets) is in
-# packages/vscode-extension/PUBLISHING.md.
+# Manual on purpose: a published version cannot be changed. Publishes with Marketplace Trusted Publishing, so no
+# token is stored: the publisher has a policy naming this repository, this workflow file and the
+# "vscode-marketplace" environment. One-time setup is in packages/vscode-extension/PUBLISHING.md.
 on:
   workflow_dispatch:
     inputs:
@@ -25,6 +26,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # Trusted Publishing swaps this GitHub token for a short-lived Marketplace credential
     # Add required reviewers on this environment to get an approval click before anything is published.
     environment: vscode-marketplace
     steps:
@@ -53,9 +57,7 @@ jobs:
       - name: Publish to the Visual Studio Marketplace
         if: ${{ !inputs.dry_run }}
         working-directory: packages/vscode-extension
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: pnpm run publish:marketplace
+        run: npx --yes @vscode/vsce@4.1.0 publish --no-dependencies --oidc
       - name: Publish to Open VSX
         if: ${{ !inputs.dry_run && inputs.open_vsx }}
         working-directory: packages/vscode-extension
