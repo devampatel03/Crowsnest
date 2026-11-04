@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Health } from '../api.js';
@@ -16,9 +17,11 @@ import type { RunResult } from '../backend/docker.js';
 
 const ok = (stdout = ''): RunResult => ({ code: 0, stdout, stderr: '', missing: false });
 const fail = (stderr = ''): RunResult => ({ code: 1, stdout: '', stderr, missing: false });
-const HEALTH: Health = { status: 'ok', version: '0.1.0', projects_root: '/projects' };
+// The tests follow the package's own version, so a release bump does not break them.
+const VERSION = (createRequire(import.meta.url)('../../package.json') as { version: string }).version;
+const HEALTH: Health = { status: 'ok', version: VERSION, projects_root: '/projects' };
 const PROJECTS = path.resolve('/home/me/code');
-const IMAGE = 'ghcr.io/devampatel03/crowsnest-api:0.1.0';
+const IMAGE = `ghcr.io/devampatel03/crowsnest-api:${VERSION}`;
 
 interface Fake {
   deps: Deps;
@@ -213,7 +216,7 @@ describe('doctorCommand', () => {
   });
 
   it('treats missing Docker as a warning when a backend answers anyway', async () => {
-    const f = fake({ version: { code: null, stdout: '', stderr: '', missing: true } }, [{ status: 'ok', version: '0.1.0', projects_root: null }]);
+    const f = fake({ version: { code: null, stdout: '', stderr: '', missing: true } }, [{ status: 'ok', version: VERSION, projects_root: null }]);
     expect(await doctorCommand(f.deps)).toBe(0);
     expect(f.logs.join('\n')).toContain('not installed');
   });
