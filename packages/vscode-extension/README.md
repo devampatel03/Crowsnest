@@ -1,14 +1,14 @@
 # Crowsnest: Risky Package Warnings
 
-Crowsnest marks the `import` and `require` lines in your code when they name a package that looks risky. A coloured
-dot appears in the gutter and the line gets a wavy underline. Hover over it to read why.
+A lookout for what you install, inside your editor. When an `import` or `require` line names a package that looks
+wrong, Crowsnest puts a coloured dot in the gutter and a wavy line under it. Hover to read why.
 
-It looks for four things that a normal vulnerability scanner does not:
+It watches for what a plain vulnerability scanner does not:
 
-- names that are one typo away from a popular package
-- names an AI assistant made up, which someone may have registered since
-- packages whose publisher or build files changed recently, a common sign of a hijacked account
-- packages that are only a few days old and have almost no history
+- a name one typo away from a popular package
+- a name an AI assistant made up, which someone may have registered since
+- a publisher or build files that changed recently, which is how accounts get hijacked
+- a package only a few days old with almost no history
 
 | Dot | Score |
 | --- | --- |
@@ -16,25 +16,25 @@ It looks for four things that a normal vulnerability scanner does not:
 | Orange | above 60% |
 | Yellow | above your threshold (50% unless you change it) |
 
-Imports with nothing wrong get no mark. Node built-ins such as `fs` and `node:path`, and Python's standard library, are
-skipped. The extension reads JavaScript, TypeScript, JSX, TSX and Python files. Python imports are checked against
-PyPI and everything else against npm.
+An import with nothing wrong gets no mark. Node built-ins such as `fs` and `node:path`, and Python's standard library,
+are skipped. It reads JavaScript, TypeScript, JSX, TSX and Python files. Python imports are checked against PyPI and
+the rest against npm.
 
 ## Set it up
 
-The extension only displays results. The checking happens in a small service that runs on your own computer, so you
-need that running first. You need [Docker](https://www.docker.com/products/docker-desktop/) and Node.js 20 or newer.
+The extension shows results. The checking happens in a small service on your own computer, so start that first. You
+need [Docker](https://www.docker.com/products/docker-desktop/) and Node.js 20 or newer.
 
 ```bash
 npm install -g @crowsnest/cli
 crowsnest start
 ```
 
-`crowsnest start` downloads the service the first time (about 430 MB) and then runs it at `http://localhost:8000`,
-which is where the extension looks. No account or API key is needed. To stop it, run `crowsnest stop`.
+The first `crowsnest start` downloads the service (about 430 MB), then runs it at `http://localhost:8000`, which is
+where the extension looks. You need no account and no API key. `crowsnest stop` stops it.
 
-If the service is not running, the status bar shows **Crowsnest (offline)**, nothing is marked, and the rest of VS Code
-carries on as normal.
+If the service is not running, the status bar says **Crowsnest (offline)**, nothing is marked, and the rest of VS Code
+carries on as usual.
 
 ## Commands
 
