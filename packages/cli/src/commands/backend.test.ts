@@ -192,10 +192,18 @@ describe('doctorCommand', () => {
     expect(f.logs.join('\n')).toContain('Nothing is wrong');
   });
 
-  it('fails, and says how to fix it, when nothing answers', async () => {
+  it('fails, and says how to fix it, when a container exists but nothing answers', async () => {
     const f = fake(healthy, [null]);
     expect(await doctorCommand(f.deps)).toBe(1);
     expect(f.logs.join('\n')).toContain('crowsnest start');
+  });
+
+  it('treats a backend that was never started as a warning, since install and check still work', async () => {
+    const f = fake({ inspect: fail(), version: ok('27.0.3') }, [null]);
+    expect(await doctorCommand(f.deps)).toBe(0);
+    const out = f.logs.join('\n');
+    expect(out).toContain('not running. Start it with: crowsnest start');
+    expect(out).toContain('Nothing is wrong');
   });
 
   it('says Docker is not running instead of failing quietly', async () => {

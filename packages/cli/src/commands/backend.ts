@@ -202,6 +202,7 @@ export async function doctorCommand(deps: Deps = realDeps): Promise<number> {
   };
   const { apiUrl, sharedFolder } = getConfig();
 
+  let containerExists = false;
   const client = await deps.run(['version', '--format', '{{.Client.Version}}']);
   const dockerInstalled = !client.missing;
   if (!dockerInstalled) {
@@ -214,6 +215,7 @@ export async function doctorCommand(deps: Deps = realDeps): Promise<number> {
 
     if (engine.code === 0) {
       const container = await inspectContainer(deps.run);
+      containerExists = Boolean(container);
       if (!container) add('warn', 'Crowsnest container', `none. Start one with: crowsnest start`);
       else if (!container.running) add('fail', 'Crowsnest container', 'exists but is not running. Run: crowsnest start');
       else add('ok', 'Crowsnest container', `running (${container.image}), sharing ${container.projects || 'nothing'}`);
@@ -222,7 +224,10 @@ export async function doctorCommand(deps: Deps = realDeps): Promise<number> {
 
   const health = await deps.health(apiUrl);
   if (!health) {
-    add('fail', `Crowsnest at ${apiUrl}`, 'nothing answers. Start it with: crowsnest start (install and check still work as a quick check)');
+    // A backend that was never started is not a fault: install and check still work as a quick check. It is a fault
+    // when a container exists (or Docker itself is broken, which is reported above) and still nothing answers.
+    if (containerExists) add('fail', `Crowsnest at ${apiUrl}`, 'the container is there but nothing answers. Run: crowsnest start');
+    else add('warn', `Crowsnest at ${apiUrl}`, 'not running. Start it with: crowsnest start (install and check still work as a quick check without it)');
   } else {
     add('ok', `Crowsnest at ${apiUrl}`, `answering (version ${health.version})`);
     if (health.version !== cliVersion) {
