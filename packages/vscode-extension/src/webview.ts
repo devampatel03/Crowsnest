@@ -299,7 +299,7 @@ function buildHtml(result: InvestigationResult): string {
     <div class="header-logo">⛵</div>
     <div class="header-title">
       <h1>Crowsnest Analysis</h1>
-      <p>Supply Chain Sentinel — package: <span class="pill">${esc(result.packageName)}</span></p>
+      <p>Package: <span class="pill">${esc(result.packageName)}</span></p>
     </div>
   </div>
 
