@@ -1,8 +1,8 @@
 # @crowsnest/cli
 
-Command-line front end for [Crowsnest](https://github.com/devampatel03/Crowsnest), a free, open-source lookout for
-the packages you install. It checks a project's dependencies and gives each one a plain call: **Clear**, **Watch**
-or **Hold**.
+The terminal tool for [Crowsnest](https://github.com/devampatel03/Crowsnest), a free, open-source check for the
+packages you install. It looks at a project's dependencies and gives each one a plain verdict: **Clear**, **Watch** or
+**Hold**.
 
 ## Install
 
@@ -10,6 +10,14 @@ or **Hold**.
 npm install -g @crowsnest/cli
 crowsnest --help
 ```
+
+Use **`-g`**. This is a command, not a library, and without `-g` npm puts it in the current folder's
+`node_modules` where your shell cannot find it. The install box on the right of the npm page leaves `-g` out, so
+copy the line above instead.
+
+If you see `crowsnest: command not found` (or "not recognized" on Windows), you most likely installed it without `-g`.
+Run the line above, or run it once without installing: `npx @crowsnest/cli doctor`. After installing, open a new
+terminal window if the command is still not found.
 
 Needs Node.js 20 or newer.
 
