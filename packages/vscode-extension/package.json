@@ -94,13 +94,13 @@
     "typecheck": "tsc --noEmit -p ./",
     "test": "vitest run",
     "test:e2e": "node test-e2e/run.mjs",
-    "package": "npx --yes @vscode/vsce@4.0.0 package --no-dependencies",
-    "publish:marketplace": "npx --yes @vscode/vsce@4.0.0 publish --no-dependencies",
+    "package": "npx --yes @vscode/vsce@4.1.0 package --no-dependencies",
+    "publish:marketplace": "npx --yes @vscode/vsce@4.1.0 publish --no-dependencies",
     "publish:openvsx": "npx --yes ovsx@1.2.0 publish --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.144.0",
+    "@types/vscode": "~1.85.0",
     "typescript": "^5.3.0",
     "vitest": "^2.1.0"
   },

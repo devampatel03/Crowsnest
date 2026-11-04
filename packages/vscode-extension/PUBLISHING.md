@@ -28,20 +28,20 @@ code --install-extension crowsnest-vscode-0.1.0.vsix
 
 ## One-time setup
 
-1. **Create an Azure DevOps organisation.** The Marketplace signs you in through it. Go to
-   https://dev.azure.com, sign in with a Microsoft account and create an organisation (any name, it is private).
-2. **Create a personal access token.** In Azure DevOps: User settings (top right), Personal access tokens, New Token.
-   - Organization: **All accessible organizations** (this matters; a single-organisation token fails with a 401).
-   - Scopes: **Custom defined**, then *Show all scopes*, tick **Marketplace → Manage**.
-   - Short expiry (30 to 90 days). Copy it once.
-3. **Create the publisher.** Go to https://marketplace.visualstudio.com/manage, *Create publisher*.
+1. **Create the publisher.** Go to https://marketplace.visualstudio.com/manage and choose *Create publisher*. Marketplace
+   sign-in goes through a Microsoft account, and it may ask for an Azure DevOps organisation behind it.
    - The **ID** must equal `"publisher"` in `package.json`, which is `crowsnest`. IDs are global and permanent.
    - If `crowsnest` is taken, choose another ID, then change `"publisher"` in `package.json` and the extension ID
      `crowsnest.crowsnest-vscode` in `test-e2e/suite.ts` to match.
-   - Fill in the display name, and (optionally) the website and a verified domain.
-4. **Add the token to GitHub** (only if you want to publish from Actions). Repository, Settings, Environments, New
-   environment `vscode-marketplace`. Add a secret `VSCE_PAT` with the token, and add yourself under *Required
-   reviewers*.
+2. **Publish the first version by hand** (see below). Uploading the `.vsix` on the publisher page needs no token.
+3. **Set up Trusted Publishing, so later versions need no token.** On the publisher page choose *Trusted Publishing*,
+   then *Create*, and fill in:
+   - Repository owner: `devampatel03`, and Repository: `Crowsnest`.
+   - Workflow: `publish-vscode.yml`, and Environment: `vscode-marketplace` (the exact name).
+4. **Create the GitHub environment.** Repository, Settings, Environments, New environment `vscode-marketplace`, and add
+   yourself under *Required reviewers*. There is no secret to add.
+
+Microsoft retires global Azure DevOps personal access tokens on 2026-12-01, so this guide no longer uses one.
 
 ## Every release
 
@@ -50,19 +50,15 @@ code --install-extension crowsnest-vscode-0.1.0.vsix
 2. Run the four checks above.
 3. Publish, either way:
    - **From GitHub:** Actions, *Publish VS Code extension*, Run workflow. Leave *Dry run* ticked first. It builds
-     the `.vsix` and attaches it to the run so you can download and test it. Run it again with *Dry run* unticked.
-   - **From your machine:**
-     ```bash
-     cd packages/vscode-extension
-     export VSCE_PAT=<your token>          # PowerShell: $env:VSCE_PAT = "<your token>"
-     npm run publish:marketplace
-     ```
+     the `.vsix` and attaches it to the run so you can download and test it. Run it again with *Dry run* unticked. It
+     publishes with `vsce publish --oidc`, using the Trusted Publishing policy from step 3 above.
+   - **By hand, no token:** `pnpm run package` builds `crowsnest-vscode-<version>.vsix`. Upload it at
+     https://marketplace.visualstudio.com/manage (your publisher, *New extension*, *Visual Studio Code*). Use this for
+     the very first version.
 4. The listing goes live within a few minutes, after an automatic scan:
    https://marketplace.visualstudio.com/items?itemName=crowsnest.crowsnest-vscode
 5. Check it: in VS Code open Extensions, search "Crowsnest", install, open a JavaScript file.
 
-You can also upload the `.vsix` by hand at https://marketplace.visualstudio.com/manage (publisher, *New extension*,
-*Visual Studio Code*). That needs no token.
 
 ## Also publish to Open VSX (optional, recommended)
 
@@ -83,7 +79,7 @@ https://open-vsx.org instead.
   but takes the listing down, so nobody can install or update it.
 - Versions are plain `major.minor.patch`. For a trial release use `--pre-release` and an odd minor number
   (for example 0.3.0), keeping stable releases on even ones.
-- Never commit the token. If it leaks, revoke it in Azure DevOps straight away.
+- Never commit a token (the Open VSX one, if you use it). If one leaks, revoke it straight away.
 
 ## Things to know before the first publish
 
