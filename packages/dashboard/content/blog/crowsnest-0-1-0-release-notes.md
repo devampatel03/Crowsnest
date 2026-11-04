@@ -42,7 +42,6 @@ Follow the [Quickstart](/docs/quickstart). The command line tool and the VS Code
 
 ## What are the known limits?
 
-- A scan on a fresh install with no API keys can fail in 0.1.0 (seen 2026-10-07). See [Troubleshooting](/docs/troubleshooting).
 - Only installs run as `crowsnest install` are checked; a plain `npm install` is not.
 - The 0.6 install stop is fixed and cannot be changed.
 - If Crowsnest cannot be reached, `crowsnest install` warns and installs anyway.

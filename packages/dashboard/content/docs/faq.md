@@ -4,7 +4,7 @@ description: "Answers to common questions about Crowsnest: what it is, whether i
 slug: faq
 order: 9
 section: Help
-updated: 2026-10-08
+updated: 2026-11-04
 question: What do people ask about Crowsnest?
 answer: Crowsnest is free, open source and runs on your machine. It needs no account and no API keys, and sends no usage data to its authors. It stops installs only when you use crowsnest install. Fourteen short answers follow.
 facts:
@@ -90,11 +90,11 @@ Nib is Crowsnest's mascot, a small crow who sits at the masthead of your project
 
 *Detail:* Nib appears on this website and in the dashboard. Nib is not in the command line tool, the Slack bot or the VS Code extension.
 
-## Why did my first scan fail?
+## Why did my scan fail?
 
-A first scan on a fresh 0.1.0 install can fail when no API keys are set. This is a known fault, seen on 2026-10-07. Your project and setup are fine. `crowsnest install <package>` worked the same day.
+No API keys are needed for a scan. On 2026-11-04 a scan with no keys, on the published 0.1.1 image, finished normally. If yours failed, the most common cause is a folder Docker cannot see, or a folder with no lockfile.
 
-*Detail:* [Troubleshooting](/docs/troubleshooting) has the exact message and what was and was not checked.
+*Detail:* [Troubleshooting](/docs/troubleshooting) lists the messages and what to do. An older build showed "Forbidden keyword in query: REPLACE"; update with `npm install -g @crowsnest/cli@latest` and run `crowsnest start` again.
 
 ## What this does not do
 
