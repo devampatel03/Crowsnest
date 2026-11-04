@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- The listing is now called "Crowsnest: Risky Package Warnings". The hover, the status bar tooltip and the report header
+  use plainer wording, and the README is rewritten.
+- Later versions publish from GitHub with Marketplace Trusted Publishing, so no token is stored.
+
 ## 0.1.0
 
 First release.

@@ -10,7 +10,7 @@ Crowsnest checks the packages in your software project and gives each one a plai
 **Clear**, **Watch** or **Hold**. A Hold means stop and check before you install or keep it.
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Version 0.1.0](https://img.shields.io/badge/version-0.1.0-informational)](#status)
+[![Version 0.1.1](https://img.shields.io/badge/version-0.1.1-informational)](#status)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 [Quickstart](#quickstart) · [Ways to use it](#ways-to-use-it) · [Documentation](#documentation) · [Contributing](#contributing)
@@ -141,7 +141,7 @@ The full guides are at [crowsnest.co.in/docs](https://crowsnest.co.in/docs). The
 
 ## Status
 
-Crowsnest is at version **0.1.0**. It works today, and the API is young enough that it may change between minor
+Crowsnest is at version **0.1.1**. It works today, and the API is young enough that it may change between minor
 versions.
 
 What is out there: `@crowsnest/cli` is on [npm](https://www.npmjs.com/package/@crowsnest/cli), the extension is on the

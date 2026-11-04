@@ -114,7 +114,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Crowsnest API",
     description="Supply chain forensics agent — see the storm before it hits your ship",
-    version="0.1.0",
+    version="0.1.1",
     lifespan=lifespan,
 )
 
@@ -179,7 +179,7 @@ async def _push_event(event_type: str, data: dict[str, Any]) -> None:
 
 @app.get("/health")
 async def health() -> dict[str, str | None]:
-    return {"status": "ok", "version": "0.1.0", "projects_root": get_settings().crowsnest_projects_root or None}
+    return {"status": "ok", "version": "0.1.1", "projects_root": get_settings().crowsnest_projects_root or None}
 
 
 _LOCKFILE_NAMES = LOCKFILE_NAMES

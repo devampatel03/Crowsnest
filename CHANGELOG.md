@@ -4,6 +4,31 @@ All notable changes to Crowsnest are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.1] - 2026-11-05
+
+### Changed
+
+- `crowsnest doctor` warns instead of failing when the backend was never started, since `install` and `check` work
+  without it. It still fails when a container exists and nothing answers.
+- The VS Code extension is now called "Crowsnest: Risky Package Warnings". Its hover, status bar tooltip and report
+  header use plainer wording.
+- The README files for the project, the command line tool and the extension are rewritten, and they say that the
+  command line tool and the extension are published and that `-g` is needed to install the command line tool.
+- The installation and VS Code pages, and the machine-readable summary, no longer say the command line tool and the
+  extension must be built from source.
+
+### Fixed
+
+- The extension could not be packaged: `@types/vscode` had moved past the VS Code version the extension supports.
+  The typings are pinned to match, and Dependabot leaves them alone.
+
+### Internal
+
+- Extension releases publish from GitHub with Marketplace Trusted Publishing (`vsce publish --oidc`), not a stored
+  token. Global Azure DevOps tokens retire on 2026-12-01.
+
 ## [0.1.0] - 2026-11-03
 
 ### Added
@@ -101,5 +126,3 @@ All notable changes to Crowsnest are listed here. The format follows
   release dates and are matched by their normalised name.
 - Maintainer history for npm packages was silently dropped, so the maintainer-takeover check and the account-age part
   of the maintainer risk score had no data. It is now stored, and existing databases are upgraded on start.
-
-Version 0.1.0 has not been tagged yet. When it is, this section becomes `[0.1.0]` with its date.
