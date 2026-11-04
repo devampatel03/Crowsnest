@@ -35,7 +35,7 @@ function list(entries: AnyEntry[]): string {
 const FACTS: string[] = [
   `Who Nib is. ${NIB_SENTENCE} Nib does not appear in the command line tool, the Slack bot or the VS Code extension.`,
   'Four ways to use it: the crowsnest command in a terminal, a VS Code extension, a Slack bot and a dashboard at http://localhost:3000.',
-  'Not published: the command line tool is not on npm and the VS Code extension is not on the Marketplace. Both are built from source.',
+  'Published: the command line tool is on npm as @crowsnest/cli and the VS Code extension is on the Marketplace as crowsnest.crowsnest-vscode. The command line tool starts the backend in Docker with `crowsnest start`.',
   'Every call is Clear, Watch or Hold, with a plain sentence for what happened and a first step. "No flags" is not the same as Clear.',
   '`crowsnest install <package>` stops at risk 0.6 or above and on any known harmful package. The limit is fixed. A plain `npm install` is not checked. If Crowsnest cannot be reached, the install proceeds with a warning.',
   'The install check looks at how new the package is (under 30 days), weekly downloads (under 1,000), a link to a code repository, a name close to a package with over 1,000,000 weekly downloads, names AI assistants are known to invent, and known harmful packages.',

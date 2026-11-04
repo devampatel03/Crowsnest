@@ -7,12 +7,13 @@ section: Get started
 updated: 2026-11-01
 howTo: true
 question: How do I install Crowsnest?
-answer: Use Docker, or install from source with Python 3.12 or newer and Node 20 or newer. Docker is the shorter path. The command line tool and VS Code extension are built from source, because neither is published to a package store yet.
+answer: Install the command line tool with npm install -g @crowsnest/cli, then run crowsnest start. It runs Crowsnest in Docker with one command. You can also run Crowsnest with Docker Compose, or from source with Python 3.12 or newer and Node 20 or newer. The VS Code extension is on the Marketplace.
 facts:
   - "Source requirements: Python 3.12 or newer, Node 20 or newer, pnpm or npm (pyproject.toml and README, 2026-10-07)."
   - "Docker images use Python 3.12 and Node 20 (infra/Dockerfile.api and the dashboard Dockerfile, 2026-10-07)."
   - "Ports: 8000 for Crowsnest, 3000 for the dashboard (infra/docker-compose.yml, 2026-10-07)."
-  - "The command line tool is not published to npm; build it from source (owner confirmation, 2026-10-07)."
+  - "The command line tool is on npm as @crowsnest/cli and needs Node 20 or newer (npm registry, 2026-11-04)."
+  - "crowsnest start runs the backend in Docker from ghcr.io/devampatel03/crowsnest-api, shares one folder read only, and listens on this machine only (CLI source, 2026-11-04)."
   - "Version 0.1.0 (health check, 2026-10-07)."
 related:
   - /docs/quickstart
@@ -25,11 +26,11 @@ Run Crowsnest with Docker, or from source with Python 3.12 or newer and Node 20 
 
 ## Which install should I pick?
 
-| | Docker | From source |
-|---|---|---|
-| You need | Docker with Docker Compose | Python 3.12 or newer, Node 20 or newer, pnpm or npm |
-| Ports | 8000 (Crowsnest), 3000 (dashboard) | The same |
-| Best for | Trying it, or running it on one machine | Changing the code, or using the terminal command |
+| | Terminal command | Docker Compose | From source |
+|---|---|---|---|
+| You need | Node 20 or newer, and Docker to run the backend | Docker with Docker Compose | Python 3.12 or newer, Node 20 or newer, pnpm or npm |
+| Ports | 8000 (Crowsnest) | 8000 (Crowsnest), 3000 (dashboard) | The same |
+| Best for | Checking projects from the terminal and the VS Code extension | Trying the dashboard, or running it on one machine | Changing the code |
 
 ## How do I install with Docker?
 
@@ -76,22 +77,17 @@ Then start the dashboard as in step 4 above.
 
 ## How do I install the terminal command?
 
-The command line tool is not published to npm. Build it from the repository:
-
 ```bash
-cd packages/cli
-npm install
-npm run build
-node dist/index.js --version
+npm install -g @crowsnest/cli
+crowsnest --version
+crowsnest start
 ```
 
-Real output on 2026-10-07:
+Use `-g`. Without it npm puts the command in the current folder, and your shell cannot find it. The npm page's own install box leaves `-g` out. `crowsnest start` downloads the backend the first time (about 430 MB) and runs it at http://localhost:8000. It needs Docker running. `crowsnest stop` stops it, and `crowsnest doctor` checks what is wrong.
 
-```text
-0.1.0
-```
+Without Docker, `crowsnest install` and `crowsnest check` still work as a quick check. See [CLI usage](/docs/cli).
 
-`node dist/index.js` is the `crowsnest` command. The [CLI usage](/docs/cli) page writes `crowsnest` for short; from source, type `node dist/index.js` (run from `packages/cli`) instead.
+To run the command from a source checkout instead, build it in `packages/cli` with `npm install` and `npm run build`, then type `node dist/index.js` where the docs say `crowsnest`.
 
 ## How do I add Slack and VS Code?
 
@@ -116,7 +112,7 @@ Then delete the `Crowsnest` folder. The `-v` deletes the stored data. If you use
 
 ## What this does not do
 
-- It does not install the terminal command or the VS Code extension for you. Both are built from source.
+- It does not install the VS Code extension for you. Install it from the Marketplace, see [VS Code extension](/docs/integrations/vscode).
 - It does not provide a hosted version. You run Crowsnest on your own machine.
 - It does not check your versions of Python or Node. A version that is too old shows up as an error during setup.
 

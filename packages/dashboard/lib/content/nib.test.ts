@@ -59,11 +59,11 @@ describe('llms.txt and llms-full.txt', () => {
   it('name Nib as a drawing and list the settled facts', () => {
     for (const t of [llmsTxt(), llmsFullTxt()]) {
       expect(t).toContain(NIB_SENTENCE);
-      expect(t).toContain('not on npm');
-      expect(t).toContain('not on the Marketplace');
+      expect(t).toContain('@crowsnest/cli');
+      expect(t).toContain('crowsnest.crowsnest-vscode');
       expect(t).toContain('Known fault in 0.1.0');
       expect(t).toContain('Vercel Web Analytics');
-      expect(t).not.toMatch(/hackathon|npm install -g/i);
+      expect(t).not.toMatch(/hackathon/i);
     }
   });
 });

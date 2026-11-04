@@ -1,20 +1,20 @@
 ---
 title: VS Code extension
-description: "Get warnings in the margin of VS Code when you import a risky package. Install from source, use three commands, and set four options. JS, TS and Python."
+description: "Get warnings in the margin of VS Code when you import a risky package. Install from the Marketplace, use three commands and set four options. JS, TS, Python."
 slug: integrations/vscode
 order: 7
 section: Integrations
-updated: 2026-10-07
+updated: 2026-11-04
 howTo: true
 question: How do I get Crowsnest warnings in VS Code?
-answer: Build the extension from packages/vscode-extension, press F5 to open a development window, and open a JavaScript, TypeScript or Python file. Risky imports get a mark in the margin. It needs Crowsnest running on port 8000 and VS Code 1.85 or newer.
+answer: Install it from the VS Code Marketplace (search for Crowsnest, publisher crowsnest), start Crowsnest with crowsnest start, and open a JavaScript, TypeScript or Python file. Risky imports get a mark in the margin. It needs Crowsnest running on port 8000 and VS Code 1.85 or newer.
 facts:
   - "Version 0.1.0; needs VS Code 1.85 or newer (packages/vscode-extension/package.json, 2026-10-07)."
   - "Switches on for JavaScript, TypeScript, JSX, TSX and Python files (package.json, 2026-10-07)."
   - "Three commands and four settings (package.json, 2026-10-13)."
   - "Waits 1,000 ms after you stop typing, and remembers each package's result for 5 minutes (src/decorator.ts, 2026-10-07)."
   - "Warning limit defaults to 0.5, lower than the install stop of 0.6 (package.json and install check, 2026-10-07)."
-  - "Not published to the VS Code Marketplace (owner confirmation, 2026-10-07)."
+  - "On the VS Code Marketplace as crowsnest.crowsnest-vscode, version 0.1.0 (Marketplace, 2026-11-04)."
 related:
   - /docs/cli
   - /docs/configuration
@@ -26,16 +26,13 @@ The VS Code extension marks risky imports in the margin as you type. Hover to se
 
 ## How do I install it?
 
-It is not on the VS Code Marketplace, and no packaged `.vsix` file is provided. Run it from source:
+It is on the VS Code Marketplace.
 
-1. **Open the folder** `packages/vscode-extension` in its own VS Code window.
-2. **Build it.** In a terminal there, run:
-   ```bash
-   npm install
-   npm run compile
-   ```
-3. **Press F5.** A second window opens, labelled Extension Development Host.
-4. **Open a JavaScript, TypeScript or Python file** in that window. The extension switches on by itself.
+1. **Install it.** Open the Extensions view, search for "Crowsnest" (publisher `crowsnest`) and press Install. Or run `code --install-extension crowsnest.crowsnest-vscode`.
+2. **Start Crowsnest.** The extension only shows results; the checking runs on your machine. Install the command line tool with `npm install -g @crowsnest/cli` and run `crowsnest start`. See [Installation](/docs/installation).
+3. **Open a JavaScript, TypeScript or Python file.** The extension switches on by itself.
+
+To run it from source instead, open `packages/vscode-extension` in its own VS Code window, run `npm install` and `npm run compile`, then press F5.
 
 ## What will I see?
 
