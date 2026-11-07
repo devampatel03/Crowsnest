@@ -8,7 +8,7 @@ import { backendPath } from '../backend/shared.js';
 
 export async function scanCommand(
   projectPath: string,
-  opts: { ecosystem?: string; format?: string; watch?: boolean },
+  opts: { ecosystem?: string; format?: string },
 ): Promise<void> {
   const path = projectPath || process.cwd();
 

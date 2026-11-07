@@ -88,6 +88,9 @@ export function buildRunArgs({ image, port, projects, envFile }: RunArgsInput): 
     '--publish', `127.0.0.1:${port}:8000`,
     '--volume', `${VOLUME}:/data`,
     '--volume', `${projects}:/projects:ro`,
+    // Lets the backend reach a model server running on this machine (Ollama, LM Studio) at host.docker.internal.
+    // Docker Desktop already provides the name; on Linux this line is what makes it resolve.
+    '--add-host', 'host.docker.internal:host-gateway',
     ...(envFile ? ['--env-file', envFile] : []),
     image,
   ];

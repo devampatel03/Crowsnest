@@ -65,7 +65,6 @@ program
   .description('Run a full supply chain scan on a project')
   .option('-e, --ecosystem <eco>', 'package ecosystem (npm|pypi|cargo|go)', 'npm')
   .option('-f, --format <fmt>', 'output format (table|json)', 'table')
-  .option('--watch', 'daemon mode: re-run every 5 minutes')
   .action(async (path: string | undefined, opts) => {
     await scanCommand(path || process.cwd(), opts);
   });
