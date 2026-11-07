@@ -146,6 +146,25 @@ describe('CrowsnestClient', () => {
     expect(r?.socketAlerts?.[0]).toEqual({ severity: 'high', category: 'install-scripts', description: 'm' });
   });
 
+  it('takes the investigation verdict from the install check, never a made-up clean one', async () => {
+    respondWith(JSON.stringify({ assessment: { blocked: true, probability: 1, signals: ['Matches known AI hallucination pattern'], degraded: [] } }));
+    const hold = await new CrowsnestClient().investigatePackage('pkg');
+    expect(hold).toMatchObject({ verdict: 'Hold', riskScore: 1, queryFindings: ['Matches known AI hallucination pattern'] });
+
+    respondWith(JSON.stringify({ assessment: { blocked: false, probability: 0, signals: [], degraded: [] } }));
+    expect((await new CrowsnestClient().investigatePackage('pkg'))?.verdict).toBe('Clear');
+
+    respondWith(JSON.stringify({ assessment: { blocked: false, probability: 0, signals: [], degraded: ['malware list unreachable'] } }));
+    const gap = await new CrowsnestClient().investigatePackage('pkg');
+    expect(gap?.verdict).toBe('Not fully checked');
+    expect(gap?.summary).toContain('malware list unreachable');
+
+    respondWith(JSON.stringify({ npm_metadata: { weekly_downloads: 5 } }));
+    const old = await new CrowsnestClient().investigatePackage('pkg');
+    expect(old?.verdict).toBe('Not fully checked');
+    expect(old?.summary).toContain('too old');
+  });
+
   it('sends the request field names the backend requires', async () => {
     respondWith('{}');
     let sent = '';

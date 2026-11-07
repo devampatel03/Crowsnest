@@ -185,62 +185,39 @@ export class CrowsnestApiClient {
       }
     );
 
-    const socketAlertsCount = raw.socket_alerts?.length ?? 0;
-    const weeklyDownloads = raw.npm_metadata?.weekly_downloads ?? 0;
-    
-    // Check findings for critical alerts
-    const iocHits = raw.findings?.IOC_MATCH?.length ?? 0;
-    const shaiHuludHits = raw.findings?.SHAI_HULUD?.length ?? 0;
-    const sleeperHits = raw.findings?.SLEEPER_DEPENDENCY?.length ?? 0;
-    
-    let verdict: 'clean' | 'suspicious' | 'compromised' = 'clean';
-    let summary = 'No security issues detected. Package appears normal.';
-    
-    if (iocHits > 0 || shaiHuludHits > 0) {
-      verdict = 'compromised';
-      summary = `CRITICAL: Known Indicators of Compromise (IOC) matched. ${iocHits} active threat matches found.`;
-    } else if (socketAlertsCount > 0 || sleeperHits > 0 || weeklyDownloads < 1000) {
-      verdict = 'suspicious';
-      summary = `WARNING: Suspicious signals detected. Contains ${socketAlertsCount} socket.dev alerts and low download counts.`;
+    const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+    const assessment = raw.assessment ?? {};
+    const signals = list(assessment.signals);
+    const notChecked = list(assessment.degraded);
+    const risk = Number(assessment.probability) || 0;
+
+    // The call comes from the backend's install check, the same answer `crowsnest install` acts on. A backend that
+    // sends none gets no verdict at all, never a made-up Clear.
+    let call: InvestigationResult['call'] = 'Not fully checked';
+    if (raw.assessment) {
+      if (assessment.blocked) call = 'Hold';
+      else if (signals.length > 0 || risk > 0) call = 'Watch';
+      else if (notChecked.length === 0) call = 'Clear';
+    } else {
+      notChecked.push('this backend is too old to give a verdict; run crowsnest start to update it');
     }
 
-    let ageDays = 365;
+    let ageDays: number | null = null;
     if (raw.npm_metadata?.created_at) {
-      try {
-        const created = new Date(raw.npm_metadata.created_at);
-        ageDays = Math.max(0, Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24)));
-      } catch (e) {
-        // An unparseable date only means the package age is not shown.
-      }
+      const created = new Date(raw.npm_metadata.created_at).getTime();
+      if (!Number.isNaN(created)) ageDays = Math.max(0, Math.floor((Date.now() - created) / (1000 * 60 * 60 * 24)));
     }
-
-    const maintainerChanges = raw.findings?.IDENTITY_DRIFT?.length ?? 0;
 
     return {
       package: pkg,
-      incident: raw.findings?.IOC_MATCH?.[0] ? {
-        id: raw.findings.IOC_MATCH[0].id ?? 'ioc-match',
-        attack_pattern: 'maintainer_takeover',
-        confidence: 0.9,
-        severity: 'CRITICAL',
-        packages: [pkg],
-        blast_radius: raw.findings.IOC_MATCH[0].blast_radius ?? 1,
-        runtime_confirmation: false,
-        remediation_options: ['Pin to a known-safe version', 'Audit recent maintainer changes'],
-        detected_at: new Date().toISOString()
-      } : null,
-      analysis: {
-        maintainer_changes: maintainerChanges,
-        days_since_maintainer_change: maintainerChanges > 0 ? 30 : null,
-        commit_pattern_anomaly: maintainerChanges > 0,
-        slsa_attestation: weeklyDownloads > 50000,
-        slsa_pipeline_risk: false,
-        socket_alerts: socketAlertsCount,
-        weekly_downloads: weeklyDownloads,
-        age_days: ageDays
-      },
-      verdict,
-      summary
+      call,
+      risk,
+      signals,
+      not_checked: notChecked,
+      weekly_downloads: raw.npm_metadata?.weekly_downloads ?? null,
+      age_days: ageDays,
+      maintainers: list(raw.npm_metadata?.maintainers),
+      socket_alerts: raw.socket_alerts?.length ?? 0,
     };
   }
 

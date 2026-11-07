@@ -159,39 +159,34 @@ describe('formatBlastRadius', () => {
 
 const invest = (over: Partial<InvestigationResult> = {}): InvestigationResult => ({
   package: 'x',
-  incident: null,
-  analysis: {
-    maintainer_changes: 0,
-    days_since_maintainer_change: null,
-    commit_pattern_anomaly: false,
-    slsa_attestation: false,
-    slsa_pipeline_risk: false,
-    socket_alerts: 0,
-    weekly_downloads: 1234567,
-    age_days: 10,
-  },
-  verdict: 'clean',
-  summary: 'ok',
+  call: 'Clear',
+  risk: 0,
+  signals: [],
+  not_checked: [],
+  weekly_downloads: 1234567,
+  age_days: 10,
+  maintainers: [],
+  socket_alerts: 0,
   ...over,
 });
 
 describe('formatInvestigation', () => {
-  it('verdict emoji and uppercase verdict', () => {
-    expect(text(formatInvestigation('x', invest({ verdict: 'compromised' })))).toContain('COMPROMISED');
-    expect(text(formatInvestigation('x', invest({ verdict: 'suspicious' })))).toContain('SUSPICIOUS');
+  it('leads with the call', () => {
+    expect(text(formatInvestigation('x', invest({ call: 'Hold', risk: 1 })))).toContain('Hold');
+    expect(text(formatInvestigation('x', invest({ call: 'Watch', risk: 0.3 })))).toContain('Watch');
   });
 
-  it('shows pipeline-risk line only when attestation exists', () => {
-    expect(text(formatInvestigation('x', invest()))).not.toContain('SLSA pipeline risk');
-    const a = invest();
-    a.analysis.slsa_attestation = true;
-    expect(text(formatInvestigation('x', a))).toContain('SLSA pipeline risk');
+  it('lists the reasons, and says nothing was raised when there are none', () => {
+    expect(text(formatInvestigation('x', invest({ call: 'Hold', signals: ['Only 6 weekly downloads'] })))).toContain('Only 6 weekly downloads');
+    expect(text(formatInvestigation('x', invest()))).toContain('nothing was raised');
   });
 
-  it('renders active incident with string or object remediation', () => {
-    expect(text(formatInvestigation('x', invest({ incident: inc() })))).toContain('Pin the version');
-    const obj = inc({ remediation_options: [{ action: 'A', description: 'D', reversibility: 'easy' }] });
-    expect(text(formatInvestigation('x', invest({ incident: obj })))).toContain('A — D');
+  it('shows what was not checked, and invents no facts', () => {
+    const out = text(formatInvestigation('x', invest({ call: 'Not fully checked', not_checked: ['malware list unreachable'], weekly_downloads: null, age_days: null })));
+    expect(out).toContain('malware list unreachable');
+    expect(out).not.toContain('Weekly downloads');
+    expect(out).not.toContain('SLSA');
+    expect(out).not.toContain('Maintainer changes');
   });
 
   it('url-encodes scoped package names in the Hold link', () => {

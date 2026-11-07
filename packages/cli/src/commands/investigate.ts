@@ -4,14 +4,45 @@ import { theme, severityColor } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { sectionHeader } from '../display/banner.js';
 import { renderKeyValue } from '../display/table.js';
+import { parsePackageSpec } from './install.js';
+
+/** What the backend's install check says about one package; the same answer `crowsnest install` acts on. */
+export interface Assessment {
+  blocked: boolean;
+  probability: number;
+  signals: string[];
+  reason?: string;
+  degraded: string[];
+}
+
+export type Call = 'Hold' | 'Watch' | 'Clear' | 'Not fully checked';
+
+/** Hold when the install check blocks it, Watch when it raised anything, and Clear only when nothing was left unchecked. */
+export function callFor(a: Assessment): Call {
+  if (a.blocked) return 'Hold';
+  if (a.signals.length > 0 || a.probability > 0) return 'Watch';
+  if (a.degraded.length > 0) return 'Not fully checked';
+  return 'Clear';
+}
+
+export function readAssessment(raw: unknown): Assessment | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+  return {
+    blocked: Boolean(r.blocked),
+    probability: Number(r.probability) || 0,
+    signals: list(r.signals),
+    reason: typeof r.reason === 'string' ? r.reason : undefined,
+    degraded: list(r.degraded),
+  };
+}
 
 export async function investigateCommand(
   packageSpec: string,
   opts: { deep?: boolean; ecosystem?: string },
 ): Promise<void> {
-  const [pkgName, version] = packageSpec.includes('@')
-    ? [packageSpec.split('@')[0], packageSpec.split('@')[1]]
-    : [packageSpec, undefined];
+  const [pkgName, version] = parsePackageSpec(packageSpec);
 
   const ecosystem = opts.ecosystem || 'npm';
 
@@ -31,6 +62,17 @@ export async function investigateCommand(
 
   console.log();
   console.log(sectionHeader(`  Investigation: ${pkgName}${version ? '@' + version : ''}`));
+
+  const assessment = readAssessment(result.assessment);
+  if (assessment) {
+    const call = callFor(assessment);
+    const paint = call === 'Hold' ? theme.error : call === 'Clear' ? theme.success : theme.status.warning;
+    console.log();
+    console.log(`  ${paint(call)}. Risk ${Math.round(assessment.probability * 100)}%.`);
+    for (const s of assessment.signals) console.log(`    ${icons.warn} ${s}`);
+    for (const d of assessment.degraded) console.log(`    ${theme.muted('Not checked: ' + d)}`);
+    if (call === 'Clear') console.log(theme.muted('    Nothing found by the install check.'));
+  }
 
   const npm = result.npm_metadata as Record<string, unknown> | undefined;
   if (npm) {
@@ -68,7 +110,7 @@ export async function investigateCommand(
       }
     } else {
       console.log();
-      console.log(theme.success(`  ${icons.ok} No detection queries triggered`));
+      console.log(theme.muted(`  ${icons.ok} The stored detection queries found nothing for this name. That is extra detail; the call above is the answer.`));
     }
   }
 
