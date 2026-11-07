@@ -55,7 +55,7 @@ crowsnest config set apiUrl http://my-host:8000
 | `crowsnest stop` | Stop it. `--delete-data` also deletes what it stored. |
 | `crowsnest doctor` | Check Docker, the backend and the internet lookups, and say how to fix problems. |
 | `crowsnest check [path]` | Vet only the versions a pull request adds (`--base <ref>`). Exits 3 when one should not be merged. |
-| `crowsnest scan [path]` | Scan a project's lockfile. `-f json` for machine output, `--watch` to repeat every 5 minutes. |
+| `crowsnest scan [path]` | Scan a project's lockfile. `-f json` for machine output. |
 | `crowsnest investigate <package>` | Look closely at one package. `--deep` runs follow-up checks. |
 | `crowsnest install <package>` | A safe `npm install`: stops on a risky package. `--crowsnest-acknowledge-risk` overrides, `--strict` refuses when a check could not be completed, `--quick` / `--full` choose the check. |
 | `crowsnest blast-radius` | What breaks if a maintainer's account is taken over. `-m <login>` or `--all`. |

@@ -35,6 +35,11 @@ describe('buildRunArgs', () => {
     expect(args).toContain('crowsnest-data:/data');
   });
 
+  it('lets the backend reach a model server on this machine', () => {
+    const i = args.indexOf('--add-host');
+    expect(args.slice(i, i + 2)).toEqual(['--add-host', 'host.docker.internal:host-gateway']);
+  });
+
   it('labels the container with the folder and ends with the image', () => {
     expect(args).toContain('crowsnest.projects=C:\\Users\\me\\code');
     expect(args.at(-1)).toBe('img:1');

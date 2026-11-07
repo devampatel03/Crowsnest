@@ -52,7 +52,6 @@ Run a full supply chain scan on a project
 Options:
   -e, --ecosystem <eco>  package ecosystem (npm|pypi|cargo|go) (default: "npm")
   -f, --format <fmt>     output format (table|json) (default: "table")
-  --watch                daemon mode: re-run every 5 minutes
   -h, --help             display help for command
 ```
 
@@ -213,7 +212,7 @@ Keys you can set: `apiUrl`, `githubToken`, `npmToken`, `socketApiKey`, `anthropi
 
 ## What this does not do
 
-- `scan --watch` appears in `--help` but does not repeat the scan yet. Run the scan again yourself.
+- `crowsnest scan` runs once. To repeat it, run it again yourself or from a scheduler. `crowsnest watch` is a different command: it streams live events.
 - The 0.6 stop limit is fixed. You cannot change it.
 - A package Crowsnest cannot find in any registry adds 0.2 risk and still goes to npm, which then reports that it does not exist.
 - `crowsnest check` compares lockfiles, so a dependency named only in `package.json` or an unpinned `requirements.txt` line is not checked.
