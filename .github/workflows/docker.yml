@@ -7,6 +7,8 @@ on:
     paths:
       - infra/**
       - packages/dashboard/Dockerfile
+      - packages/dashboard/package.json
+      - pnpm-lock.yaml
       - packages/core/**
       - pyproject.toml
       - .dockerignore
@@ -49,7 +51,7 @@ jobs:
       matrix:
         include:
           - { name: api, context: ".", file: infra/Dockerfile.api }
-          - { name: dashboard, context: packages/dashboard, file: packages/dashboard/Dockerfile }
+          - { name: dashboard, context: ".", file: packages/dashboard/Dockerfile }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
