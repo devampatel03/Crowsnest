@@ -6,6 +6,29 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-08
+
+### Fixed
+
+- `crowsnest investigate` printed "No detection queries triggered" with a green tick for a package that `crowsnest
+  install` blocks. The backend now returns the install check's answer with an investigation, and the command line, the
+  VS Code extension and the Slack `/crowsnest-investigate` command all show Hold, Watch, Clear or Not fully checked
+  from it. A Clear needs a clean answer with nothing left unchecked.
+- The Slack investigation no longer shows facts the backend never sent (an attestation flag guessed from download
+  counts, a fixed "30 days since a maintainer change").
+- `crowsnest investigate @scope/name` dropped the scope and looked up the wrong package.
+- `crowsnest scan --watch` was listed as "re-run every 5 minutes" but ran once. The option is removed.
+- A Crowsnest started with `crowsnest start` can reach Ollama or LM Studio on the same machine at
+  `host.docker.internal`, on Linux as well as Docker Desktop.
+
+### Changed
+
+- The website lists every way to install (the dashboard, the terminal command and the VS Code extension) and puts the
+  dashboard first. The 0.1.0 release notes, the quickstart, the Slack page and the models page are brought up to date.
+- Development tooling moved to vitest 4 and vite 6, and the unused root `package-lock.json` is gone. This clears the
+  critical and high Dependabot alerts, all of which were in development tools that never ship.
+- The dashboard image uses Node 26.
+
 ## [0.1.1] - 2026-11-05
 
 ### Changed

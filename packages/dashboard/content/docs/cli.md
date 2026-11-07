@@ -14,7 +14,7 @@ facts:
   - "Install stops at risk 0.6 or above, shown as 60 percent in the terminal; that limit is fixed. It also stops a version a public malware list names, and a version younger than two days unless you change that (install check, 2026-10-24)."
   - "Exit codes: scan returns 0 when clean, 1 when it finds something, 2 when it fails; a stopped install or check returns 3 (CLI source, 2026-10-24)."
   - "Scan checks for completion every 2 seconds (CLI source, 2026-10-07)."
-  - "Version 0.1.1 (crowsnest --version, 2026-11-05)."
+  - "Version 0.1.2 (crowsnest --version, 2026-11-08)."
 related:
   - /docs/installation
   - /docs/configuration
