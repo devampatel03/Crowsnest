@@ -1,16 +1,16 @@
 ---
 title: Quickstart
-description: "Install Docker, run three commands, and open the Crowsnest dashboard at localhost:3000. No account and no API keys needed. A step-by-step quickstart."
+description: "Start Crowsnest with the dashboard in Docker, or with one terminal command. No account and no API keys needed. A step-by-step quickstart for both ways."
 slug: quickstart
 order: 2
 section: Get started
-updated: 2026-11-04
+updated: 2026-11-08
 howTo: true
 question: How do I start Crowsnest?
-answer: Install Docker and Git, clone the repository, copy .env.example to .env, then run docker compose up --build. Open localhost:3000 for the dashboard. You need no account and no API keys. The first run builds two images, so allow time.
+answer: Run npm install -g @crowsnest/cli and then crowsnest start for the terminal, or clone the repository, copy .env.example to .env and run docker compose up --build for the dashboard at localhost:3000. You need Docker. You need no account and no API keys. The first run downloads or builds images, so allow time.
 facts:
   - "Dashboard port: 3000. Crowsnest service port: 8000 (infra/docker-compose.yml, 2026-10-07)."
-  - "Health check: http://localhost:8000/health returned {\"status\":\"ok\",\"version\":\"0.1.0\"} on 2026-10-07."
+  - "Health check: http://localhost:8000/health returned {\"status\":\"ok\",\"version\":\"0.1.1\",\"projects_root\":\"/projects\"} on 2026-11-07 from the published 0.1.1 image."
   - "Stored data lives in one Docker volume named crowsnest-data (infra/docker-compose.yml, 2026-10-07)."
   - "The compose file shares none of your project folders with the container (infra/docker-compose.yml, 2026-10-07)."
 related:
@@ -20,13 +20,33 @@ related:
   - /docs/cli
 ---
 
-Install Docker, run three commands, and open http://localhost:3000. Crowsnest starts with no account and no API keys. Allow time for the first build.
+There are two ways to start Crowsnest, and they work together. The dashboard runs from the repository with Docker Compose. The terminal command starts the same backend with one command. Neither needs an account or an API key.
 
-## What do I need before I start?
+## Which way should I start?
+
+| | Dashboard | Terminal |
+|---|---|---|
+| You get | The dashboard at http://localhost:3000, plus the backend | The `crowsnest` command, with the backend in Docker |
+| You need | Docker with Docker Compose, and Git | Node.js 20 or newer, and Docker |
+| Start with | `docker compose -f infra/docker-compose.yml up --build` | `npm install -g @crowsnest/cli`, then `crowsnest start` |
+
+Start with the dashboard if you want to look around: it shows every call in one place. Start with the terminal if you want to scan from a shell, stop risky installs, or use the VS Code extension. Both listen on port 8000, so run one at a time.
+
+## How do I start the terminal command?
+
+```bash
+npm install -g @crowsnest/cli
+crowsnest start
+crowsnest scan .
+```
+
+Use `-g`. Without it npm leaves the command in the current folder and your shell cannot find it. The first `crowsnest start` downloads the backend, about 430 MB. It shares the current folder with it, read only. `crowsnest stop` stops it, and `crowsnest doctor` says what is wrong if something is. The [CLI usage](/docs/cli) page lists every command.
+
+## What do I need before I start the dashboard?
 
 Docker with Docker Compose, and Git. Nothing else.
 
-## How do I start Crowsnest?
+## How do I start the dashboard?
 
 1. **Get the code.**
    ```bash
@@ -43,9 +63,9 @@ Docker with Docker Compose, and Git. Nothing else.
    docker compose -f infra/docker-compose.yml up --build
    ```
    The first run builds two images, so it takes a while. When it settles, two things are running: the Crowsnest service on port 8000 and the dashboard on port 3000.
-4. **Check that it is running.** Open http://localhost:8000/health. You should see this, which is the real reply from the 0.1.0 code:
+4. **Check that it is running.** Open http://localhost:8000/health. You should see something like this, the real reply from the 0.1.1 code:
    ```json
-   {"status":"ok","version":"0.1.0"}
+   {"status":"ok","version":"0.1.1","projects_root":"/projects"}
    ```
 5. **Open the dashboard.** Go to http://localhost:3000. If the status at the top right says Offline instead of Live, go to [Troubleshooting](/docs/troubleshooting).
 6. **Scan a project.** Press **Scan a project**, enter the folder, and press **Scan**. Crowsnest reads the lockfile in that folder, such as a `package-lock.json`. Calls appear under **Needs your attention**. Read the next section first if you use Docker.

@@ -44,8 +44,8 @@ Who publishes a package, how new it is, how many people download it, whether it 
 
 | Place | What it does | Page |
 |---|---|---|
+| Dashboard | Shows every call with what to do about it, who publishes the packages you use, and a log of everything Crowsnest has checked. The best place to start | [Using the dashboard](/docs/dashboard) |
 | Terminal | Scans a project, checks one package, stops risky installs | [CLI usage](/docs/cli) |
-| Dashboard | Shows every call with what to do about it | [Using the dashboard](/docs/dashboard) |
 | Slack | Posts the most serious calls to a channel | [Slack bot](/docs/integrations/slack) |
 | VS Code | Marks risky imports in the margin | [VS Code extension](/docs/integrations/vscode) |
 

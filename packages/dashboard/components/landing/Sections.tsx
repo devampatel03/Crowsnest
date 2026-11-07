@@ -204,35 +204,65 @@ export function InstallSection() {
     <Section id="install" title={INSTALL.title.replace(/\.$/, '')} labelledBy="install-title">
       <div className="flex items-end justify-between gap-s4">
         <h2 id="install-title" className="m-0 font-display text-display-l text-fg">
+
           <Underlined id="install" text={INSTALL.title} />
+
         </h2>
         <div aria-hidden="true" className="flex shrink-0 flex-col items-center gap-s1">
           <p className="nib-voice-s m-0 hidden max-w-[11rem] text-center text-fg-soft md:block">{INSTALL.haulCaption}</p>
           <div className="w-[6rem] md:w-[9.375rem] [&_svg]:h-auto [&_svg]:w-full">
+
             <Nib pose="haul" size={150} />
+
           </div>
         </div>
       </div>
       <p className="mb-s5 mt-s3 max-w-prose text-body-l text-fg-soft">{INSTALL.lead}</p>
-      <ol className="m-0 list-none overflow-hidden rounded-panel border border-rule bg-raised p-0">
-        {INSTALL.rows.map((r) => (
-          <li key={r.id} className="flex flex-col gap-s2 border-b border-rule p-s3 last:border-b-0 md:flex-row md:items-center md:gap-s4">
-            <p className="label m-0 md:w-52 md:shrink-0">{r.label}</p>
-            <div tabIndex={0} role="region" aria-label={`Command: ${r.label}`} className="min-w-0 flex-1 overflow-x-auto">
-              <code className="block whitespace-pre-wrap font-mono text-code text-fg [overflow-wrap:anywhere] md:min-w-max md:whitespace-pre md:[overflow-wrap:normal]">
-                <span aria-hidden="true" className="select-none text-fg-mute">
-                  ${' '}
-                </span>
-                {r.command}
-              </code>
+      <div className="flex flex-col gap-s5">
+        {INSTALL.ways.map((w) => (
+          <div key={w.id} className="overflow-hidden rounded-panel border border-rule bg-raised">
+            <div className="border-b border-rule p-s3">
+              <h3 className="m-0 font-sans text-h3 text-fg">{w.title}</h3>
+              <p className="mb-0 mt-s2 max-w-prose text-body text-fg-soft">{w.blurb}</p>
+              <p className="mb-0 mt-s2 max-w-prose text-body-s text-fg-mute">{w.needs}</p>
             </div>
-            <CopyButton text={r.command} accessibleName={`Copy ${r.short} command`} className="min-h-11 self-start md:self-auto" />
-          </li>
+            <ol className="m-0 list-none p-0">
+              {w.rows.map((r) => (
+                <li key={r.id} className="flex flex-col gap-s2 border-b border-rule p-s3 last:border-b-0 md:flex-row md:items-center md:gap-s4">
+                  <p className="label m-0 md:w-52 md:shrink-0">{r.label}</p>
+                  <div tabIndex={0} role="region" aria-label={`Command: ${r.label}`} className="min-w-0 flex-1 overflow-x-auto">
+                    <code className="block whitespace-pre-wrap font-mono text-code text-fg [overflow-wrap:anywhere] md:min-w-max md:whitespace-pre md:[overflow-wrap:normal]">
+                      <span aria-hidden="true" className="select-none text-fg-mute">
+                        ${' '}
+                      </span>
+                      {r.command}
+                    </code>
+                  </div>
+                  <CopyButton text={r.command} accessibleName={`Copy ${r.short} command`} className="min-h-11 self-start md:self-auto" />
+                </li>
+              ))}
+            </ol>
+            <p className="m-0 border-t border-rule p-s3 text-body-s text-fg-soft">
+              {w.after}{' '}
+              <Link href={w.link.href} className="text-brand underline underline-offset-4 hover:decoration-2">
+                {w.link.label}
+              </Link>
+              {w.id === 'dashboard' ? (
+                <>
+                  {' '}
+                  <Inline text={INSTALL.windowsNote} />
+                </>
+              ) : null}
+            </p>
+          </div>
         ))}
-      </ol>
-      <p className="mb-0 mt-s4 max-w-prose text-body text-fg">{INSTALL.after}</p>
-      <p className="mb-0 mt-s2 max-w-prose text-body-s text-fg-mute">
-        <Inline text={INSTALL.windowsNote} />
+      </div>
+      <p className="mb-0 mt-s4 max-w-prose text-body-s text-fg-soft">
+        {INSTALL.slack}{' '}
+        <Link href="/docs/integrations/slack" className="text-brand underline underline-offset-4 hover:decoration-2">
+          {INSTALL.slackLink}
+        </Link>
+        .
       </p>
       <p className="mb-0 mt-s3 max-w-prose text-body-s text-fg-soft">
         {INSTALL.early}{' '}

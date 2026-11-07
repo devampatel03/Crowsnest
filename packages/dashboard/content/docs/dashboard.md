@@ -21,6 +21,8 @@ related:
 
 The dashboard answers three questions in order: what needs you, how serious it is, and what to do. Open it at http://localhost:3000. It has four pages: Horizon, Lookout, Hold and Log.
 
+The dashboard starts with the Docker Compose setup in the [Quickstart](/docs/quickstart). The terminal command `crowsnest start` runs the backend only, so it has no dashboard. Everything the terminal command finds shows up here too if you point both at the same backend.
+
 ## How do I read a call?
 
 Each card has three parts.

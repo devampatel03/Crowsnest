@@ -21,7 +21,7 @@ related:
   - /docs/cli
 ---
 
-The Slack bot posts every Hold to a channel of your choice and answers four commands. It connects out to Slack, so you do not need a public web address. Set it up once; it needs three Slack keys.
+The Slack bot posts every Hold to a channel of your choice and answers four commands. It connects out to Slack, so you do not need a public web address. Set it up once; it needs two Slack keys.
 
 ## What do I need?
 
