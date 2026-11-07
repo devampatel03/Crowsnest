@@ -5,7 +5,7 @@ description: "Slopsquatting is when attackers register package names that AI ass
 slug: what-is-slopsquatting
 order: 1
 published: 2026-10-07
-updated: 2026-11-01
+updated: 2026-11-08
 author: Crowsnest contributors
 dek: An AI assistant can suggest a package that does not exist. An attacker can make it exist.
 question: What is slopsquatting?
@@ -14,6 +14,7 @@ facts:
   - "Reading time: about 4 minutes (estimate at 200 words a minute)."
   - "crowsnest install stops at risk 0.6 or above; the limit is fixed (install check, 2026-10-07)."
   - "A package Crowsnest has no data on adds 0.2 risk and still installs (install check, 2026-10-07)."
+  - "react-codeshift@1.0.0 is blocked at 100 percent risk by crowsnest install, with exit code 3 (real run, Crowsnest 0.1.1, 2026-11-08)."
   - "The install check weighs: registered under 30 days ago, under 1,000 weekly downloads, no repository link, and a name close to a package with over 1,000,000 weekly downloads (install check, 2026-10-07)."
 related:
   - /blog/how-to-stay-safe-from-malicious-packages
@@ -58,20 +59,26 @@ Three things tend to be true together. The package is very new. Almost nobody do
 
 When you run `crowsnest install`, Crowsnest looks at how new the package is, how many people download it, whether it links to its source code, and whether its name is close to a very popular one. It also checks a built-in list of names AI assistants are known to invent. At risk 0.6 or above, it stops the install and shows you the reasons.
 
-The reasons appear in plain lines. Here is a real result from the 0.1.0 code, for a name Crowsnest had no data on:
+The reasons appear in plain lines. Here is a real result from Crowsnest 0.1.1 on 2026-11-08, for `react-codeshift`, a name AI assistants invented before someone registered it:
 
 ```text
-✔ Approved: left-pad
-[crowsnest]   ℹ  Package not found in Crowsnest database (may be new)
-[crowsnest]   Risk score: 20%
+✖ Blocked: react-codeshift@1.0.0
+[crowsnest] ⛔ BLOCKED: react-codeshift@1.0.0
+[crowsnest]   📉  Only 17 weekly downloads
+[crowsnest]   🔗  No GitHub repository linked
+[crowsnest]   🤖  Matches known AI hallucination pattern (confidence: 95%)
+[crowsnest]   🚨  ACTIVE IOC: Slopsquat-Campaign-Jan2026 — slopsquat-1
+[crowsnest]   Risk score:  100%
 ```
 
-That is the limit in one screen. A name Crowsnest has never seen scores 20 percent, which is under the 60 percent stop, so it installs.
+Nothing was installed, and the command exited with code 3. The name is on a built-in list of invented names, and a campaign that registered it is on the known-bad list, so the score is 100 percent whatever else is true.
+
+A name Crowsnest has never seen is different. With no data at all it scores 20 percent, which is under the 60 percent stop, so it installs. That is the limit of the check, and it is why the first three habits above are worth doing by hand.
 
 ## What this does not do
 
 - If nobody has registered an invented name yet, there is no package to check, and the install simply fails.
-- Crowsnest cannot judge a package it has no data on. It adds a small amount of risk (0.2) for that and carries on, as the output above shows.
+- Crowsnest cannot judge a package it has no data on. It adds a small amount of risk (0.2) for that and carries on.
 - A plain `npm install` is not checked at all.
 
 Read the other posts in this series: [How to stay safe from malicious packages](/blog/how-to-stay-safe-from-malicious-packages) and [What to do when Crowsnest says Hold](/blog/what-to-do-when-crowsnest-says-hold). The [glossary entry](/glossary/slopsquatting) has the short definition, and [CLI usage](/docs/cli) covers the install command. [Install Crowsnest](/#install) to try it.

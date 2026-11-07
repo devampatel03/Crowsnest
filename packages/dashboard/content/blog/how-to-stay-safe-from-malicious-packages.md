@@ -5,7 +5,7 @@ description: "A short checklist for installing packages safely: check age and do
 slug: how-to-stay-safe-from-malicious-packages
 order: 2
 published: 2026-10-07
-updated: 2026-10-07
+updated: 2026-11-08
 author: Crowsnest contributors
 dek: Five habits that take under a minute each.
 question: How do I stay safe from malicious packages?
@@ -38,7 +38,7 @@ Read the name you typed, letter by letter. Compare it with the package you meant
 crowsnest install some-package
 ```
 
-This runs the check first. At risk 0.6 or above it stops. Without it, a plain `npm install` is not checked.
+This runs the check first. It stops at risk 0.6 or above, on a version a public list of malicious packages names, and on a version published in the last two days. Without it, a plain `npm install` is not checked.
 
 ## 4. Why keep my lockfile committed?
 
