@@ -6,7 +6,9 @@
  * What is checked is what is installed: the version is resolved first and passed to npm.
  */
 
-import { execFile, spawn } from 'child_process';
+import { spawn, type SpawnOptions } from 'child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import ora from 'ora';
 import { api, VetoResult } from '../api.js';
 import { theme } from '../display/theme.js';
@@ -164,12 +166,38 @@ export function iconFor(signal: string): string {
     signal.includes('Typosquat') ? icons.mask : icons.warn;
 }
 
+/** Plain characters only: a package name or version, an npm sub-command, or a flag. Nothing a shell treats as special. */
+const NPM_ARG = /^[A-Za-z0-9@/._^~*+=-]+$/;
+
+/**
+ * Where npm's own script is on Windows: next to node (the official installer, nvm-windows and similar), or the one that
+ * started this process when it was run through npm or npx.
+ */
+function windowsNpmScript(): string | undefined {
+  const next = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (fs.existsSync(next)) return next;
+  const started = process.env.npm_execpath;
+  return started && /npm-cli.js$/.test(started) && fs.existsSync(started) ? started : undefined;
+}
+
+/**
+ * Start npm with no shell. On Windows npm is npm.cmd, which Node refuses to start without a shell, so node runs npm's own
+ * script directly. If that script cannot be found, this stops with a message instead of falling back to a shell string.
+ * Every argument is checked first. Elsewhere npm is run directly.
+ */
+export function spawnNpm(args: string[], options: SpawnOptions) {
+  for (const a of args) {
+    if (!NPM_ARG.test(a)) throw new Error(`Refusing to pass "${a}" to npm: it holds characters other than letters, digits and . _ ^ ~ * + = @ / -`);
+  }
+  if (process.platform !== 'win32') return spawn('npm', args, options);
+  const script = windowsNpmScript();
+  if (!script) throw new Error('Could not find npm next to node. Run the install yourself with: npm install ' + args.slice(1).join(' '));
+  return spawn(process.execPath, [script, ...args], options);
+}
+
 async function runNpmInstall(packageSpec: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['install', packageSpec], {
-      stdio: 'inherit',
-      shell: true,
-    });
+    const child = spawnNpm(['install', packageSpec], { stdio: 'inherit' });
     child.on('close', (code) => {
       if (code === 0) {
         resolve();
@@ -243,11 +271,27 @@ export function pickVersion(output: string): string | undefined {
 /** Ask npm which version `pkg@spec` resolves to. Undefined when npm cannot say (offline, unknown package). */
 export function resolveVersion(pkgName: string, spec: string | undefined): Promise<string | undefined> {
   return new Promise((resolve) => {
-    execFile(
-      'npm',
-      ['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'],
-      { shell: process.platform === 'win32', timeout: 20000 },
-      (error, stdout) => resolve(error ? undefined : pickVersion(String(stdout))),
-    );
+    let out = '';
+    let child: ReturnType<typeof spawnNpm>;
+    try {
+      child = spawnNpm(['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'], {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      resolve(undefined);
+      return;
+    }
+    const timer = setTimeout(() => child.kill(), 20000);
+    child.stdout?.on('data', (d: Buffer) => {
+      out += d;
+    });
+    child.on('error', () => {
+      clearTimeout(timer);
+      resolve(undefined);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve(code === 0 ? pickVersion(out) : undefined);
+    });
   });
 }
