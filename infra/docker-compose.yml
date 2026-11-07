@@ -15,8 +15,8 @@ services:
 
   crowsnest-dashboard:
     build:
-      context: ../packages/dashboard
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: packages/dashboard/Dockerfile
     ports:
       - "127.0.0.1:3000:3000"
     # NEXT_PUBLIC_API_URL is read when the image is built (Next.js inlines it into the browser code), so it
