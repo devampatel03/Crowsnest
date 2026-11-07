@@ -7,6 +7,8 @@
  */
 
 import { spawn, type SpawnOptions } from 'child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import ora from 'ora';
 import { api, VetoResult } from '../api.js';
 import { theme } from '../display/theme.js';
@@ -164,17 +166,29 @@ export function iconFor(signal: string): string {
     signal.includes('Typosquat') ? icons.mask : icons.warn;
 }
 
+/** Plain characters only: a package name or version, an npm sub-command, or a flag. Nothing a shell treats as special. */
+const NPM_ARG = /^[A-Za-z0-9@/._^~*+=-]+$/;
+
+/** Where npm's own script sits next to node on Windows (the official installer, nvm-windows and similar). */
+function windowsNpmScript(): string | undefined {
+  const script = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  return fs.existsSync(script) ? script : undefined;
+}
+
 /**
- * Start npm. On Windows npm is npm.cmd, which Node will only run through a shell, and Node 24 prints a security
- * warning when it is given an argument list together with a shell. So on Windows the command goes in as one string.
- * Every part of it was checked by isSafePackageSpec (plain characters only) and is quoted here. Elsewhere npm is run
- * directly, with no shell.
+ * Start npm without handing a string to a shell where that can be avoided. On Windows npm is npm.cmd, which Node
+ * refuses to start without a shell, so node runs npm's own script directly. If that script cannot be found (an
+ * unusual install), the command goes to the shell as one quoted string, which Node 24 accepts without a security
+ * warning. Every argument is checked first. Elsewhere npm is run directly.
  */
 export function spawnNpm(args: string[], options: SpawnOptions) {
-  if (process.platform === 'win32') {
-    return spawn(`npm ${args.map((a) => `"${a}"`).join(' ')}`, { ...options, shell: true });
+  for (const a of args) {
+    if (!NPM_ARG.test(a)) throw new Error(`Refusing to pass "${a}" to npm: it holds characters other than letters, digits and . _ ^ ~ * + = @ / -`);
   }
-  return spawn('npm', args, options);
+  if (process.platform !== 'win32') return spawn('npm', args, options);
+  const script = windowsNpmScript();
+  if (script) return spawn(process.execPath, [script, ...args], options);
+  return spawn(`npm ${args.map((a) => `"${a}"`).join(' ')}`, { ...options, shell: true });
 }
 
 async function runNpmInstall(packageSpec: string): Promise<void> {
