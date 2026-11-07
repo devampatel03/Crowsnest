@@ -80,34 +80,40 @@ describe('CrowsnestApiClient', () => {
     expect(r.compromised_packages).toEqual([]);
   });
 
-  describe('investigate verdicts', () => {
+  describe('investigate calls', () => {
     const call = async (raw: unknown) => {
       fetchMock.mockResolvedValue(jsonResponse(raw));
       return new CrowsnestApiClient('http://x').investigate('pkg');
     };
-    it('IOC hit means compromised', async () => {
-      const r = await call({ findings: { IOC_MATCH: [{ id: 'z' }] }, npm_metadata: { weekly_downloads: 5e6 } });
-      expect(r.verdict).toBe('compromised');
-      expect(r.incident?.severity).toBe('CRITICAL');
+    const meta = { weekly_downloads: 5e6 };
+    it('a package the install check blocks is a Hold', async () => {
+      const r = await call({ assessment: { blocked: true, probability: 1, signals: ['Matches known AI hallucination pattern'], degraded: [] }, npm_metadata: meta });
+      expect(r.call).toBe('Hold');
+      expect(r.signals).toEqual(['Matches known AI hallucination pattern']);
+      expect(r.risk).toBe(1);
     });
-    it('socket alerts mean suspicious', async () => {
-      const r = await call({ socket_alerts: [{}], npm_metadata: { weekly_downloads: 5e6 } });
-      expect(r.verdict).toBe('suspicious');
+    it('a raised signal that does not block is a Watch', async () => {
+      expect((await call({ assessment: { blocked: false, probability: 0.3, signals: ['Only 10 weekly downloads'], degraded: [] } })).call).toBe('Watch');
     });
-    it('low downloads mean suspicious', async () => {
-      expect((await call({ npm_metadata: { weekly_downloads: 10 } })).verdict).toBe('suspicious');
+    it('Clear needs a clean answer with nothing left unchecked', async () => {
+      expect((await call({ assessment: { blocked: false, probability: 0, signals: [], degraded: [] }, npm_metadata: meta })).call).toBe('Clear');
+      const gap = await call({ assessment: { blocked: false, probability: 0, signals: [], degraded: ['malware list unreachable'] } });
+      expect(gap.call).toBe('Not fully checked');
+      expect(gap.not_checked).toEqual(['malware list unreachable']);
     });
-    it('healthy package is clean', async () => {
-      expect((await call({ npm_metadata: { weekly_downloads: 5e6 } })).verdict).toBe('clean');
+    it('an old backend with no assessment never gets a made-up Clear', async () => {
+      const r = await call({ npm_metadata: meta });
+      expect(r.call).toBe('Not fully checked');
+      expect(r.not_checked[0]).toContain('too old');
     });
-    it('missing metadata (unknown package) is flagged suspicious, age defaults', async () => {
-      const r = await call({});
-      expect(r.verdict).toBe('suspicious');
-      expect(r.analysis.age_days).toBe(365);
-    });
-    it('computes package age from created_at', async () => {
+    it('reports facts it has, and null for ones it has not', async () => {
       const created = new Date(Date.now() - 10 * 86_400_000).toISOString();
-      expect((await call({ npm_metadata: { weekly_downloads: 5e6, created_at: created } })).analysis.age_days).toBe(10);
+      const r = await call({ assessment: { blocked: false, probability: 0, signals: [], degraded: [] }, npm_metadata: { ...meta, created_at: created, maintainers: ['ann'] } });
+      expect(r.age_days).toBe(10);
+      expect(r.maintainers).toEqual(['ann']);
+      const none = await call({ assessment: { blocked: false, probability: 0, signals: [], degraded: [] } });
+      expect(none.age_days).toBeNull();
+      expect(none.weekly_downloads).toBeNull();
     });
   });
 

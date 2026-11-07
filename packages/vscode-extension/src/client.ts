@@ -207,12 +207,32 @@ export class CrowsnestClient {
     const npmRaw = raw['npm_metadata'] as Record<string, unknown> | undefined;
     const sockRaw = raw['socket_alerts'] as unknown[] | undefined;
 
+    // The call comes from the backend's install check, the same answer `crowsnest install` acts on. A backend that sends
+    // none gets no verdict, never a made-up clean one.
+    const a = raw['assessment'] as Record<string, unknown> | undefined;
+    const signals = a ? this.asStringArray(a['signals']) : [];
+    const notChecked = a ? this.asStringArray(a['degraded']) : [];
+    const risk = a ? this.asNumber(a['probability'], 0) : 0;
+    let verdict = 'Not fully checked';
+    if (a) {
+      if (a['blocked']) verdict = 'Hold';
+      else if (signals.length > 0 || risk > 0) verdict = 'Watch';
+      else if (notChecked.length === 0) verdict = 'Clear';
+    }
+    const summary = !a
+      ? 'This backend is too old to give a verdict. Run "crowsnest start" to update it.'
+      : notChecked.length > 0
+        ? `Not checked: ${notChecked.join('; ')}`
+        : typeof a['reason'] === 'string'
+          ? a['reason']
+          : undefined;
+
     return {
       packageName,
-      riskScore: this.asNumber(raw['risk_score'] ?? raw['probability'], 0),
-      verdict: String(raw['verdict'] ?? raw['summary'] ?? 'Unknown'),
-      summary: raw['summary'] ? String(raw['summary']) : undefined,
-      queryFindings: this.asStringArray(raw['query_findings'] ?? raw['findings']),
+      riskScore: risk,
+      verdict,
+      summary,
+      queryFindings: signals,
       npmMetadata: npmRaw
         ? {
             description: npmRaw['description'] ? String(npmRaw['description']) : undefined,

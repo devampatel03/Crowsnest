@@ -321,51 +321,25 @@ export function formatInvestigation(
   result: InvestigationResult,
   dashboardUrl = 'http://localhost:3000'
 ): Block[] {
-  const verdictEmoji =
-    result.verdict === 'compromised' ? '🚨' :
-    result.verdict === 'suspicious'  ? '⚠️' : '✅';
+  const emoji = result.call === 'Hold' ? '🚨' : result.call === 'Watch' ? '⚠️' : result.call === 'Clear' ? '✅' : '❔';
+
+  const facts = [
+    `• Risk: ${Math.round(result.risk * 100)}%`,
+    result.weekly_downloads != null ? `• Weekly downloads: ${result.weekly_downloads.toLocaleString('en-US')}` : null,
+    result.age_days != null ? `• Package age: ${result.age_days} days` : null,
+    result.maintainers.length > 0 ? `• Maintainers: ${result.maintainers.join(', ')}` : null,
+    result.socket_alerts > 0 ? `• Socket.dev alerts: ${result.socket_alerts}` : null,
+  ].filter((l): l is string => l !== null);
 
   const blocks: Block[] = [
-    header(`${verdictEmoji} Investigation: \`${pkg}\``),
-    section(
-      `*Verdict:* ${verdictEmoji} ${result.verdict.toUpperCase()}\n` +
-      `*Summary:* ${result.summary}`
-    ),
+    header(`${emoji} ${result.call}: \`${pkg}\``),
+    section(result.signals.length > 0 ? `*Why:*\n${result.signals.map((s) => `• ${s}`).join('\n')}` : '*Why:* nothing was raised.'),
     DIVIDER,
-    section(
-      `*Analysis signals:*\n` +
-      `• Maintainer changes (recent): ${result.analysis.maintainer_changes}\n` +
-      (result.analysis.days_since_maintainer_change != null
-        ? `• Days since last maintainer change: ${result.analysis.days_since_maintainer_change}\n`
-        : '') +
-      `• Commit pattern anomaly: ${result.analysis.commit_pattern_anomaly ? '⚠️ Yes' : '✅ No'}\n` +
-      `• SLSA attestation present: ${result.analysis.slsa_attestation ? '✅ Yes' : '❌ No'}\n` +
-      (result.analysis.slsa_attestation
-        ? `• SLSA pipeline risk: ${result.analysis.slsa_pipeline_risk ? '⚠️ Risky pipeline' : '✅ Pipeline looks clean'}\n`
-        : '') +
-      `• Socket.dev alerts: ${result.analysis.socket_alerts}\n` +
-      `• Weekly downloads: ${result.analysis.weekly_downloads.toLocaleString()}\n` +
-      `• Package age: ${result.analysis.age_days} days`
-    ),
+    section(`*What Crowsnest knows:*\n${facts.join('\n')}`),
   ];
 
-  // If there's an active incident, show it
-  if (result.incident) {
-    const inc = result.incident;
-    const pattern = ATTACK_PATTERN_LABEL[inc.attack_pattern] ?? inc.attack_pattern;
-    blocks.push(
-      DIVIDER,
-      section(
-        `*Active incident:* ${SEVERITY_EMOJI[inc.severity]} ${inc.severity} — ${pattern}\n` +
-        `Confidence: ${confidenceBar(inc.confidence)} | ` +
-        `Blast radius: ${blastRadiusCount(inc.blast_radius)} projects\n` +
-        (inc.remediation_options[0]
-          ? `*Fix:* ${typeof inc.remediation_options[0] === 'string'
-              ? inc.remediation_options[0]
-              : `${inc.remediation_options[0].action} — ${inc.remediation_options[0].description}`}`
-          : '')
-      )
-    );
+  if (result.not_checked.length > 0) {
+    blocks.push(section(`*Not checked:*\n${result.not_checked.map((n) => `• ${n}`).join('\n')}`));
   }
 
   blocks.push(

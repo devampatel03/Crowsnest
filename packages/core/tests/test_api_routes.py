@@ -217,6 +217,16 @@ class TestLockfilesAndOthers:
         body = r.json()
         assert body["package"] == "left-pad" and body["socket_alerts"] == []
 
+    def test_investigate_agrees_with_the_install_check(self, api_client):
+        """A package the install gate blocks must not look clean in an investigation."""
+        veto = api_client.post("/api/veto", json={"package": "react-codeshift"}).json()
+        assert veto["blocked"] is True
+        body = api_client.post("/api/investigate", json={"package": "react-codeshift"}).json()
+        assessment = body["assessment"]
+        assert assessment["blocked"] is True
+        assert assessment["probability"] == veto["probability"]
+        assert assessment["signals"] == veto["signals"]
+
     def test_replay_unknown_campaign(self, api_client):
         r = api_client.post("/api/replay", json={"ioc_name": "no-such-campaign"})
         assert r.status_code == 200

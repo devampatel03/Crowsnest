@@ -350,9 +350,23 @@ async def event_stream() -> StreamingResponse:
 
 @app.post("/api/investigate")
 async def investigate(req: InvestigateRequest) -> dict[str, Any]:
-    """Deep investigation of a specific package."""
+    """Deep investigation of a specific package.
+
+    `assessment` is the same verdict the install gate and the editor use, so `investigate` and `install` can never
+    disagree about one package. `findings` are extra detail from the stored detection queries and can be empty for a
+    package that is blocked.
+    """
     engine = _get_engine()
+    settings = get_settings()
     results: dict[str, Any] = {"package": req.package, "version": req.version, "findings": {}}
+    results["assessment"] = await evaluate_veto(
+        engine,
+        package=req.package,
+        version=req.version,
+        ecosystem=req.ecosystem,
+        min_release_age_days=settings.crowsnest_min_release_age_days,
+        live=settings.crowsnest_live_lookups,
+    )
 
     queries_to_run = ["MALICIOUS_PACKAGE_MATCH", "IOC_MATCH", "SHAI_HULUD", "SLEEPER_DEPENDENCY", "IDENTITY_DRIFT"]
     for qname in queries_to_run:

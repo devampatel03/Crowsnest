@@ -81,22 +81,20 @@ export interface BlastRadiusResult {
   risk_score: number;   // 0.0 – 1.0
 }
 
-/** Returned from /api/investigate */
+/** Returned from /api/investigate: the install check's answer plus the package facts the backend holds. */
 export interface InvestigationResult {
   package: string;
-  incident: Incident | null;
-  analysis: {
-    maintainer_changes: number;
-    days_since_maintainer_change: number | null;
-    commit_pattern_anomaly: boolean;
-    slsa_attestation: boolean;
-    slsa_pipeline_risk: boolean;
-    socket_alerts: number;
-    weekly_downloads: number;
-    age_days: number;
-  };
-  verdict: 'clean' | 'suspicious' | 'compromised';
-  summary: string;
+  /** Hold when the install check blocks it, Watch when it raised anything, Clear only when nothing went unchecked. */
+  call: 'Hold' | 'Watch' | 'Clear' | 'Not fully checked';
+  /** 0.0 to 1.0, the same risk the install check acts on. */
+  risk: number;
+  signals: string[];
+  /** Checks that could not be made, so a Clear is never claimed over a gap. */
+  not_checked: string[];
+  weekly_downloads: number | null;
+  age_days: number | null;
+  maintainers: string[];
+  socket_alerts: number;
 }
 
 /** Returned from /api/stats */

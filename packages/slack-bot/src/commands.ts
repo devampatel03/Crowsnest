@@ -116,7 +116,7 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
       await postBlocks(
         client,
         channelId,
-        `Investigation complete for ${pkg}: ${result.verdict}.`,
+        `Investigation complete for ${pkg}: ${result.call}.`,
         formatInvestigation(pkg, result, config.dashboardUrl)
       );
     } catch (err) {
