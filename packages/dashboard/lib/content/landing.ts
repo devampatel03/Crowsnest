@@ -118,7 +118,7 @@ export const INSTALL = {
   after: 'Open http://localhost:3000. API keys are optional.',
   other: 'Other ways to install',
   haulCaption: "Three commands. I'll steady the crate.",
-  early: 'Version 0.1.0 is early. A first scan on a fresh install can fail when no API keys are set.',
+  early: 'Version 0.1.1 is early, and the API may change between minor versions.',
   earlyLink: 'Troubleshooting',
   earlyTail: 'has the details.',
   closing:

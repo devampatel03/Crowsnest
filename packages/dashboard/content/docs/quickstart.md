@@ -4,7 +4,7 @@ description: "Install Docker, run three commands, and open the Crowsnest dashboa
 slug: quickstart
 order: 2
 section: Get started
-updated: 2026-10-07
+updated: 2026-11-04
 howTo: true
 question: How do I start Crowsnest?
 answer: Install Docker and Git, clone the repository, copy .env.example to .env, then run docker compose up --build. Open localhost:3000 for the dashboard. You need no account and no API keys. The first run builds two images, so allow time.
@@ -71,9 +71,7 @@ Checked on 2026-10-07: a container started with a folder shared this way could r
 
 On a fresh start Crowsnest has no calls of your own, so pages may be empty until a scan runs. Do not read starter or empty pages as a result for your project.
 
-As of 2026-10-07, a scan on a fresh install with no API keys failed in a real run against the 0.1.0 code. The exact message is on the Troubleshooting page.
-
-That is a known fault in 0.1.0, not a problem with your project or your setup. The [Troubleshooting](/docs/troubleshooting) page says what still works and what to do.
+Checked on 2026-11-04: the published 0.1.1 image, started with no API keys and a folder shared read only, scanned a three-package project and finished with findings. If a scan fails for you, the [Troubleshooting](/docs/troubleshooting) page says what to check.
 
 ## What this does not do
 

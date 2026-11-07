@@ -61,7 +61,6 @@ describe('llms.txt and llms-full.txt', () => {
       expect(t).toContain(NIB_SENTENCE);
       expect(t).toContain('@crowsnest/cli');
       expect(t).toContain('crowsnest.crowsnest-vscode');
-      expect(t).toContain('Known fault in 0.1.0');
       expect(t).toContain('Vercel Web Analytics');
       expect(t).not.toMatch(/hackathon/i);
     }
