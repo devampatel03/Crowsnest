@@ -4,7 +4,7 @@ description: "Fix common Crowsnest problems: a dashboard showing Offline, port 8
 slug: troubleshooting
 order: 10
 section: Help
-updated: 2026-11-04
+updated: 2026-11-08
 question: Why is Crowsnest not working?
 answer: "Most problems are one of three: another process is using port 8000, Crowsnest is not running, or a folder is not visible to it. Find your symptom below. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
 facts:
@@ -26,8 +26,8 @@ Most problems are one of three: something else is using port 8000, Crowsnest is 
 
 Crowsnest is not running or is on another address.
 
-1. Open http://localhost:8000/health. You should see `{"status":"ok","version":"0.1.0"}`.
-2. If the page does not load, start Crowsnest again (see the [Quickstart](/docs/quickstart)).
+1. Run `crowsnest doctor`. It checks Docker, the backend and the internet lookups, and says how to fix what it finds. Or open http://localhost:8000/health, which should answer `{"status":"ok", ...}` with the version.
+2. If it does not answer, start Crowsnest again with `crowsnest start`, or with Docker Compose (see the [Quickstart](/docs/quickstart)).
 3. If it loads, check that `NEXT_PUBLIC_API_URL` points to it.
 
 ## What if I see "IO Error: Cannot open file ... being used by another process"?
@@ -87,11 +87,22 @@ No key is set, so Crowsnest is using cached data. That is normal. Add a key on t
 
 ## The terminal says "command not found". What now?
 
-From source, the command is `node dist/index.js`, run from `packages/cli` after `npm run build`. See [Installation](/docs/installation).
+You most likely installed without `-g`, so npm put the command in the current folder where your shell cannot find it. Install it globally:
+
+```bash
+npm install -g @crowsnest/cli
+crowsnest --version
+```
+
+If it is still not found, open a new terminal window. To try it once with no install, run `npx @crowsnest/cli doctor`. See [Installation](/docs/installation).
+
+## `crowsnest start` says Docker is not running, or the port is busy. What now?
+
+Start Docker Desktop (or the Docker service) and run `crowsnest doctor`. If port 8000 is taken by something else, pick another with `crowsnest start --port 8001`, and point other tools at it with `crowsnest config set apiUrl http://localhost:8001`.
 
 ## crowsnest install installed something I expected it to stop. Why?
 
-If Crowsnest cannot be reached, the install runs with a warning. Look for the line "Crowsnest API unreachable — proceeding without veto check". Start Crowsnest and try again. Also, a package Crowsnest knows nothing about scores only 0.2, which is under the 0.6 limit, so it installs.
+If Crowsnest is not running, `crowsnest install` falls back to a quick check and says so ("Quick check: the public malware list, what changed since the previous release, and release age"). The quick check does not look for look-alike names or invented names, so start Crowsnest with `crowsnest start` for the full check, or add `--strict` to refuse to install when a check could not be completed. Also, a package Crowsnest knows nothing about scores only 0.2, which is under the 0.6 limit, so it installs.
 
 ## Slack says "Crowsnest API is unreachable". What now?
 
@@ -103,12 +114,11 @@ Check that Crowsnest is running, that `crowsnest.enabled` is on, and that the fi
 
 ## What this does not do
 
-- It does not cover every fault. It lists the ones seen in code or in a run on 2026-10-07.
-- It does not fix the scan fault above. That needs a change to Crowsnest itself.
+- It does not cover every fault. It lists the ones seen in code or in a real run.
 - It does not replace a bug report. If you are still stuck, open an issue.
 
 ## I am still stuck. What do I do?
 
-Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form. Include your operating system, your Python and Node versions, and whether you run Docker or from source. Remove keys first. See [Contributing](/docs/contributing).
+Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form. Include your operating system, your Node version, the output of `crowsnest doctor`, and whether you run Docker Compose, `crowsnest start` or from source. Remove keys first. See [Contributing](/docs/contributing).
 
 **Include the exact error text in your report. It is the fastest way to a fix.**

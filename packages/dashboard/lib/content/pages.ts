@@ -35,7 +35,7 @@ export const PRIVACY = {
   metaTitle: 'Privacy',
   h1: 'Privacy.',
   description:
-    'What leaves your machine when you run Crowsnest: package lookups on public registries and optional calls to Anthropic, Socket and GitHub. Lockfiles stay local.',
+    'What leaves your machine when you run Crowsnest: package lookups on public registries and optional calls to an AI model provider, Socket and GitHub. Lockfiles stay local.',
   lead: 'Crowsnest runs on your machine. This page lists what leaves it, and when.',
   local: {
     title: 'What stays on your machine',
@@ -45,21 +45,21 @@ export const PRIVACY = {
   sends: [
     {
       id: 'npm',
-      name: 'npm registry',
-      text: 'The names of packages being looked up, up to 100 per scan. If you set NPM_TOKEN, it is sent to the npm registry as a bearer token. PyPI is not contacted during a scan.',
+      name: 'Package registries',
+      text: 'The names of packages being looked up, on the registry each one comes from: npm, PyPI, crates.io, Packagist, RubyGems and the Go module proxy, up to 500 per kind per scan. If you set NPM_TOKEN, it is sent to the npm registry as a bearer token.',
       when: 'During a scan, with or without keys.',
     },
     {
       id: 'osv',
       name: 'OSV (api.osv.dev)',
-      text: 'The names of packages being looked up for known vulnerabilities, up to 500 per scan.',
+      text: 'The malicious-package list is asked about every package name and exact version in your lockfiles. `crowsnest install` and `crowsnest check` ask it about the exact version being installed.',
       when: 'During a scan, with or without keys.',
     },
     {
       id: 'anthropic',
-      name: 'Anthropic',
-      text: 'When Crowsnest plans a scan: the project folder path, the kind of project, the time of the last scan, any recent campaign names and your GitHub organisation name. For each check that finds something, up to 20 result rows are sent too. Triage and remediation do not call Anthropic.',
-      when: 'Only if you set ANTHROPIC_API_KEY.',
+      name: 'Your AI model provider',
+      text: 'When Crowsnest plans a scan: the project folder path, the kind of project, the time of the last scan, any recent campaign names and your GitHub organisation name. For each check that finds something, up to 20 result rows are sent too. Triage and remediation do not call the model. Anthropic is the default; OpenAI, Gemini, Groq and others work the same way, and a model on your own machine (Ollama or LM Studio) sends nothing off it.',
+      when: 'Only if you set a model key, such as ANTHROPIC_API_KEY, or point Crowsnest at a model server.',
     },
     { id: 'socket', name: 'Socket', text: 'Package names, up to 50 npm packages per scan.', when: 'Only if you set SOCKET_API_KEY.' },
     { id: 'github', name: 'GitHub', text: 'Repository and maintainer lookups.', when: 'Only if you set GITHUB_TOKEN.' },
@@ -67,7 +67,7 @@ export const PRIVACY = {
   ],
   withoutKeys: {
     title: 'Without keys',
-    text: 'The optional calls to Anthropic, Socket and GitHub are not made. A scan still looks up package names on the npm registry and OSV, as listed above, and Crowsnest uses cached data for the rest.',
+    text: 'The optional calls to a model provider, Socket and GitHub are not made. A scan still looks up package names on the registries and OSV, as listed above, and Crowsnest uses cached data for the rest.',
   },
   usage: {
     title: 'Usage data',
