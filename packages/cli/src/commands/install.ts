@@ -6,7 +6,7 @@
  * What is checked is what is installed: the version is resolved first and passed to npm.
  */
 
-import { execFile, spawn } from 'child_process';
+import { spawn, type SpawnOptions } from 'child_process';
 import ora from 'ora';
 import { api, VetoResult } from '../api.js';
 import { theme } from '../display/theme.js';
@@ -164,12 +164,22 @@ export function iconFor(signal: string): string {
     signal.includes('Typosquat') ? icons.mask : icons.warn;
 }
 
+/**
+ * Start npm. On Windows npm is npm.cmd, which Node will only run through a shell, and Node 24 prints a security
+ * warning when it is given an argument list together with a shell. So on Windows the command goes in as one string.
+ * Every part of it was checked by isSafePackageSpec (plain characters only) and is quoted here. Elsewhere npm is run
+ * directly, with no shell.
+ */
+export function spawnNpm(args: string[], options: SpawnOptions) {
+  if (process.platform === 'win32') {
+    return spawn(`npm ${args.map((a) => `"${a}"`).join(' ')}`, { ...options, shell: true });
+  }
+  return spawn('npm', args, options);
+}
+
 async function runNpmInstall(packageSpec: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['install', packageSpec], {
-      stdio: 'inherit',
-      shell: true,
-    });
+    const child = spawnNpm(['install', packageSpec], { stdio: 'inherit' });
     child.on('close', (code) => {
       if (code === 0) {
         resolve();
@@ -243,11 +253,21 @@ export function pickVersion(output: string): string | undefined {
 /** Ask npm which version `pkg@spec` resolves to. Undefined when npm cannot say (offline, unknown package). */
 export function resolveVersion(pkgName: string, spec: string | undefined): Promise<string | undefined> {
   return new Promise((resolve) => {
-    execFile(
-      'npm',
-      ['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'],
-      { shell: process.platform === 'win32', timeout: 20000 },
-      (error, stdout) => resolve(error ? undefined : pickVersion(String(stdout))),
-    );
+    let out = '';
+    const child = spawnNpm(['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'], {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const timer = setTimeout(() => child.kill(), 20000);
+    child.stdout?.on('data', (d: Buffer) => {
+      out += d;
+    });
+    child.on('error', () => {
+      clearTimeout(timer);
+      resolve(undefined);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve(code === 0 ? pickVersion(out) : undefined);
+    });
   });
 }
