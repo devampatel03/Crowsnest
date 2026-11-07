@@ -1,0 +1,22 @@
+name: Dependency check
+
+# Crowsnest checks its own pull requests with the GitHub Action it ships (.github/actions/dependency-check). A pull
+# request that adds a package version a public malware list names, one whose release looks hijacked, or one published
+# in the last two days fails here. It also keeps the Action itself exercised, so it cannot rot unnoticed.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-check:
+    name: Dependency check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/dependency-check
