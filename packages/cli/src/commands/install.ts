@@ -169,17 +169,21 @@ export function iconFor(signal: string): string {
 /** Plain characters only: a package name or version, an npm sub-command, or a flag. Nothing a shell treats as special. */
 const NPM_ARG = /^[A-Za-z0-9@/._^~*+=-]+$/;
 
-/** Where npm's own script sits next to node on Windows (the official installer, nvm-windows and similar). */
+/**
+ * Where npm's own script is on Windows: next to node (the official installer, nvm-windows and similar), or the one that
+ * started this process when it was run through npm or npx.
+ */
 function windowsNpmScript(): string | undefined {
-  const script = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
-  return fs.existsSync(script) ? script : undefined;
+  const next = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (fs.existsSync(next)) return next;
+  const started = process.env.npm_execpath;
+  return started && /npm-cli.js$/.test(started) && fs.existsSync(started) ? started : undefined;
 }
 
 /**
- * Start npm without handing a string to a shell where that can be avoided. On Windows npm is npm.cmd, which Node
- * refuses to start without a shell, so node runs npm's own script directly. If that script cannot be found (an
- * unusual install), the command goes to the shell as one quoted string, which Node 24 accepts without a security
- * warning. Every argument is checked first. Elsewhere npm is run directly.
+ * Start npm with no shell. On Windows npm is npm.cmd, which Node refuses to start without a shell, so node runs npm's own
+ * script directly. If that script cannot be found, this stops with a message instead of falling back to a shell string.
+ * Every argument is checked first. Elsewhere npm is run directly.
  */
 export function spawnNpm(args: string[], options: SpawnOptions) {
   for (const a of args) {
@@ -187,8 +191,8 @@ export function spawnNpm(args: string[], options: SpawnOptions) {
   }
   if (process.platform !== 'win32') return spawn('npm', args, options);
   const script = windowsNpmScript();
-  if (script) return spawn(process.execPath, [script, ...args], options);
-  return spawn(`npm ${args.map((a) => `"${a}"`).join(' ')}`, { ...options, shell: true });
+  if (!script) throw new Error('Could not find npm next to node. Run the install yourself with: npm install ' + args.slice(1).join(' '));
+  return spawn(process.execPath, [script, ...args], options);
 }
 
 async function runNpmInstall(packageSpec: string): Promise<void> {
@@ -268,9 +272,15 @@ export function pickVersion(output: string): string | undefined {
 export function resolveVersion(pkgName: string, spec: string | undefined): Promise<string | undefined> {
   return new Promise((resolve) => {
     let out = '';
-    const child = spawnNpm(['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'], {
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
+    let child: ReturnType<typeof spawnNpm>;
+    try {
+      child = spawnNpm(['view', `${pkgName}@${spec ?? 'latest'}`, 'version', '--json'], {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      resolve(undefined);
+      return;
+    }
     const timer = setTimeout(() => child.kill(), 20000);
     child.stdout?.on('data', (d: Buffer) => {
       out += d;

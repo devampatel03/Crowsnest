@@ -8,6 +8,7 @@ import {
   parseMinReleaseAge,
   pickVersion,
 } from './install.js';
+import { spawnNpm } from './install.js';
 import { renderReport } from './check.js';
 import type { ChangeReport, ChangeResult } from '../api.js';
 
@@ -169,5 +170,13 @@ describe('renderReport', () => {
     const text = renderReport(report);
     expect(text).toContain('Checked 0 package version(s) in the lockfiles.');
     expect(text).toContain('Nothing to block.');
+  });
+});
+
+describe('spawnNpm', () => {
+  it('refuses an argument with characters a shell treats as special', () => {
+    for (const bad of ['a;b', 'a b', '$(x)', 'a&b', 'a|b', '"x"', 'a`b`', 'a>b', '']) {
+      expect(() => spawnNpm(['install', bad], {})).toThrow(/Refusing to pass/);
+    }
   });
 });
