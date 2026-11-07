@@ -4,7 +4,7 @@ description: "Crowsnest can use Claude, OpenAI, Gemini, Groq, Ollama on your own
 slug: integrations/models
 order: 8
 section: Integrations
-updated: 2026-10-13
+updated: 2026-11-08
 howTo: true
 question: How do I make Crowsnest use a different AI model?
 answer: Run python -m packages.core.llm setup, pick a provider from the list, paste its key and press Enter. It makes one real test call and saves the result to .env. Or set the provider's usual key, such as OPENAI_API_KEY. No model at all is also fine.
@@ -22,7 +22,26 @@ related:
 
 Crowsnest works with no AI model at all. If you add one, it helps with two jobs: choosing which checks to run on a project, and writing up what the checks found. You can pick the provider you already pay for, or one that runs on your own machine.
 
-## How do I set it up?
+## How do I set it up with the terminal command?
+
+If you started Crowsnest with `crowsnest start`, put the key in a small file and hand the file over when you start. Nothing else is needed:
+
+```env
+# crowsnest.env
+OPENAI_API_KEY=sk-...
+```
+
+```bash
+crowsnest start --env-file crowsnest.env
+```
+
+To pick a provider when you have more than one key, add `CROWSNEST_LLM_PROVIDER=groq` (and optionally `CROWSNEST_LLM_MODEL=...`) to the same file. Check what is in use with `curl http://localhost:8000/api/llm`, or run one real test call inside the running backend:
+
+```bash
+docker exec crowsnest-api python -m packages.core.llm test
+```
+
+## How do I set it up from the repository?
 
 1. **Start the setup.** From the Crowsnest folder, run:
    ```bash
@@ -76,11 +95,11 @@ CROWSNEST_LLM_PROVIDER=ollama
 CROWSNEST_LLM_MODEL=llama3.1
 ```
 
-Nothing then leaves your computer for the model step. Smaller local models follow instructions less reliably. Crowsnest checks everything a model writes, so a poor answer is corrected or replaced by the fixed rules, but a stronger model gives better write-ups.
+The backend runs in Docker, so `localhost` inside it is not your computer. Point it at the host with `CROWSNEST_LLM_BASE_URL=http://host.docker.internal:11434/v1` (Ollama), or `http://host.docker.internal:1234/v1` (LM Studio). `crowsnest start` makes that name work on Linux too. Nothing then leaves your computer for the model step. Smaller local models follow instructions less reliably. Crowsnest checks everything a model writes, so a poor answer is corrected or replaced by the fixed rules, but a stronger model gives better write-ups.
 
 ## How do I check what is in use?
 
-Run `python -m packages.core.llm test` for one real test call (it uses a few tokens of your provider's allowance). Or open `http://localhost:8000/api/llm`, which shows the provider and model in use and never shows a key.
+Run `python -m packages.core.llm test` from the repository, or `docker exec crowsnest-api python -m packages.core.llm test` for a backend started with `crowsnest start`. It makes one real test call and uses a few tokens of your provider's allowance. Or open `http://localhost:8000/api/llm`, which shows the provider and model in use and never shows a key.
 
 ## What does a model never get to decide?
 

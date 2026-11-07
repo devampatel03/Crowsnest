@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { parseJsonLd } from '@/test/jsonld-extract';
-import { FAQ, HERO, HOW, INSTALL, TRY } from '@/lib/content/landing';
+import { FAQ, HERO, HOW, INSTALL, INSTALL_ROWS, TRY } from '@/lib/content/landing';
 import { ENTITY_DEFINITION } from '@/lib/seo/entity';
 import { EXPECTED_TYPES } from '@/lib/seo/expected-types';
 import { mirroredStrings } from '@/lib/seo/jsonld';
@@ -56,7 +56,7 @@ describe('Landing page', () => {
 
   it('puts the answers, install commands and bearing labels in server HTML', () => {
     for (const f of FAQ) expect(text(html)).toContain(f.answer);
-    for (const r of INSTALL.rows) expect(text(html)).toContain(r.command);
+    for (const r of INSTALL_ROWS) expect(text(html)).toContain(r.command);
     for (const d of ['000°', '072°', '144°', '216°', '288°']) expect(html).toContain(d);
     // The degrees are not visible labels: they sit in sr-only text and titles only.
     expect(html).not.toMatch(/class="bearing/);
@@ -116,7 +116,15 @@ describe('Landing page', () => {
   it('never ships internals vocabulary, hackathon wording or competitor claims', () => {
     const t = text(html);
     expect(t).not.toMatch(/hackathon|DuckDB|SQL|template|pipeline|LangGraph|Dependabot|Snyk/i);
-    expect(t).not.toMatch(/npm install -g/i);
+  });
+
+  it('shows every way to install: the dashboard, the terminal command and the editor extension', () => {
+    const t = text(html);
+    expect(t).toContain('docker compose -f infra/docker-compose.yml up --build');
+    expect(t).toContain('npm install -g @crowsnest/cli');
+    expect(t).toContain('crowsnest start');
+    expect(t).toContain('code --install-extension crowsnest.crowsnest-vscode');
+    expect(INSTALL.ways.map((w) => w.id)).toEqual(['dashboard', 'terminal', 'editor']);
   });
 
   it('emits parseable JSON-LD with the expected types, mirrored by visible text', () => {
