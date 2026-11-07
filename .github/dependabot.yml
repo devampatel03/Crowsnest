@@ -14,6 +14,23 @@ updates:
     ignore:
       # vsce refuses to package when these typings are newer than engines.vscode (^1.85.0). Raise both together by hand.
       - dependency-name: "@types/vscode"
+      # These majors raise the minimum Node version above the 20 that the command line tool and CI support.
+      # Revisit them together when the project moves to Node 22.
+      - dependency-name: "ora"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-react"
+        update-types: ["version-update:semver-major"]
+      # React 19 needs react-dom, the types and the test libraries to move together. Do it by hand, as one change.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly }
