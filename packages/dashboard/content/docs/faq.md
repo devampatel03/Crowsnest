@@ -4,7 +4,7 @@ description: "Answers to common questions about Crowsnest: what it is, whether i
 slug: faq
 order: 9
 section: Help
-updated: 2026-11-04
+updated: 2026-11-08
 question: What do people ask about Crowsnest?
 answer: Crowsnest is free, open source and runs on your machine. It needs no account and no API keys, and sends no usage data to its authors. It stops installs only when you use crowsnest install. Fourteen short answers follow.
 facts:
@@ -36,13 +36,13 @@ Slopsquatting is when an attacker registers a package name that an AI coding ass
 
 ## Do I need API keys?
 
-No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub key for repository details, and an Anthropic key for AI-assisted analysis.
+No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub key for repository details, and a key for an AI model (Anthropic, OpenAI, Gemini and others, or one on your own machine) for written explanations.
 
 *Detail:* see [Configuration](/docs/configuration).
 
 ## Does it stop npm install?
 
-Only when you install through Crowsnest. `crowsnest install <package>` checks first and stops at risk 0.6 or above. A plain `npm install` is not checked. If Crowsnest cannot be reached, the install goes ahead and you see a warning.
+Only when you install through Crowsnest. `crowsnest install <package>` checks first and stops at risk 0.6 or above. A plain `npm install` is not checked. If Crowsnest is not running, the install falls back to a quick check against the public malware list and says so. Add `--strict` to refuse to install when a check could not be completed.
 
 *Detail:* see [CLI usage](/docs/cli).
 
@@ -80,7 +80,7 @@ Do not install the package, or remove it, until you have checked. Read the one-s
 
 ## How do I report a bug?
 
-Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form, and remove any keys first. For a security problem, do not post exploit details in a public issue. Open an issue that says only that you have a security report and ask for a private way to share it. The project has no security email address yet, and a reply is not promised.
+Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form, and remove any keys first. For a security problem, do not open a public issue. Use GitHub's private reporting instead: on the repository's [Security tab](https://github.com/devampatel03/Crowsnest/security), choose **Report a vulnerability**. Only the maintainers can see it. The project is run by volunteers, so a fixed reply time is not promised.
 
 *Detail:* see [Contributing](/docs/contributing).
 
