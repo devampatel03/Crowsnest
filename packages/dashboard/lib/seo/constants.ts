@@ -7,7 +7,7 @@ export const ISSUES_URL = `${REPO_URL}/issues`;
 export const NEW_ISSUE_URL = `${REPO_URL}/issues/new/choose`;
 export const LICENSE_NAME = 'Apache-2.0';
 export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
-export const VERSION = '0.1.1';
+export const VERSION = '0.1.2';
 
 /** Byline used on every post and the author field of Article JSON-LD (no named author). */
 export const AUTHOR_NAME = 'Crowsnest contributors';

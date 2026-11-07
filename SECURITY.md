@@ -23,7 +23,7 @@ details publicly.
 
 ## Supported versions
 
-Crowsnest is at version 0.1.1 and is early. Only the latest release, and the `main` branch, receive
+Crowsnest is at version 0.1.2 and is early. Only the latest release, and the `main` branch, receive
 security fixes.
 
 | Version | Supported |

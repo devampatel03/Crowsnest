@@ -56,7 +56,7 @@ Who publishes a package, how new it is, how many people download it, whether it 
 - It does not stop a plain `npm install`. Only installs run as `crowsnest install <package>` are checked.
 - It does not send your lockfile to Crowsnest's authors. Crowsnest runs on your machine and sends them no usage data.
 - It needs setup: you run it yourself. There is no hosted version and no account.
-- **It is early.** Version 0.1.1 is young, and the API may change between minor versions. See [Troubleshooting](/docs/troubleshooting) if something goes wrong.
+- **It is early.** Version 0.1.2 is young, and the API may change between minor versions. See [Troubleshooting](/docs/troubleshooting) if something goes wrong.
 
 ## Where do I go next?
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- "Investigate Package Under Cursor" now shows the same call the install check gives (Hold, Watch, Clear or Not fully
+  checked) with the reasons. It used to show risk 0 and "Unknown" for a package the install check blocks.
+
 ## 0.1.1
 
 - The listing is now called "Crowsnest: Risky Package Warnings". The hover, the status bar tooltip and the report header
