@@ -11,7 +11,7 @@ import { Breadcrumb } from '@/components/site/Breadcrumb';
 import { PROSE } from '@/components/site/prose';
 import { BearingRule } from '@/components/system/BearingRule';
 import { Button } from '@/components/system/Button';
-import { AnswerBox, FactList } from '@/components/system/Content';
+import { AnswerBox } from '@/components/system/Content';
 import { resolveRelated } from '@/lib/content/links';
 import { POST_COVERS } from '@/lib/content/nib';
 import { getPost, getPosts } from '@/lib/content/loader';
@@ -104,11 +104,6 @@ export default async function PostPage({ params }: Props) {
           {lead ? (
             <div className="mb-s5">
               <AnswerBox>{lead}</AnswerBox>
-            </div>
-          ) : null}
-          {post.meta.facts?.length ? (
-            <div className="mb-s5">
-              <FactList asOf={post.meta.updated} facts={post.meta.facts} />
             </div>
           ) : null}
           <div className={PROSE}>{content}</div>

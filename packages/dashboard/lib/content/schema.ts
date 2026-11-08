@@ -18,7 +18,7 @@ export interface ContentExtras {
   answer?: string;
   /** The question a page answers. */
   question?: string;
-  /** Quotable facts (3 to 6 strings). Rendered in the facts panel and llms-full. */
+  /** Quotable facts (3 to 6 strings). Kept for llms-full and machine-readable output; not shown on the page. */
   facts?: string[];
 }
 

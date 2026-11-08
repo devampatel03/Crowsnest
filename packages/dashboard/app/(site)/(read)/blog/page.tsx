@@ -6,7 +6,6 @@ import { Breadcrumb } from '@/components/site/Breadcrumb';
 import { Button } from '@/components/system/Button';
 import { HUBS } from '@/lib/content/hubs';
 import { getPosts } from '@/lib/content/loader';
-import { BLOG_NIB_LINE } from '@/lib/content/nib';
 import { breadcrumbTrail } from '@/lib/seo/breadcrumbs';
 import { breadcrumbList, collectionPage } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -33,7 +32,7 @@ export default function BlogIndex() {
       <div className="mx-auto max-w-shell px-s4 pb-s6 pt-s5">
         <h1 className="m-0 font-display text-display-l text-fg">{hub.h1}</h1>
         <p className="mb-0 mt-s3 max-w-prose text-body-l text-fg-soft">{hub.sentence}</p>
-        <p className="nib-voice mb-s5 mt-s2 text-fg">{BLOG_NIB_LINE}</p>
+        <div className="mb-s5" />
         <LinkRows
           label="Posts"
           titleLevel={2}

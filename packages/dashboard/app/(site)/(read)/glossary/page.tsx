@@ -5,7 +5,6 @@ import { LinkRows } from '@/components/site/blocks';
 import { Breadcrumb } from '@/components/site/Breadcrumb';
 import { GLOSSARY_LINES, HUBS } from '@/lib/content/hubs';
 import { getTerms } from '@/lib/content/loader';
-import { GLOSSARY_NIB_LINE } from '@/lib/content/nib';
 import { breadcrumbTrail } from '@/lib/seo/breadcrumbs';
 import { breadcrumbList, collectionPage } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -36,7 +35,6 @@ export default function GlossaryIndex() {
           <div aria-hidden="true" className="w-[5.5rem] shrink-0 [&_svg]:h-auto [&_svg]:w-full">
             <Nib pose="spy" size={88} />
           </div>
-          <p className="nib-voice m-0 pb-s2 text-fg">{GLOSSARY_NIB_LINE}</p>
         </div>
         <LinkRows
           label="Terms"

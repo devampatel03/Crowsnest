@@ -57,21 +57,18 @@ export function Sandbox({ nibs, bubbles }: { nibs: Record<string, ReactNode>; bu
           <div aria-live="polite" className="flex flex-col gap-s3">
             <Gauge key={sample.name} level={scored.level} animate />
             <p className="m-0 min-h-[5.5em] text-body-l text-fg md:min-h-[3.4em]">{sample.happened}</p>
-            <p className="m-0 text-body text-fg-soft">
-              <span className="font-semibold text-fg">What to do. </span>
-              {sample.todo}
-            </p>
-            {note ? <p className="nib-voice m-0 text-fg">{note}</p> : null}
+            <p className="m-0 text-body text-fg-soft">{sample.todo}</p>
+            {note ? <p className="m-0 text-body-s text-fg-mute">{note}</p> : null}
           </div>
 
           <div className="min-h-[7rem]">
-            <h3 className="m-0 font-sans text-h3 text-fg">{TRY.reasonsLabel}</h3>
+            <h3 className="label m-0">{TRY.reasonsLabel}</h3>
             <ul className="m-0 mt-s2 list-none p-0">
               {scored.fired.length === 0 ? (
-                <li className="border-b border-rule py-s2 text-body-s text-fg">{TRY.nothingFound}</li>
+                <li className="border-b border-rule py-s2 text-body text-fg-soft">{TRY.nothingFound}</li>
               ) : (
                 scored.fired.map((r) => (
-                  <li key={r.id} className="border-b border-rule py-s2 text-body-s text-fg">
+                  <li key={r.id} className="border-b border-rule py-s2 text-body text-fg-soft">
                     {r.plain}
                   </li>
                 ))
