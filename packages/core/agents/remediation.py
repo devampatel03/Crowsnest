@@ -55,8 +55,7 @@ def _generate_draft(incident: AlertObject) -> RemediationDraft:
 
     pr_diff = _make_pr_diff(pattern, packages, incident.get("blast_radius", []))
 
-    severity_emoji = {"CRITICAL": "🚨", "HIGH": "⛔", "MEDIUM": "⚠️", "LOW": "ℹ️"}[severity]
-    slack_message = f"""{severity_emoji} *[{severity}] Supply Chain Alert — {_pattern_label(pattern)}*
+    slack_message = f"""*[{severity}] Supply Chain Alert — {_pattern_label(pattern)}*
 *Packages:*\n{pkg_list or '  (see details)'}
 *Confidence:* {confidence_pct}%
 *Blast radius:* {blast_count} project(s) affected

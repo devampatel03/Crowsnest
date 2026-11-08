@@ -357,7 +357,7 @@ function buildNpmSection(
 
   return /* html */ `
   <div class="section">
-    <div class="section-header">📦 npm Metadata</div>
+    <div class="section-header">npm Metadata</div>
     <div class="section-body">
       <table class="kv-table">${tableRows}</table>
     </div>
@@ -382,7 +382,7 @@ function buildAlertsSection(alerts: SocketAlert[]): string {
 
   return /* html */ `
   <div class="section">
-    <div class="section-header">🔌 Socket Security Alerts</div>
+    <div class="section-header">Socket Security Alerts</div>
     <div class="section-body">${rows}</div>
   </div>`;
 }
@@ -394,7 +394,7 @@ function buildFindingsSection(findings: string[]): string {
 
   return /* html */ `
   <div class="section">
-    <div class="section-header">🔍 Investigation Findings</div>
+    <div class="section-header">Investigation Findings</div>
     <div class="section-body">
       <ul class="findings-list">${items}</ul>
     </div>

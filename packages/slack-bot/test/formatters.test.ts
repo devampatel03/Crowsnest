@@ -133,12 +133,8 @@ const blast = (over: Partial<BlastRadiusResult> = {}): BlastRadiusResult => ({
 });
 
 describe('formatBlastRadius', () => {
-  it.each([
-    [0.8, '🚨'],
-    [0.5, '⚠️'],
-    [0.1, '✅'],
-  ])('risk %s uses emoji %s', (score, emoji) => {
-    expect(text(formatBlastRadius('bob', blast({ risk_score: score })))).toContain(emoji);
+  it.each([0.8, 0.5, 0.1])('risk %s header has no emoji', (score) => {
+    expect(text(formatBlastRadius('bob', blast({ risk_score: score })))).not.toMatch(/\p{Extended_Pictographic}/u);
   });
 
   it('url-encodes the maintainer in the deep link', () => {
@@ -212,7 +208,6 @@ describe('formatStats', () => {
 
   it('critical status and counts', () => {
     const t = text(formatStats(stats({ active_incidents: { CRITICAL: 2, HIGH: 0, MEDIUM: 1, LOW: 0 } })));
-    expect(t).toContain('🚨');
     expect(t).toContain('*CRITICAL:* 2');
     expect(t).toContain('*Active incidents:* 3');
   });

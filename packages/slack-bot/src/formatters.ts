@@ -3,7 +3,6 @@
  *
  * Design principles:
  *  - Every public function returns Block[] (array of Slack blocks)
- *  - Emoji convey severity / attack pattern at a glance
  *  - Blocks stay concise — Slack caps at 50 blocks per message
  *  - Dashboard deep-link button is included in every result
  */
@@ -19,22 +18,15 @@ import type {
   AttackPattern,
 } from './types.js';
 
-const SEVERITY_EMOJI: Record<Severity, string> = {
-  CRITICAL: '🚨',
-  HIGH:     '⛔',
-  MEDIUM:   '⚠️',
-  LOW:      'ℹ️',
-};
-
 const ATTACK_PATTERN_LABEL: Record<AttackPattern, string> = {
-  maintainer_takeover: '👤 Maintainer Takeover',
-  worm:                '🐛 Token-Theft Worm',
-  slopsquat:           '🤖 Slopsquatting',
-  slsa_poisoning:      '🔒 SLSA-Attested Malware',
-  sleeper:             '😴 Sleeper Dependency',
-  identity_drift:      '🎭 Identity Drift',
-  typosquat:           '🔤 Typosquatting',
-  dep_confusion:       '🔀 Dependency Confusion',
+  maintainer_takeover: 'Maintainer Takeover',
+  worm:                'Token-Theft Worm',
+  slopsquat:           'Slopsquatting',
+  slsa_poisoning:      'SLSA-Attested Malware',
+  sleeper:             'Sleeper Dependency',
+  identity_drift:      'Identity Drift',
+  typosquat:           'Typosquatting',
+  dep_confusion:       'Dependency Confusion',
 };
 
 function section(text: string): Block {
@@ -88,11 +80,10 @@ function confidenceBar(confidence: number): string {
 
 /** Format a single incident as a short summary line (for scan result lists) */
 function incidentSummaryLine(inc: Incident): string {
-  const emoji = SEVERITY_EMOJI[inc.severity] ?? '❓';
   const pattern = ATTACK_PATTERN_LABEL[inc.attack_pattern] ?? inc.attack_pattern;
   const pkgs = inc.packages.slice(0, 3).join(', ') +
     (inc.packages.length > 3 ? ` +${inc.packages.length - 3} more` : '');
-  return `${emoji} *${inc.severity}* — ${pattern} — \`${pkgs}\``;
+  return `*${inc.severity}* — ${pattern} — \`${pkgs}\``;
 }
 
 /** The API sends blast_radius as a count from some endpoints and as a list of affected projects from others. */
@@ -121,8 +112,8 @@ export function formatScanResult(
 
   const hasCritical = bySeverity.CRITICAL > 0 || bySeverity.HIGH > 0;
   const headerText = hasCritical
-    ? `🚨 Crowsnest Scan Complete — Action Required`
-    : `✅ Crowsnest Scan Complete — No Critical Issues`;
+    ? `Crowsnest Scan Complete — Action Required`
+    : `Crowsnest Scan Complete — No Critical Issues`;
 
   const blocks: Block[] = [
     header(headerText),
@@ -138,7 +129,7 @@ export function formatScanResult(
     Object.entries(bySeverity) as Array<[Severity, number]>
   )
     .filter(([, count]) => count > 0)
-    .map(([sev, count]) => `${SEVERITY_EMOJI[sev]} *${sev}:* ${count}`)
+    .map(([sev, count]) => `*${sev}:* ${count}`)
     .join('   ');
 
   if (severityLines) {
@@ -161,7 +152,7 @@ export function formatScanResult(
           `${incidentSummaryLine(inc)}\n` +
           `  Confidence: ${confidenceBar(inc.confidence)} | ` +
           `Blast radius: ${blastRadiusCount(inc.blast_radius)} projects` +
-          (inc.runtime_confirmation ? ' | ✅ Runtime confirmed' : '')
+          (inc.runtime_confirmation ? ' | Runtime confirmed' : '')
         )
       )
     );
@@ -191,7 +182,6 @@ export function formatIncidentAlert(
   incident: Incident,
   dashboardUrl = 'http://localhost:3000'
 ): Block[] {
-  const emoji = SEVERITY_EMOJI[incident.severity] ?? '❓';
   const pattern = ATTACK_PATTERN_LABEL[incident.attack_pattern] ?? incident.attack_pattern;
   const pkgList = incident.packages
     .slice(0, 5)
@@ -201,12 +191,12 @@ export function formatIncidentAlert(
   const firstRemediation = incident.remediation_options[0];
 
   const blocks: Block[] = [
-    header(`${emoji} ${incident.severity} Alert — ${pattern}`),
+    header(`${incident.severity} Alert — ${pattern}`),
     section(
       `*Packages:* ${pkgList}\n` +
       `*Confidence:* ${confidenceBar(incident.confidence)}\n` +
       `*Blast radius:* ${blastRadiusCount(incident.blast_radius)} internal project(s)` +
-      (incident.runtime_confirmation ? '\n*Runtime:* ✅ Confirmed active' : '')
+      (incident.runtime_confirmation ? '\n*Runtime:* Confirmed active' : '')
     ),
   ];
 
@@ -235,7 +225,7 @@ export function formatIncidentAlert(
           `*Recommended action:* ${firstRemediation.action}\n` +
           `${firstRemediation.description}\n` +
           `_Reversibility: ${firstRemediation.reversibility}_ ` +
-          (firstRemediation.pr_ready ? '| 🤖 PR auto-generation available' : '')
+          (firstRemediation.pr_ready ? '| PR auto-generation available' : '')
         )
       );
     }
@@ -246,7 +236,7 @@ export function formatIncidentAlert(
     context(
       `Incident ID: \`${incident.id}\` • Detected ${new Date(incident.detected_at).toLocaleString()}`
     ),
-    dashboardButton(`${dashboardUrl}/log?incident=${incident.id}`, '🔍 Investigate')
+    dashboardButton(`${dashboardUrl}/log?incident=${incident.id}`, 'Investigate')
   );
 
   return blocks;
@@ -261,16 +251,15 @@ export function formatBlastRadius(
   dashboardUrl = 'http://localhost:3000'
 ): Block[] {
   const riskPct = Math.round(result.risk_score * 100);
-  const riskEmoji = result.risk_score >= 0.7 ? '🚨' : result.risk_score >= 0.4 ? '⚠️' : '✅';
 
   const blocks: Block[] = [
-    header(`${riskEmoji} Blast Radius Analysis — @${maintainer}`),
+    header(`Blast Radius Analysis — @${maintainer}`),
     section(
       `*Risk score:* ${riskPct}%\n` +
       `*Compromised packages (owned by maintainer):* ${result.compromised_packages.length}\n` +
       `*Affected internal projects:* ${result.affected_projects.length}\n` +
       `*Affected transitive dependencies:* ${result.affected_packages.length}\n` +
-      `*Runtime exposure:* ${result.runtime_exposed ? '⚠️ Yes — this package is loaded at runtime' : '✅ Not observed at runtime'}`
+      `*Runtime exposure:* ${result.runtime_exposed ? 'Yes — this package is loaded at runtime' : 'Not observed at runtime'}`
     ),
     DIVIDER,
   ];
@@ -321,7 +310,6 @@ export function formatInvestigation(
   result: InvestigationResult,
   dashboardUrl = 'http://localhost:3000'
 ): Block[] {
-  const emoji = result.call === 'Hold' ? '🚨' : result.call === 'Watch' ? '⚠️' : result.call === 'Clear' ? '✅' : '❔';
 
   const facts = [
     `• Risk: ${Math.round(result.risk * 100)}%`,
@@ -332,7 +320,7 @@ export function formatInvestigation(
   ].filter((l): l is string => l !== null);
 
   const blocks: Block[] = [
-    header(`${emoji} ${result.call}: \`${pkg}\``),
+    header(`${result.call}: \`${pkg}\``),
     section(result.signals.length > 0 ? `*Why:*\n${result.signals.map((s) => `• ${s}`).join('\n')}` : '*Why:* nothing was raised.'),
     DIVIDER,
     section(`*What Crowsnest knows:*\n${facts.join('\n')}`),
@@ -359,10 +347,9 @@ export function formatStats(
 ): Block[] {
   const { active_incidents: ai } = result;
   const totalIncidents = ai.CRITICAL + ai.HIGH + ai.MEDIUM + ai.LOW;
-  const statusEmoji = ai.CRITICAL > 0 ? '🚨' : ai.HIGH > 0 ? '⛔' : '✅';
 
   const blocks: Block[] = [
-    header(`${statusEmoji} Crowsnest Status`),
+    header('Crowsnest Status'),
     section(
       `*Packages in graph:* ${result.total_packages.toLocaleString()}\n` +
       `*Maintainers tracked:* ${result.total_maintainers.toLocaleString()}\n` +
@@ -380,11 +367,11 @@ export function formatStats(
       ] as const
     )
       .filter(([, count]) => count > 0)
-      .map(([sev, count]) => `${SEVERITY_EMOJI[sev as Severity]} *${sev}:* ${count}`);
+      .map(([sev, count]) => `*${sev}:* ${count}`);
 
     blocks.push(section(lines.join('   ')));
   } else {
-    blocks.push(section('_No active incidents. Supply chain looks clean._ 🎉'));
+    blocks.push(section('_No active incidents. Supply chain looks clean._'));
   }
 
   blocks.push(

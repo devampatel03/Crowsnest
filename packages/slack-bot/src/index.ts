@@ -19,7 +19,7 @@ import { formatIncidentAlert } from './formatters.js';
 import type { Incident, PublishEvent } from './types.js';
 
 async function main(): Promise<void> {
-  console.log('🦅 Crowsnest Slack Bot starting…');
+  console.log('Crowsnest Slack Bot starting…');
 
   const missing = missingRequiredConfig();
   if (missing.length > 0) {
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
     console.log(`\n[index] Received ${signal} — shutting down…`);
     alertStream.stop();
     await app.stop();
-    console.log('[index] Goodbye! 👋');
+    console.log('[index] Goodbye.');
     process.exit(0);
   };
 
@@ -103,7 +103,7 @@ async function main(): Promise<void> {
 
   console.log('');
   console.log('╔══════════════════════════════════════════════════╗');
-  console.log('║          🦅 Crowsnest Slack Bot Ready            ║');
+  console.log('║           Crowsnest Slack Bot Ready             ║');
   console.log('╠══════════════════════════════════════════════════╣');
   console.log(`║  Mode:          Socket Mode (WebSocket)           ║`);
   console.log(`║  API:           ${config.crowsnestApiUrl.padEnd(33)}║`);

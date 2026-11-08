@@ -423,10 +423,10 @@ export class ImportDecoratorProvider {
     const pct = Math.round(result.probability * 100);
     const severity =
       result.probability > 0.8
-        ? '⛔ CRITICAL'
+        ? 'CRITICAL'
         : result.probability > 0.6
-        ? '⚠️ HIGH'
-        : '🟡 MEDIUM';
+        ? 'HIGH'
+        : 'MEDIUM';
 
     const signalLines =
       result.signals.length > 0
