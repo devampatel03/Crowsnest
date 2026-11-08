@@ -41,8 +41,8 @@ async function postError(
     err instanceof CrowsnestApiError && err.isNetworkError;
 
   const text = isDown
-    ? `⚠️ *Crowsnest API is unreachable* — make sure the backend is running at \`${config.crowsnestApiUrl}\`.\n_Command: ${context}_`
-    : `❌ *Error running ${context}:* ${err instanceof Error ? err.message : String(err)}`;
+    ? `*Crowsnest API is unreachable* — make sure the backend is running at \`${config.crowsnestApiUrl}\`.\n_Command: ${context}_`
+    : `*Error running ${context}:* ${err instanceof Error ? err.message : String(err)}`;
 
   await client.chat.postMessage({
     channel: channelId,
@@ -70,7 +70,7 @@ async function postBlocks(
 export function registerCommands(app: App, apiClient: CrowsnestApiClient): void {
 
   app.command('/crowsnest-scan', async ({ command, ack, client }) => {
-    await ack('🔍 Scan started — results will appear here shortly…');
+    await ack('Scan started — results will appear here shortly…');
 
     const rawText = command.text.trim();
     const projectPath = rawText || '/tmp/project';
@@ -82,7 +82,7 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
     if (usingDefault) {
       await client.chat.postMessage({
         channel: channelId,
-        text: `ℹ️ No project path provided — scanning default path \`${projectPath}\`.`,
+        text: `No project path provided — scanning default path \`${projectPath}\`.`,
       });
     }
 
@@ -103,11 +103,11 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
     const pkg = command.text.trim();
 
     if (!pkg) {
-      await ack('❌ Please provide a package name, e.g. `/crowsnest-investigate left-pad`');
+      await ack('Please provide a package name, e.g. `/crowsnest-investigate left-pad`');
       return;
     }
 
-    await ack(`🔬 Investigating \`${pkg}\`…`);
+    await ack(`Investigating \`${pkg}\`…`);
 
     const channelId = command.channel_id;
 
@@ -130,12 +130,12 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
 
     if (!maintainer) {
       await ack(
-        '❌ Please provide a maintainer login, e.g. `/crowsnest-blast-radius sindresorhus`'
+        'Please provide a maintainer login, e.g. `/crowsnest-blast-radius sindresorhus`'
       );
       return;
     }
 
-    await ack(`💣 Calculating blast radius for @${maintainer}…`);
+    await ack(`Calculating blast radius for @${maintainer}…`);
 
     const channelId = command.channel_id;
 
@@ -153,7 +153,7 @@ export function registerCommands(app: App, apiClient: CrowsnestApiClient): void 
   });
 
   app.command('/crowsnest-status', async ({ command, ack, client }) => {
-    await ack('📊 Fetching Crowsnest status…');
+    await ack('Fetching Crowsnest status…');
 
     const channelId = command.channel_id;
 

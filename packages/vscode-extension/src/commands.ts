@@ -95,14 +95,14 @@ export async function scanFileCommand(
         const pct = Math.round(result.probability * 100);
         const icon =
           result.probability > 0.8
-            ? '🔴'
+            ? 'CRITICAL'
             : result.probability > 0.6
-            ? '🟠'
+            ? 'HIGH'
             : result.probability > threshold
-            ? '🟡'
-            : '🟢';
+            ? 'MEDIUM'
+            : 'OK';
 
-        channel.appendLine(`  ${icon}  ${pkg}  —  risk ${pct}%`);
+        channel.appendLine(`  [${icon}]  ${pkg}  —  risk ${pct}%`);
 
         if (result.probability > threshold) {
           atRiskCount++;
@@ -130,7 +130,7 @@ export async function scanFileCommand(
         }
       });
   } else {
-    vscode.window.showInformationMessage('Crowsnest: All packages look clean! ✅');
+    vscode.window.showInformationMessage('Crowsnest: All packages look clean.');
   }
 }
 

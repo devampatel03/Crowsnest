@@ -62,7 +62,7 @@ export class AlertStream {
     }
 
     this.es.addEventListener('open', () => {
-      console.log('[alert-stream] ✅ Connected to Crowsnest event stream.');
+      console.log('[alert-stream] Connected to Crowsnest event stream.');
       this.backoffMs = BASE_BACKOFF_MS; // Reset backoff on successful connection
     });
 
@@ -161,7 +161,7 @@ export class AlertStream {
     }
 
     console.log(
-      `[alert-stream] 🚨 ${incident.severity} incident detected: ` +
+      `[alert-stream] ${incident.severity} incident detected: ` +
         `${incident.attack_pattern} — ${incident.packages.join(', ')}`
     );
 
