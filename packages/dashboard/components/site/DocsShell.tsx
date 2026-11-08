@@ -22,7 +22,7 @@ export function DocsShell({
 }) {
   return (
     <div className="mx-auto flex max-w-docs flex-col px-s4 pb-s6 xl:grid xl:grid-cols-[240px_56px_minmax(0,1fr)_12.5rem] xl:gap-x-s4">
-      <div {...({ inert: 'true' } as Record<string, string>)} aria-hidden="true" className="xl:col-start-2 xl:row-start-1">
+      <div {...({ inert: true } as Record<string, boolean>)} aria-hidden="true" className="xl:col-start-2 xl:row-start-1">
         <BearingRule
           variant="site"
           sections={sections}
