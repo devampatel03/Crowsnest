@@ -71,5 +71,3 @@ The warning limit (0.5) is lower than the install stop (0.6) on purpose, so you 
 - It does not work without Crowsnest running. See [Troubleshooting](/docs/troubleshooting) if no marks appear.
 
 For the same check in your terminal, see [CLI usage](/docs/cli). Settings and keys are on the [Configuration](/docs/configuration) page, and the [Slack bot](/docs/integrations/slack) covers team alerts.
-
-**A mark in the margin costs you a second. An install you regret costs more.**

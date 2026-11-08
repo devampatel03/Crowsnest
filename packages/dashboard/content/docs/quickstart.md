@@ -100,5 +100,3 @@ Checked on 2026-11-04: the published 0.1.1 image, started with no API keys and a
 - It does not start the Slack bot or VS Code extension. Those have their own pages.
 
 Next, install the terminal command from the [Installation](/docs/installation) page, then read [Using the dashboard](/docs/dashboard).
-
-**Scan one real project. The first call you read teaches you more than this page.**

@@ -60,5 +60,3 @@ How Crowsnest is built is documented in the repository, not on this site. Start 
 - It does not replace the [Troubleshooting](/docs/troubleshooting) page. Check there first for a known fault.
 
 New to Crowsnest? Start with the [Introduction](/docs), then the [Installation](/docs/installation) page, and read the [FAQ](/docs/faq).
-
-**A good bug report is a contribution. So is a doc fix.**

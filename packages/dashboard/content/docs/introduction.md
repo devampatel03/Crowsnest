@@ -59,5 +59,3 @@ Who publishes a package, how new it is, how many people download it, whether it 
 ## Where do I go next?
 
 Start with the [Quickstart](/docs/quickstart). If you already have a call in front of you, read [What to do when Crowsnest says Hold](/blog/what-to-do-when-crowsnest-says-hold). Questions are answered in the [FAQ](/docs/faq).
-
-**Start with the Quickstart. It takes three commands.**

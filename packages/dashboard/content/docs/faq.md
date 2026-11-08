@@ -101,5 +101,3 @@ No API keys are needed for a scan. On 2026-11-04 a scan with no keys, on the pub
 - It does not answer questions about your own setup. [Troubleshooting](/docs/troubleshooting) covers the common faults.
 - It does not promise Crowsnest catches every attack. Read [what it cannot do](/docs).
 - It does not offer private support. There is no email address or chat room yet; use GitHub issues.
-
-**Not here? Open an issue. Good questions become answers on this page.**

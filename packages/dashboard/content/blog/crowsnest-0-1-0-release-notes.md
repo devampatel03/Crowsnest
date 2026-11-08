@@ -60,5 +60,3 @@ Version 0.1.1 followed the next day. It made `crowsnest doctor` warn, not fail, 
 These notes do not promise a date or a feature list for the next version. Check the repository for current state.
 
 Found a rough edge? Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose), and read [Contributing](/docs/contributing). To learn what the safe-install check is for, read [What is slopsquatting?](/blog/what-is-slopsquatting).
-
-**Found a rough edge? Tell us. Version 0.1 expects them.**

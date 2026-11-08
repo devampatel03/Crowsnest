@@ -7,7 +7,7 @@ import { HUBS } from './hubs';
 import { FAQ } from './landing';
 import { contentProblems, getAllEntries, getDocs, getPosts, getTerms } from './loader';
 import { entryMarkdown, llmsFullTxt, llmsTxt, rssXml } from './machine';
-import { extractFaq, extractSteps, toMarkdown } from './mdx';
+import { dropLeadDuplicate, extractFaq, extractSteps, similar, toMarkdown } from './mdx';
 import { allPublicRoutes, PLANNED_PATHS } from './routes';
 
 const require = createRequire(import.meta.url);
@@ -46,6 +46,17 @@ describe('content loader', () => {
   it('serves the Introduction at /docs and nothing at /docs/introduction', () => {
     expect(getDocs().find((d) => d.slug === 'introduction')?.path).toBe('/docs');
     expect(getAllEntries().some((e) => e.path === '/docs/introduction')).toBe(false);
+  });
+
+  it('no page repeats its lead in the first paragraph or ends on a bold slogan', () => {
+    for (const e of getAllEntries()) {
+      const lead = e.section === 'glossary' ? e.meta.definition : e.meta.answer;
+      const body = dropLeadDuplicate(e.body, lead).trim();
+      const paragraphs = body.split(/\n\s*\n/);
+      if (lead) expect(similar(paragraphs[0] ?? '', lead), `${e.path} repeats its lead`).toBe(false);
+      const last = (paragraphs[paragraphs.length - 1] ?? '').trim();
+      expect(/^\*\*[^\n]+\*\*$/.test(last), `${e.path} ends on a bold slogan`).toBe(false);
+    }
   });
 
   it('spells supply chain unhyphenated', () => {

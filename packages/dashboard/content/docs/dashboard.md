@@ -79,5 +79,3 @@ Shortcuts do nothing while you type in a box or have a dialog open.
 - It does not offer replay. Replay is a terminal feature, described on the [CLI usage](/docs/cli) page.
 
 Questions about a word on screen? Look it up in the [glossary](/glossary), or see [Troubleshooting](/docs/troubleshooting) if the page says Offline.
-
-**Read the sentence, then the first step. That is the whole job.**

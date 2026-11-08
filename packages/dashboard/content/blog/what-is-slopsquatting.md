@@ -82,5 +82,3 @@ A name Crowsnest has never seen is different. With no data at all it scores 20 p
 - A plain `npm install` is not checked at all.
 
 Read the other posts in this series: [How to stay safe from malicious packages](/blog/how-to-stay-safe-from-malicious-packages) and [What to do when Crowsnest says Hold](/blog/what-to-do-when-crowsnest-says-hold). The [glossary entry](/glossary/slopsquatting) has the short definition, and [CLI usage](/docs/cli) covers the install command. [Install Crowsnest](/#install) to try it.
-
-**An invented name is only dangerous once someone owns it. Check before you install.**
