@@ -117,5 +117,3 @@ Then delete the `Crowsnest` folder. The `-v` deletes the stored data. If you use
 - It does not check your versions of Python or Node. A version that is too old shows up as an error during setup.
 
 Next, [scan a project from the terminal](/docs/cli), or set optional keys on the [Configuration](/docs/configuration) page.
-
-**Docker if you want to look. Source if you want to change something.**

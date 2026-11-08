@@ -68,5 +68,3 @@ Look at the reasons. A real new package from a person you know can look like a H
 - It does not stop a plain `npm install`, so a package can reach your project without a Hold ever showing.
 
 For the habits that prevent a Hold, read [How to stay safe from malicious packages](/blog/how-to-stay-safe-from-malicious-packages). For one of the most common causes, read [What is slopsquatting?](/blog/what-is-slopsquatting). The terminal command is on the [CLI usage](/docs/cli) page. [Install Crowsnest](/#install) to get calls like this one.
-
-**A Hold is a pause, not a verdict. Use the pause.**

@@ -76,5 +76,3 @@ Nothing breaks. Crowsnest falls back to cached data and fixed rules, so you see 
 - It does not validate other settings. A mistyped address shows up as Offline or "unreachable" messages.
 
 If something does not behave, see [Troubleshooting](/docs/troubleshooting). To set up the pieces that use these keys, see [Installation](/docs/installation) and [CLI usage](/docs/cli).
-
-**Start with no keys. Add one when you miss what it gives you.**

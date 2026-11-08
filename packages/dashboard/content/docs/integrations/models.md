@@ -116,5 +116,3 @@ A model that is down, slow, out of credit or wrong never stops a scan. Crowsnest
 - It does not store keys safely. They sit in a plain text `.env` file, so keep it out of version control.
 
 Related pages: [Configuration](/docs/configuration), [Troubleshooting](/docs/troubleshooting) and the [Slack bot](/docs/integrations/slack).
-
-**No model is a fine place to start.**

@@ -57,5 +57,3 @@ Be slower with brand-new packages that do something important, such as handling 
 A checklist cannot catch everything. A trusted package can still be taken over later, which is why Crowsnest also watches for changes in who maintains the packages you use; see [maintainer takeover](/glossary/maintainer-takeover). Crowsnest also cannot check a package it has no data on: it adds only 0.2 risk and the install goes ahead. Do the first two habits by hand.
 
 Start with the [Quickstart](/docs/quickstart) to set Crowsnest up, then [install Crowsnest](/#install) and use it for every new package.
-
-**Five small checks beat one big cleanup.**

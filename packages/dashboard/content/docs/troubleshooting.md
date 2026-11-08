@@ -120,5 +120,3 @@ Check that Crowsnest is running, that `crowsnest.enabled` is on, and that the fi
 ## I am still stuck. What do I do?
 
 Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form. Include your operating system, your Node version, the output of `crowsnest doctor`, and whether you run Docker Compose, `crowsnest start` or from source. Remove keys first. See [Contributing](/docs/contributing).
-
-**Include the exact error text in your report. It is the fastest way to a fix.**

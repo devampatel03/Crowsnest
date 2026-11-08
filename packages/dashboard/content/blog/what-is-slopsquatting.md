@@ -59,15 +59,15 @@ Three things tend to be true together. The package is very new. Almost nobody do
 
 When you run `crowsnest install`, Crowsnest looks at how new the package is, how many people download it, whether it links to its source code, and whether its name is close to a very popular one. It also checks a built-in list of names AI assistants are known to invent. At risk 0.6 or above, it stops the install and shows you the reasons.
 
-The reasons appear in plain lines. Here is a real result from Crowsnest 0.1.1 on 2026-11-08, for `react-codeshift`, a name AI assistants invented before someone registered it:
+The reasons appear in plain lines. Here is the result for `react-codeshift`, a name AI assistants invented before someone registered it:
 
 ```text
 ✖ Blocked: react-codeshift@1.0.0
-[crowsnest] ⛔ BLOCKED: react-codeshift@1.0.0
-[crowsnest]   📉  Only 17 weekly downloads
-[crowsnest]   🔗  No GitHub repository linked
-[crowsnest]   🤖  Matches known AI hallucination pattern (confidence: 95%)
-[crowsnest]   🚨  ACTIVE IOC: Slopsquat-Campaign-Jan2026 — slopsquat-1
+[crowsnest] ✖ BLOCKED: react-codeshift@1.0.0
+[crowsnest]   ·  Only 17 weekly downloads
+[crowsnest]   ·  No GitHub repository linked
+[crowsnest]   ·  Matches known AI hallucination pattern (confidence: 95%)
+[crowsnest]   !!  ACTIVE IOC: Slopsquat-Campaign-Jan2026 — slopsquat-1
 [crowsnest]   Risk score:  100%
 ```
 
@@ -82,5 +82,3 @@ A name Crowsnest has never seen is different. With no data at all it scores 20 p
 - A plain `npm install` is not checked at all.
 
 Read the other posts in this series: [How to stay safe from malicious packages](/blog/how-to-stay-safe-from-malicious-packages) and [What to do when Crowsnest says Hold](/blog/what-to-do-when-crowsnest-says-hold). The [glossary entry](/glossary/slopsquatting) has the short definition, and [CLI usage](/docs/cli) covers the install command. [Install Crowsnest](/#install) to try it.
-
-**An invented name is only dangerous once someone owns it. Check before you install.**

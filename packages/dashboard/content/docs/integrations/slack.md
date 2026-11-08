@@ -85,5 +85,3 @@ Slack shows "Crowsnest API is unreachable" with the address it tried, `http://lo
 - It does not run itself. Start it again after a restart of your machine.
 
 Related pages: [Configuration](/docs/configuration), [Troubleshooting](/docs/troubleshooting) and the [VS Code extension](/docs/integrations/vscode).
-
-**Keep the channel small. A channel that only gets Holds gets read.**
