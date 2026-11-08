@@ -103,6 +103,20 @@ export interface LockfileEntry {
   declared_in: string;
 }
 
+/**
+ * What a failed request says, in words. The backend answers `{"detail": "..."}` for a problem with a plain reason, so that
+ * sentence is shown as it is; anything else keeps the status and the body.
+ */
+export function errorMessage(status: number, body: string): string {
+  try {
+    const detail = (JSON.parse(body) as { detail?: unknown }).detail;
+    if (typeof detail === 'string' && detail.trim() !== '') return detail.trim();
+  } catch {
+    /* not JSON: fall through */
+  }
+  return `API error ${status}: ${body}`;
+}
+
 class APIError extends Error {
   constructor(
     message: string,
@@ -141,7 +155,7 @@ async function request<T>(
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
-    throw new APIError(`API error ${response.status}: ${body}`, response.status);
+    throw new APIError(errorMessage(response.status, body), response.status);
   }
 
   return response.json() as Promise<T>;
@@ -152,6 +166,8 @@ export interface Health {
   version: string;
   /** Where the backend sees the folder shared from the user's machine, when it runs in Docker. */
   projects_root?: string | null;
+  /** The folder on the user's machine that is shared there, when the backend knows it (Docker Compose). */
+  projects_host?: string | null;
 }
 
 export const api = {

@@ -2,7 +2,7 @@ import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = vi.hoisted(() => ({
-  health: null as null | { status: string; version: string; projects_root?: string | null },
+  health: null as null | { status: string; version: string; projects_root?: string | null; projects_host?: string | null },
   shared: '',
 }));
 
@@ -60,9 +60,25 @@ describe('backendPath', () => {
     expect(await backendPath('/home/me/code/app')).toBe('/home/me/code/app');
   });
 
-  it('explains what to do when Docker is in use but no folder is recorded', async () => {
+  it('sends the path as typed when Docker is in use but no shared folder is known, so the backend can explain', async () => {
     state.health = { status: 'ok', version: '0.1.0', projects_root: '/projects' };
-    await expect(backendPath('/home/me/code/app')).rejects.toThrow(/crowsnest start --projects/);
+    expect(await backendPath('/home/me/code/app')).toBe('/home/me/code/app');
+    expect(await backendPath('demo-project')).toBe('demo-project');
+  });
+
+  it('uses the folder a Compose backend reports when none was saved', async () => {
+    state.health = { status: 'ok', version: '0.1.0', projects_root: '/projects', projects_host: path.resolve('/home/me/code') };
+    expect(await backendPath(path.resolve('/home/me/code/app'))).toBe(
+      toBackendPath(path.resolve('/home/me/code/app'), path.resolve('/home/me/code'), '/projects'),
+    );
+  });
+
+  it('prefers the folder crowsnest start saved over the one the backend reports', async () => {
+    state.health = { status: 'ok', version: '0.1.0', projects_root: '/projects', projects_host: path.resolve('/elsewhere') };
+    state.shared = path.resolve('/home/me/code');
+    expect(await backendPath(path.resolve('/home/me/code/app'))).toBe(
+      toBackendPath(path.resolve('/home/me/code/app'), path.resolve('/home/me/code'), '/projects'),
+    );
   });
 
   it('translates for a Docker backend', async () => {
