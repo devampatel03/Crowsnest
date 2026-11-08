@@ -234,9 +234,9 @@ html {
     transform: none;
   }
 
-  /* Answer-first lead: italic display serif, one per article. */
+  /* Answer-first lead: upright, light sans, one per article. */
   .answer-box {
-    @apply font-display text-lead italic text-fg;
+    @apply font-sans text-body-l font-normal not-italic text-fg-soft;
     border-left: 1px solid var(--c-line-strong);
     padding-left: var(--s-3);
   }

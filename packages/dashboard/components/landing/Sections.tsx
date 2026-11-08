@@ -154,18 +154,22 @@ export function HowSection() {
       </div>
       <p className="mb-0 mt-s3 text-body-s text-fg-mute">{HOW.note}</p>
 
-      <p className="mb-0 mt-s5 max-w-prose text-body text-fg">
-        {HOW.runs.map((r, i) => (
-          <span key={r.href}>
-            <Link href={r.href} className="text-brand underline underline-offset-4 hover:decoration-2">
-              {r.lead}
-            </Link>
-            {i < HOW.runs.length - 2 ? ', ' : i === HOW.runs.length - 2 ? ', and ' : '.'}
-          </span>
-        ))}
-      </p>
-      <p className="mb-0 mt-s3 max-w-prose text-body-s text-fg-mute">{HOW.honesty}</p>
-      <p className="mb-0 mt-s4 max-w-prose text-body font-semibold text-fg">{HOW.closing}</p>
+      <div className="mt-s6 grid gap-s4 border-t border-rule pt-s5 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-x-s6">
+        <p className="label m-0">Where it runs</p>
+        <ul className="m-0 flex list-none flex-wrap gap-x-s4 gap-y-s2 p-0 text-body">
+          {HOW.runs.map((r) => (
+            <li key={r.href}>
+              <Link href={r.href} className="text-brand underline underline-offset-4 hover:decoration-2">
+                {r.lead.charAt(0).toUpperCase() + r.lead.slice(1)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="label m-0">What the calls mean</p>
+        <p className="m-0 max-w-prose text-body text-fg-soft">
+          {HOW.closing} {HOW.honesty}
+        </p>
+      </div>
     </Section>
   );
 }
@@ -217,67 +221,52 @@ export function InstallSection() {
           </div>
         </div>
       </div>
-      <p className="mb-s5 mt-s3 max-w-prose text-body-l text-fg-soft">{INSTALL.lead}</p>
-      <div className="flex flex-col gap-s5">
+      <p className="mb-s6 mt-s3 max-w-prose text-body-l text-fg-soft">{INSTALL.lead}</p>
+      <div className="border-t border-rule">
         {INSTALL.ways.map((w) => (
-          <div key={w.id} className="overflow-hidden rounded-panel border border-rule bg-raised">
-            <div className="border-b border-rule p-s3">
+          <div key={w.id} className="grid gap-s3 border-b border-rule py-s5 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-x-s6">
+            <div>
               <h3 className="m-0 font-sans text-h3 text-fg">{w.title}</h3>
-              <p className="mb-0 mt-s2 max-w-prose text-body text-fg-soft">{w.blurb}</p>
-              <p className="mb-0 mt-s2 max-w-prose text-body-s text-fg-mute">{w.needs}</p>
+              <p className="mb-0 mt-s2 text-body-s text-fg-soft">{w.blurb}</p>
             </div>
-            <ol className="m-0 list-none p-0">
-              {w.rows.map((r) => (
-                <li key={r.id} className="flex flex-col gap-s2 border-b border-rule p-s3 last:border-b-0 md:flex-row md:items-center md:gap-s4">
-                  <p className="label m-0 md:w-52 md:shrink-0">{r.label}</p>
-                  <div tabIndex={0} role="region" aria-label={`Command: ${r.label}`} className="min-w-0 flex-1 overflow-x-auto">
-                    <code className="block whitespace-pre-wrap font-mono text-code text-fg [overflow-wrap:anywhere] md:min-w-max md:whitespace-pre md:[overflow-wrap:normal]">
-                      <span aria-hidden="true" className="select-none text-fg-mute">
-                        ${' '}
-                      </span>
-                      {r.command}
-                    </code>
-                  </div>
-                  <CopyButton text={r.command} accessibleName={`Copy ${r.short} command`} className="min-h-11 self-start md:self-auto" />
-                </li>
-              ))}
-            </ol>
-            <p className="m-0 border-t border-rule p-s3 text-body-s text-fg-soft">
-              {w.after}{' '}
-              <Link href={w.link.href} className="text-brand underline underline-offset-4 hover:decoration-2">
-                {w.link.label}
-              </Link>
-              {w.id === 'dashboard' ? (
-                <>
-                  {' '}
-                  <Inline text={INSTALL.windowsNote} />
-                </>
-              ) : null}
-            </p>
+            <div className="min-w-0">
+              <ol className="m-0 flex list-none flex-col gap-s2 p-0">
+                {w.rows.map((r) => (
+                  <li key={r.id} className="flex items-center gap-s2 rounded-ctl bg-raised py-1 pl-s3 pr-1">
+                    <div tabIndex={0} role="region" aria-label={`Command: ${r.label}`} className="min-w-0 flex-1 overflow-x-auto">
+                      <code className="block whitespace-nowrap font-mono text-code text-fg">
+                        <span aria-hidden="true" className="select-none text-fg-mute">
+                          ${' '}
+                        </span>
+                        {r.command}
+                      </code>
+                    </div>
+                    <CopyButton text={r.command} accessibleName={`Copy ${r.short} command`} className="min-h-11 shrink-0" />
+                  </li>
+                ))}
+              </ol>
+              <p className="mb-0 mt-s3 text-body-s text-fg-mute">
+                {w.needs}{' '}
+                <Link href={w.link.href} className="text-brand underline underline-offset-4 hover:decoration-2">
+                  {w.link.label}
+                </Link>
+                .
+              </p>
+            </div>
           </div>
         ))}
       </div>
-      <p className="mb-0 mt-s4 max-w-prose text-body-s text-fg-soft">
-        {INSTALL.slack}{' '}
-        <Link href="/docs/integrations/slack" className="text-brand underline underline-offset-4 hover:decoration-2">
-          {INSTALL.slackLink}
-        </Link>
-        .
-      </p>
-      <p className="mb-0 mt-s3 max-w-prose text-body-s text-fg-soft">
+      <p className="mb-0 mt-s5 max-w-prose text-body-s text-fg-mute">
         {INSTALL.early}{' '}
         <Link href="/docs/troubleshooting" className="text-brand underline underline-offset-4 hover:decoration-2">
           {INSTALL.earlyLink}
         </Link>{' '}
-        {INSTALL.earlyTail}
-      </p>
-      <div className="mt-s4">
-        <Button variant="tertiary" href="/docs/installation">
-          {INSTALL.other}
-        </Button>
-      </div>
-      <p className="mb-0 mt-s4 max-w-prose text-body font-semibold text-fg">
-        <Inline text={INSTALL.closing} />
+        {INSTALL.earlyTail} <Link href="/docs/installation" className="text-brand underline underline-offset-4 hover:decoration-2">{INSTALL.other}</Link>
+        {' '}or{' '}
+        <Link href="/docs/integrations/slack" className="text-brand underline underline-offset-4 hover:decoration-2">
+          {INSTALL.slackLink.toLowerCase()}
+        </Link>
+        .
       </p>
     </Section>
   );

@@ -1,9 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/format';
-import { squigglePath, squiggleVariantFor } from './sketch-path';
+import { squiggleVariantFor } from './sketch-path';
 
 /**
- * Pencil underline for the last word of each landing H2 and docs H1:
+ * Straight brand underline for the last word of each landing H2 and docs H1:
  * `<h2>How it protects <Squiggle id="how">you.</Squiggle></h2>`. 6px tall,
  * `--c-brand`, three variants (pass `variant`, or it is derived from `id`).
  * Draws on once (500ms); reduced motion is fully drawn. The line is
@@ -37,7 +37,7 @@ export function Squiggle({
         className="pointer-events-none absolute -bottom-1 left-0 h-[0.375rem] w-full overflow-visible fill-none"
       >
         <path
-          d={squigglePath(v)}
+          d="M0 4 H120"
           pathLength={1}
           vectorEffect="non-scaling-stroke"
           strokeLinecap="round"

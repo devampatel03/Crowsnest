@@ -26,7 +26,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-shell px-s4 pb-s6 pt-s5">
         <h1 className="m-0 font-display text-display-l text-fg">{ABOUT.h1}</h1>
         <div className="mt-s4 max-w-prose">
-          <p className="m-0 font-display text-lead italic text-fg">{ABOUT.lead}</p>
+          <p className="m-0 font-sans text-lead not-italic text-fg-soft">{ABOUT.lead}</p>
           {ABOUT.body.map((p) => (
             <p key={p} className="mb-0 mt-s4 text-body text-fg-soft">
               {p}

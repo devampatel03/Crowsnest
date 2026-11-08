@@ -1,6 +1,6 @@
 import { Nib } from '@/components/mascot';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { AnswerBox, FactList } from '@/components/system/Content';
+import { AnswerBox } from '@/components/system/Content';
 import { Button } from '@/components/system/Button';
 import { docNavOrder, editUrl, neighbours, resolveRelated } from '@/lib/content/links';
 import { getDocs, type DocEntry } from '@/lib/content/loader';
@@ -54,12 +54,6 @@ export async function DocView({ doc }: { doc: DocEntry }) {
           </div>
         ) : null}
       </ArticleHead>
-
-      {doc.meta.facts?.length ? (
-        <div className="mb-s5 max-w-prose">
-          <FactList asOf={doc.meta.updated} facts={doc.meta.facts} />
-        </div>
-      ) : null}
 
       <div className={PROSE}>{content}</div>
 

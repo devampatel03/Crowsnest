@@ -5,7 +5,7 @@
    fill printed slightly off-register, down and to the right. Press one and the
    fill snaps into register; hover and it lifts off the page. The arrow is a
    beak, and a primary shivers three "ting" marks like the ones around Nib's
-   bell. Links get a pencil squiggle underline instead of a straight rule.
+   bell. Links get a straight hairline underline.
 
    Layers (every .btn):
      ::before   the fill, offset and nudged out of register
@@ -187,7 +187,7 @@
   transition-duration: 80ms;
 }
 
-/* ---- Tertiary: a link with a pencil squiggle ----------------------------- */
+/* ---- Tertiary: a link with a hairline underline ----------------------------- */
 .btn-tertiary {
   --_h: 1.5rem;
   min-height: var(--_h);
@@ -201,15 +201,17 @@
   display: none;
 }
 .btn-tertiary::after {
-  inset: auto 0 -0.3rem 0;
-  height: 0.4rem;
+  inset: auto 0 -0.2rem 0;
+  height: 1px;
   z-index: 0;
   border: 0;
   border-radius: 0;
   transform: none;
   background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cpath d='M0 3 Q3 0.4 6 3 T12 3 T18 3 T24 3' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 1.25rem 100% repeat-x;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cpath d='M0 3 Q3 0.4 6 3 T12 3 T18 3 T24 3' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 0 50% / 1.25rem 100% repeat-x;
+  opacity: 0.55;
+  transition: opacity 120ms ease, height 120ms ease;
+  -webkit-mask: none;
+  mask: none;
 }
 .btn-tertiary:hover,
 .btn-tertiary:focus-visible {
@@ -217,16 +219,11 @@
 }
 .btn-tertiary:hover::after,
 .btn-tertiary:focus-visible::after {
-  animation: squiggle-run 700ms linear infinite;
+  opacity: 1;
+  height: 2px;
 }
 .btn-tertiary:hover .btn-arrow {
   transform: translateX(0.25rem);
-}
-@keyframes squiggle-run {
-  to {
-    -webkit-mask-position: 1.25rem 50%;
-    mask-position: 1.25rem 50%;
-  }
 }
 @media (max-width: 767px) {
   .btn-tertiary {

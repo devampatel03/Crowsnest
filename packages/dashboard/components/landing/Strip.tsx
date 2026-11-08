@@ -6,8 +6,7 @@ const SCENES = [<Scene1 key={1} />, <Scene2 key={2} />, <Scene3 key={3} />, <Sce
 
 /**
  * "The night the quikrequest came aboard": five panels in the mascot's comic
- * layout (wide panel 1, then 2 above 3 across). Captions are real text in the
- * hand face; the drawings are decorative, and the full text equivalent sits
+ * layout (wide panel 1, then 2 above 3 across). Captions are real text; the drawings are decorative, and the full text equivalent sits
  * in the figcaption for screen readers. MotionGate draws the frames once when
  * the strip is a quarter visible (data-draw); reduced motion shows them drawn.
  */
@@ -21,7 +20,7 @@ export function LandingStrip() {
         {SCENES.map((scene, i) => (
           <li key={i}>
             <PanelSvg heavy={i === 3}>{scene}</PanelSvg>
-            <p className="nib-voice m-0 mt-s2 text-fg">{HOW.captions[i]}</p>
+            <p className="m-0 mt-s3 text-body text-fg">{HOW.captions[i]}</p>
           </li>
         ))}
       </ol>

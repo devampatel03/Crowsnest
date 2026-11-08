@@ -5,7 +5,7 @@ import { ArticleHead } from '@/components/site/ArticleHead';
 import { RelatedLinks } from '@/components/site/blocks';
 import { Breadcrumb } from '@/components/site/Breadcrumb';
 import { PROSE } from '@/components/site/prose';
-import { AnswerBox, FactList } from '@/components/system/Content';
+import { AnswerBox } from '@/components/system/Content';
 import { resolveRelated } from '@/lib/content/links';
 import { getTerm, getTerms } from '@/lib/content/loader';
 import { renderEntry } from '@/lib/content/render';
@@ -62,11 +62,6 @@ export default async function TermPage({ params }: Props) {
           <div className="mb-s5">
             <AnswerBox>{entry.meta.definition}</AnswerBox>
           </div>
-          {entry.meta.facts?.length ? (
-            <div className="mb-s5">
-              <FactList asOf={entry.meta.updated} facts={entry.meta.facts} />
-            </div>
-          ) : null}
           <div className={PROSE}>{content}</div>
           <RelatedLinks items={resolveRelated(entry.meta.related)} />
         </article>

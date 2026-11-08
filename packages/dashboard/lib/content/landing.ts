@@ -80,10 +80,10 @@ export const HOW = {
     'A five-panel drawing about a made-up package. Panel 1: a small crow named Nib sits on a masthead with a lit lantern. Three wooden crates queue at the rail, labelled tidy-dates, fast-csv-lite and one new crate; the caption reads "You add a package. It joins the line." Panel 2: close on two crates. One carries a crown and is the famous package. The next, labelled quikrequest, stands one step behind it wearing a fake moustache; the caption reads "One crate is wearing a very familiar name." Panel 3: Nib raises a spyglass. A round inset shows the crate\'s tag with three marks: new, almost nobody uses it, and a name a hair from a famous one; the caption reads "I check its age, its users, and how familiar its name looks." Panel 4: Nib pulls a bell cord. The bell swings and a three-notch gauge in the corner shows Hold; the caption reads "Hold. Not this one." Panel 5: the quikrequest crate sits on the dock with a tag tied to it while the other crates are loaded, and Nib is back on the perch; the caption reads "The rest come aboard. This one waits for you."',
   note: 'Made-up packages, drawn to explain the idea.',
   runs: [
-    { lead: 'In your terminal', href: '/docs/cli' },
-    { lead: 'in VS Code', href: '/docs/integrations/vscode' },
-    { lead: 'in Slack', href: '/docs/integrations/slack' },
-    { lead: 'on a dashboard', href: '/docs/dashboard' },
+    { lead: 'Terminal', href: '/docs/cli' },
+    { lead: 'VS Code', href: '/docs/integrations/vscode' },
+    { lead: 'Slack', href: '/docs/integrations/slack' },
+    { lead: 'Dashboard', href: '/docs/dashboard' },
   ],
   honesty: 'Crowsnest flags a package; you decide what to do. The install check runs when you install through Crowsnest. A scan reads the lockfile you already have.',
   closing: 'Clear means nothing was found. Hold means stop and look.',
@@ -131,8 +131,8 @@ export const INSTALL = {
       id: 'dashboard',
       title: 'The dashboard',
       blurb:
-        'The whole picture in a browser. See which calls need you now, who publishes the packages you use, and every call Crowsnest has made. Scan a project with one button.',
-      needs: 'You need Docker and Git.',
+        'The whole picture in a browser: what needs you now, who publishes your packages, every call made.',
+      needs: 'Needs Docker and Git. Allow a few minutes the first time, then open http://localhost:3000.',
       rows: [
         { id: 'get', short: 'clone', label: 'Get the code', command: 'git clone https://github.com/devampatel03/Crowsnest.git && cd Crowsnest' },
         { id: 'env', short: 'settings file', label: 'Create your settings file', command: 'cp .env.example .env' },
@@ -144,8 +144,8 @@ export const INSTALL = {
     {
       id: 'terminal',
       title: 'The terminal',
-      blurb: 'Scan a project, check one package, vet a pull request, and stop a risky install before it runs.',
-      needs: 'You need Node.js 20 or newer, and Docker to run the backend.',
+      blurb: 'Scan a project, check a package, vet a pull request, stop a risky install.',
+      needs: 'Needs Node.js 20 and Docker. The first start downloads about 430 MB.',
       rows: [
         { id: 'cli', short: 'install', label: 'Install the command', command: 'npm install -g @crowsnest/cli' },
         { id: 'run', short: 'start', label: 'Start the backend', command: 'crowsnest start' },
@@ -157,8 +157,8 @@ export const INSTALL = {
     {
       id: 'editor',
       title: 'VS Code',
-      blurb: 'A mark on the import line of a risky package while you type. Hover to read why.',
-      needs: 'You need VS Code 1.85 or newer, and the terminal setup above running.',
+      blurb: 'A mark on the import line of a risky package, with the reason on hover.',
+      needs: 'Needs VS Code 1.85 and the terminal setup running.',
       rows: [
         { id: 'ext', short: 'extension', label: 'Install the extension', command: 'code --install-extension crowsnest.crowsnest-vscode' },
       ],

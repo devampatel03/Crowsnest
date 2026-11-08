@@ -1,9 +1,8 @@
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/format';
-import { wavePath } from './sketch-path';
 
 /**
- * Section divider: a hand-drawn wave, 1px `--c-line-strong`, about 24px
+ * Section divider: a straight hairline, 1px `--c-line-strong`, about 24px
  * amplitude, seeded by `id` so server and client match. Replaces the straight
  * divider between landing sections and above the footer. Draws left to right
  * once (700ms) when 25% visible; reduced motion is fully drawn. Purely
@@ -22,7 +21,7 @@ export function WaveRule({ id, draw = true, className }: { id: string; draw?: bo
         className="size-full overflow-visible fill-none"
       >
         <path
-          d={wavePath(id)}
+          d="M0 24 H1200"
           pathLength={1}
           vectorEffect="non-scaling-stroke"
           strokeLinecap="round"

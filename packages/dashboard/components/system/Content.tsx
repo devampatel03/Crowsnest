@@ -45,7 +45,7 @@ export function FactList({ heading = 'Quotable facts', asOf, facts }: { heading?
   );
 }
 
-/** Answer-first lead: italic Instrument Serif, one per article (<= 50 words). */
+/** Answer-first lead: upright Instrument Sans, one per article (<= 50 words). */
 export function AnswerBox({ children }: { children: ReactNode }) {
   return <div className="answer-box">{children}</div>;
 }
