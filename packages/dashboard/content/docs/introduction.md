@@ -20,8 +20,6 @@ related:
   - /glossary
 ---
 
-Crowsnest is a free, open-source supply chain security tool that you run yourself: it checks the packages in your software project and tells you, in plain words, which ones to hold back before they cause harm.
-
 ## Who is Crowsnest for?
 
 Anyone who installs packages from npm or PyPI and wants a second opinion first. You do not need to be a security specialist. Crowsnest says what it found, how serious it is, and what to do next.
