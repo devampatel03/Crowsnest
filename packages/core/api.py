@@ -29,6 +29,7 @@ from .config import get_settings
 from .coral.engine import CoralEngine
 from .llm import LLMClient, get_llm
 from .llm import describe as describe_llm
+from .projects import list_projects, resolve_scan_path
 from .queries.templates import QueryLibrary
 from .sources.lockfile import LOCKFILE_NAMES, has_supported_lockfile
 from .veto import evaluate as evaluate_veto
@@ -179,17 +180,63 @@ async def _push_event(event_type: str, data: dict[str, Any]) -> None:
 
 @app.get("/health")
 async def health() -> dict[str, str | None]:
-    return {"status": "ok", "version": "0.1.2", "projects_root": get_settings().crowsnest_projects_root or None}
+    settings = get_settings()
+    return {
+        "status": "ok",
+        "version": "0.1.2",
+        "projects_root": settings.crowsnest_projects_root or None,
+        # The folder on the user's machine that is shared there; the command line maps typed paths with it.
+        "projects_host": settings.crowsnest_projects_host or None,
+    }
+
+
+@app.get("/api/projects")
+async def list_shared_projects() -> dict[str, Any]:
+    """The folders Crowsnest can read when it runs in Docker, so a scan can be started by picking one.
+
+    `root` is null outside Docker, where any path on the machine can be typed.
+    """
+    settings = get_settings()
+    root = settings.crowsnest_projects_root
+    projects = await asyncio.to_thread(list_projects, root)
+    return {"root": root or None, "host": settings.crowsnest_projects_host or None, "projects": projects}
 
 
 _LOCKFILE_NAMES = LOCKFILE_NAMES
+
+
+def _not_readable_message(what: str) -> str:
+    """Why a folder cannot be scanned, with the way out when Crowsnest runs in Docker and cannot see it."""
+    settings = get_settings()
+    root = settings.crowsnest_projects_root
+    if not root:
+        return what
+    where = f"the folder shared as {root}" + (f" ({settings.crowsnest_projects_host})" if settings.crowsnest_projects_host else "")
+    return (
+        f"{what} Crowsnest runs in Docker and can only read {where}. "
+        "Put the project there, or set CROWSNEST_PROJECTS to the folder that holds your projects and restart."
+    )
+
+
+def _map_project_path(raw: str) -> str:
+    """The path to read for what the user typed. In Docker that is inside the shared folder, and nowhere else.
+
+    A bare name or a path as it appears on the user's machine is mapped into the shared folder; a symlink or `..` that
+    leads out of it is refused. Outside Docker the path is used as typed.
+    """
+    settings = get_settings()
+    root = settings.crowsnest_projects_root
+    mapped = resolve_scan_path(raw, root, settings.crowsnest_projects_host)
+    if root and not Path(mapped).resolve().is_relative_to(Path(root).resolve()):
+        raise HTTPException(status_code=400, detail=_not_readable_message("That folder is outside the shared folder."))
+    return mapped
 
 
 def _check_scan_target(req: ScanRequest) -> None:
     """Reject a scan that cannot read anything, instead of reporting a clean or unrelated result."""
     folder = Path(req.project_path)
     if not folder.exists():
-        raise HTTPException(status_code=400, detail="That folder does not exist.")
+        raise HTTPException(status_code=400, detail=_not_readable_message("That folder does not exist."))
     if not folder.is_dir():
         raise HTTPException(status_code=400, detail="That path is not a directory.")
     if req.lockfile_path:
@@ -205,6 +252,8 @@ def _check_scan_target(req: ScanRequest) -> None:
 @app.post("/api/scan")
 async def trigger_scan(req: ScanRequest) -> dict[str, str]:
     """Kick off a full supply-chain scan asynchronously."""
+    # A path as typed on the user's machine, or a bare folder name, becomes the path inside the container.
+    req = req.model_copy(update={"project_path": _map_project_path(req.project_path)})
     _check_scan_target(req)
     scan_id = str(uuid.uuid4())
     _scan_store[scan_id] = {
@@ -284,7 +333,9 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) 
         _scan_store[scan_id].update({
             "status": "complete",
             "finished_at": datetime.now(UTC).isoformat(),
-            "incidents": new_incidents,
+            # Everything this scan detected, not only what is new: a project scanned twice has the same Holds twice.
+            "incidents": incidents,
+            "new_incident_count": len(new_incidents),
             "token_usage": result.get("token_usage", 0),
             "remediation_drafts": result.get("remediation_drafts", []),
             "failed_queries": result.get("query_errors", {}),
@@ -297,7 +348,8 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) 
         await _push_event("scan_progress", {
             "scan_id": scan_id,
             "phase": "complete",
-            "incidents_found": len(new_incidents),
+            "incidents_found": len(incidents),
+            "new_incident_count": len(new_incidents),
             "token_usage": result.get("token_usage", 0),
         })
 
@@ -570,9 +622,10 @@ class CheckChangesRequest(BaseModel):
 @app.post("/api/check-changes")
 async def check_dependency_changes(req: CheckChangesRequest) -> dict[str, Any]:
     """Vet the package versions a change adds: those in the lockfiles now but not at `base_ref`."""
+    project_path = _map_project_path(req.project_path)
     try:
         return await check_changes(
-            req.project_path, base_ref=req.base_ref, engine=_get_engine(),
+            project_path, base_ref=req.base_ref, engine=_get_engine(),
             min_release_age_days=req.min_release_age_days,
         )
     except CheckError as exc:

@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Set by the Docker image: the folder inside the container where the user's projects are shared. The command line
     # reads it from /health to turn a path on the user's machine into a path the container can read.
     crowsnest_projects_root: str = ""
+    # The folder on the user's machine that is shared at the path above. Set by Docker Compose when it is known, so a
+    # path typed as it appears on the user's machine can be mapped into the container.
+    crowsnest_projects_host: str = ""
     # Accept both DEMO_MODE=true and CROWSNEST_DEMO_MODE=true
     crowsnest_demo_mode: bool = Field(default=False, validation_alias="DEMO_MODE")
 
