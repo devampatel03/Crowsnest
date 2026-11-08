@@ -94,7 +94,7 @@ export function ScanProvider({ children }: { children: ReactNode }) {
         toast({
           message: `Scan finished. ${found.toLocaleString('en-US')} ${found === 1 ? 'package needs' : 'packages need'} your attention.`,
           id: 'scan',
-          action: { label: 'View →', onSelect: () => router.push('/horizon') },
+          action: { label: 'View →', onSelect: () => router.push('/') },
         });
       } else {
         toast({ message: "Done. Nib's back with the results.", tone: 'success', id: 'scan', icon: <NibMini size={20} /> });

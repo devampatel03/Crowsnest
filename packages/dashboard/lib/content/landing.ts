@@ -218,7 +218,7 @@ export const FAQ: LandingFaq[] = [
     id: 'npm',
     question: 'Does it stop npm install?',
     answer:
-      'Only when you install through Crowsnest. crowsnest install <package> checks first and stops at risk 0.6 or above. A plain npm install is not checked. If Crowsnest cannot be reached, the install goes ahead and you see a warning.',
+      'Only when you install through Crowsnest. crowsnest install <package> checks first and stops at risk 0.6 or above. A plain npm install is not checked. If Crowsnest is not running, the install falls back to a quick check against the public malware list and says so.',
   },
   {
     id: 'privacy',

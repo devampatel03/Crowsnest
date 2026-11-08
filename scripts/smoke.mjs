@@ -3,7 +3,8 @@
 //
 //   node scripts/smoke.mjs                      # start backend on :8100 with a temp DuckDB, no API keys
 //   SMOKE_API=http://localhost:8000 node scripts/smoke.mjs   # test an already-running backend (does not start/stop one)
-//   SMOKE_DASH=http://localhost:3100 node scripts/smoke.mjs  # also check dashboard routes
+//   SMOKE_DASH=http://localhost:3000 node scripts/smoke.mjs  # also check the dashboard (pnpm dev)
+//   SMOKE_SITE=http://localhost:3001 node scripts/smoke.mjs  # also check the website (pnpm dev:site)
 //   SMOKE_PYTHON=.venv/bin/python node scripts/smoke.mjs     # python interpreter for the spawned backend
 //
 // Exits non-zero if any check fails. Always stops what it started.
@@ -17,6 +18,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = process.env.SMOKE_PORT || '8100';
 let api = process.env.SMOKE_API;
 const dash = process.env.SMOKE_DASH;
+const site = process.env.SMOKE_SITE;
 const startupTimeoutMs = Number(process.env.SMOKE_STARTUP_MS || 180000);
 
 // Every request gets a hard timeout so a hung backend fails the check instead of hanging CI.
@@ -168,12 +170,22 @@ async function apiChecks() {
   });
 }
 
+// The dashboard opens on Horizon at / (no /horizon), and website pages are not served on its port.
 async function dashChecks() {
-  for (const [p, want] of [['/', 200], ['/docs', 200], ['/blog', 200], ['/glossary', 200], ['/about', 200], ['/privacy', 200],
-    ['/horizon', 200], ['/lookout', 200], ['/hold', 200], ['/log', 200], ['/sitemap.xml', 200], ['/robots.txt', 200],
-    ['/llms.txt', 200], ['/no-such-page', 404]]) {
+  for (const [p, want] of [['/', 200], ['/lookout', 200], ['/hold', 200], ['/log', 200], ['/horizon', 308],
+    ['/docs', 404], ['/blog', 404], ['/no-such-page', 404]]) {
     await check(`dashboard ${p} -> ${want}`, async () => {
-      const r = await fetch(`${dash}${p}`); expect(r.status === want, `status ${r.status}`);
+      const r = await fetch(`${dash}${p}`, { redirect: 'manual' }); expect(r.status === want, `status ${r.status}`);
+    });
+  }
+}
+
+// The website serves its pages and never the dashboard.
+async function siteChecks() {
+  for (const [p, want] of [['/', 200], ['/docs', 200], ['/blog', 200], ['/glossary', 200], ['/about', 200], ['/privacy', 200],
+    ['/sitemap.xml', 200], ['/robots.txt', 200], ['/llms.txt', 200], ['/horizon', 404], ['/lookout', 404], ['/no-such-page', 404]]) {
+    await check(`website ${p} -> ${want}`, async () => {
+      const r = await fetch(`${site}${p}`); expect(r.status === want, `status ${r.status}`);
     });
   }
 }
@@ -186,6 +198,7 @@ try {
   }
   await apiChecks();
   if (dash) await dashChecks();
+  if (site) await siteChecks();
 } catch (e) {
   record('setup', false, String(e.message || e));
 } finally {

@@ -2,11 +2,11 @@
 // lib/seo/*, app/layout.tsx (metadataBase), app/sitemap.ts, app/robots.ts.
 //
 // Fail-loud rule: a production build on CI, or on Vercel
-// production, with no NEXT_PUBLIC_SITE_URL would bake http://localhost:3000
+// production, with no NEXT_PUBLIC_SITE_URL would bake http://localhost:3001
 // into canonicals, the sitemap and robots.txt. That throws. Dev and test keep
 // the localhost fallback.
 
-const DEV_FALLBACK = 'http://localhost:3000';
+const DEV_FALLBACK = 'http://localhost:3001';
 
 const LOCAL_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
 

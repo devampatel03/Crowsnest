@@ -109,14 +109,14 @@ describe('resolveSiteUrl', () => {
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: 'https://e.org//' })).toBe('https://e.org');
   });
   it('falls back to localhost in dev and test', () => {
-    expect(resolveSiteUrl({ NODE_ENV: 'development' })).toBe('http://localhost:3000');
-    expect(resolveSiteUrl({ NODE_ENV: 'test', CI: 'true' })).toBe('http://localhost:3000');
+    expect(resolveSiteUrl({ NODE_ENV: 'development' })).toBe('http://localhost:3001');
+    expect(resolveSiteUrl({ NODE_ENV: 'test', CI: 'true' })).toBe('http://localhost:3001');
   });
   it('throws on CI or Vercel production when unset', () => {
     expect(() => resolveSiteUrl({ NODE_ENV: 'production', CI: 'true' })).toThrow(/NEXT_PUBLIC_SITE_URL/);
     expect(() => resolveSiteUrl({ NODE_ENV: 'production', VERCEL_ENV: 'production' })).toThrow();
   });
   it('does not throw on a local production build', () => {
-    expect(resolveSiteUrl({ NODE_ENV: 'production' })).toBe('http://localhost:3000');
+    expect(resolveSiteUrl({ NODE_ENV: 'production' })).toBe('http://localhost:3001');
   });
 });

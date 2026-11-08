@@ -1,24 +1,8 @@
-# Dependency directories
+# Dependencies
 node_modules/
 /packages/*/node_modules/
 
-# Local AI-assistant, planning and review material: kept on disk, never published
-.claude/
-CLAUDE.md
-AGENTS.md
-MEMORY.md
-REVIEW.md
-RUNNING_AND_TESTING.md
-setup.md
-implementation-plan.md
-crowsnest_comprehensive_architecture.md
-Technical Documentation.pdf
-/docs/
-screenshots/
-images-ss/
-fix-screenshots/
-
-# Build outputs
+# Build output
 dist/
 build/
 out/
@@ -26,26 +10,28 @@ out/
 /packages/*/dist/
 /packages/*/out/
 /packages/*/.next/
+/packages/*/.next-*/
+*.tsbuildinfo
+*.vsix
+/packages/vscode-extension/out-e2e/
 
-# Python environments and cache
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .venv/
 venv/
-.venv-claude/
 .pytest_cache/
 .mypy_cache/
+uv.lock
 
-# Local databases & wal files
+# Local data
 *.duckdb
 *.duckdb.wal
 crowsnest.duckdb*
 crowsnest_temp.duckdb*
 snapshots/
-
-
 
 # Environment files
 .env
@@ -63,30 +49,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# TypeScript incremental build cache
-*.tsbuildinfo
-
-# Serena tooling cache
-.serena/
-
-# Hackathon-submission-specific artifacts, not part of the maintained docs
-# set (kept on disk for history, just not tracked/cluttering `git status`).
-# See SUBMISSION.md and final.md for context if you want to revive these.
-SUBMISSION.md
-final.md
-uv.lock
-
-
-# per-builder Next output folders (NEXT_DIST_DIR)
-/packages/*/.next-*/
-
-# Local tool output
+# Test and coverage output
 .coverage
 coverage.xml
 htmlcov/
-packages/dashboard/.claude/
-.claude/qa-team/runs/*/artifacts/*.json
-
-# VS Code extension build outputs
-*.vsix
-/packages/vscode-extension/out-e2e/
+node_modules

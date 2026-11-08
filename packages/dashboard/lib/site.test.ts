@@ -4,7 +4,7 @@ import { canonicalUrl, resolveSiteUrl } from './site';
 describe('resolveSiteUrl', () => {
   it('allows localhost for local builds and dev', () => {
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: 'http://localhost:3100' })).toBe('http://localhost:3100');
-    expect(resolveSiteUrl({})).toBe('http://localhost:3000');
+    expect(resolveSiteUrl({})).toBe('http://localhost:3001');
   });
   it('fails a CI build with no origin or a localhost origin', () => {
     expect(() => resolveSiteUrl({ CI: 'true' })).toThrow(/NEXT_PUBLIC_SITE_URL/);

@@ -2,12 +2,17 @@
 //
 // The console shows one installation's data, so it belongs on the machine that runs Crowsnest. The public
 // website is docs and a landing page only. Rule, in order:
-//   1. CROWSNEST_CONSOLE=on  -> always open  (self-hosting behind your own login or VPN)
+//   1. CROWSNEST_CONSOLE=on  -> always open  (self-hosting behind your own login or VPN, or Docker Desktop,
+//                               where the published port reaches the container from a non-loopback address)
 //   2. CROWSNEST_CONSOLE=off -> always closed
 //   3. running on Vercel     -> closed
-//   4. otherwise             -> open only for a loopback host (localhost, 127.0.0.1, ::1) that no reverse
+//   4. the website app       -> closed (the console has its own port: lib/app-mode.ts)
+//   5. the console app       -> open only for a loopback host (localhost, 127.0.0.1, ::1) that no reverse
 //                               proxy forwarded (a proxy often rewrites Host to localhost)
 
+import { appMode } from './app-mode';
+
+/** The console pages as the server routes them. Horizon is the front page, so it is also served at `/`. */
 export const CONSOLE_PATHS = ['/horizon', '/lookout', '/hold', '/log'] as const;
 
 type Env = Record<string, string | undefined>;
@@ -30,7 +35,8 @@ export function consoleAllowedByEnv(env: Env): boolean {
   const flag = env.CROWSNEST_CONSOLE?.trim().toLowerCase();
   if (flag === 'on') return true;
   if (flag === 'off') return false;
-  return !env.VERCEL;
+  if (env.VERCEL) return false;
+  return appMode(env) === 'console';
 }
 
 /**

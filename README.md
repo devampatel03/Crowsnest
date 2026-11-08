@@ -178,7 +178,8 @@ Run the dashboard and its checks:
 ```bash
 cd packages/dashboard
 pnpm install
-pnpm run dev           # http://localhost:3000
+pnpm run dev           # the dashboard, http://localhost:3000
+pnpm run dev:site      # the website, http://localhost:3001
 pnpm run typecheck
 pnpm run lint
 pnpm run test

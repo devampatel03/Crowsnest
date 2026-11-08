@@ -49,14 +49,14 @@ describe('severityOf matches the documented bands', () => {
 });
 
 describe('consoleUrl', () => {
-  it('opens /horizon on the configured origin', () => {
-    expect(consoleUrl('http://localhost:3000')).toBe('http://localhost:3000/horizon');
-    expect(consoleUrl('http://127.0.0.1:3100/ignored/path')).toBe('http://127.0.0.1:3100/horizon');
+  it('opens the dashboard root on the configured origin', () => {
+    expect(consoleUrl('http://localhost:3000')).toBe('http://localhost:3000');
+    expect(consoleUrl('http://127.0.0.1:3100/ignored/path')).toBe('http://127.0.0.1:3100');
   });
 
   it('falls back to the local default for blank, invalid or non-web values', () => {
     for (const bad of [undefined, '', '   ', 'not a url', 'javascript:alert(1)', 'file:///etc/passwd']) {
-      expect(consoleUrl(bad)).toBe('http://localhost:3000/horizon');
+      expect(consoleUrl(bad)).toBe('http://localhost:3000');
     }
   });
 });

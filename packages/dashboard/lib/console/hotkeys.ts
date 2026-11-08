@@ -3,7 +3,7 @@
 export const CHORD_WINDOW_MS = 1200;
 
 export const CHORD_TARGETS: Record<string, { href: string; label: string }> = {
-  h: { href: '/horizon', label: 'Horizon' },
+  h: { href: '/', label: 'Horizon' },
   l: { href: '/lookout', label: 'Lookout' },
   o: { href: '/hold', label: 'Installed' },
   g: { href: '/log', label: 'Log' },

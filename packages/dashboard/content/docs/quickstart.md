@@ -67,7 +67,7 @@ Docker with Docker Compose, and Git. Nothing else.
    ```json
    {"status":"ok","version":"0.1.1","projects_root":"/projects"}
    ```
-5. **Open the dashboard.** Go to http://localhost:3000. If the status at the top right says Offline instead of Live, go to [Troubleshooting](/docs/troubleshooting).
+5. **Open the dashboard.** Go to http://localhost:3000, which opens on Horizon. If the status at the top right says Offline instead of Live, go to [Troubleshooting](/docs/troubleshooting).
 6. **Scan a project.** Press **Scan a project**, enter the folder, and press **Scan**. Crowsnest reads the lockfile in that folder, such as a `package-lock.json`. Calls appear under **Needs your attention**. Read the next section first if you use Docker.
 7. **Stop Crowsnest.**
    ```bash

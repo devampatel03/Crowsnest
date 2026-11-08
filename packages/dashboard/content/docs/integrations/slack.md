@@ -4,16 +4,16 @@ description: "Set up the Crowsnest Slack bot with one guided command. It posts s
 slug: integrations/slack
 order: 6
 section: Integrations
-updated: 2026-10-13
+updated: 2026-11-09
 howTo: true
 question: How do I set up the Crowsnest Slack bot?
 answer: Run npm run setup in packages/slack-bot. It opens Slack with the app pre-filled, checks the two keys you paste, sends a test message and saves everything to .env. Then run npm run dev. The bot posts only the most serious calls to #security by default. No public web address is needed.
 facts:
-  - "Four slash commands: /crowsnest-scan, /crowsnest-investigate, /crowsnest-blast-radius, /crowsnest-status (slack-bot source, 2026-10-07)."
-  - "Posts only the most serious calls, which the product shows as Hold (slack-bot source, 2026-10-07)."
-  - "Default channel: #security, set with CROWSNEST_ALERT_CHANNEL (slack-bot source, 2026-10-07)."
-  - "Two Slack keys are needed: SLACK_BOT_TOKEN and SLACK_APP_TOKEN. The signing secret is not used in Socket Mode (slack-bot source, 2026-10-13)."
-  - "Default Crowsnest address: http://localhost:8000; default dashboard address: http://localhost:3000 (slack-bot source, 2026-10-07)."
+  - "Four slash commands: /crowsnest-scan, /crowsnest-investigate, /crowsnest-blast-radius, /crowsnest-status (slack-bot source, 2026-11-09)."
+  - "Posts only the most serious calls, which the product shows as Hold (slack-bot source, 2026-11-09)."
+  - "Default channel: #security, set with CROWSNEST_ALERT_CHANNEL (slack-bot source, 2026-11-09)."
+  - "Two Slack keys are needed: SLACK_BOT_TOKEN and SLACK_APP_TOKEN. The signing secret is not used in Socket Mode (slack-bot source, 2026-11-09)."
+  - "Default Crowsnest address: http://localhost:8000; default dashboard address: http://localhost:3000 (slack-bot source, 2026-11-09)."
 related:
   - /docs/configuration
   - /docs/dashboard
@@ -21,32 +21,43 @@ related:
   - /docs/cli
 ---
 
-The Slack bot posts every Hold to a channel of your choice and answers four commands. It connects out to Slack, so you do not need a public web address. Set it up once; it needs two Slack keys.
+## Before you start
 
-## What do I need?
+| You need | Why |
+|---|---|
+| A Slack workspace where you may add apps | The bot is a Slack app you create once. |
+| Crowsnest running on port 8000 | The bot asks it for every answer. |
+| Node.js 20 or newer | The bot is built from source; it is not in a package store. |
 
-A Slack workspace where you may add apps, and Crowsnest running on port 8000. The bot is built from source; it is not in a package store. You do not need a public web address or a signing secret.
+The bot connects out to Slack, so there is no public web address to set up and no signing secret.
 
-## How do I set it up?
+## Set it up
 
-Run the guided setup. It takes about three minutes.
+The guided setup takes about three minutes.
 
-```bash
-cd packages/slack-bot
-npm install
-npm run setup
-```
+1. **Run the setup.** From the Crowsnest folder:
 
-It opens Slack's "create app from manifest" page with every permission and slash command already filled in, so you only pick a workspace and click Create. Then it asks for two keys and checks each one with Slack as you paste it:
+   ```bash
+   cd packages/slack-bot
+   npm install
+   npm run setup
+   ```
 
-1. **Bot key** (`xoxb-...`) from the app's OAuth & Permissions page, after you click Install to Workspace.
-2. **App key** (`xapp-...`) from Basic Information, App-Level Tokens, with the `connections:write` permission.
+2. **Create the app.** Setup opens Slack's "create app from manifest" page with every permission and slash command already filled in. Pick a workspace and click **Create**.
+3. **Paste two keys.** Setup checks each one with Slack as you paste it.
+4. **Choose a channel.** Setup posts a test message there and saves the keys to the `.env` file in the Crowsnest folder.
+5. **Start the bot.** Run `npm run dev`.
 
-It then asks which channel to use, posts a test message there, and saves the keys to the `.env` file in the Crowsnest folder. Start the bot with `npm run dev`.
+| Key | Where to find it |
+|---|---|
+| Bot key (`xoxb-...`) | The app's OAuth & Permissions page, after you click Install to Workspace. |
+| App key (`xapp-...`) | Basic Information, App-Level Tokens, with the `connections:write` permission. |
 
 Run `npm run doctor` any time to check the keys, permissions and the backend without changing anything. If Slack refuses to connect, the bot prints what went wrong in plain words and points to this command.
 
-Prefer to do it by hand? Create the app from `packages/slack-bot/slack-app-manifest.json` (Slack, Your Apps, Create New App, From a manifest), install it, and put the two keys in `.env`:
+### Setting it up by hand
+
+Create the app from `packages/slack-bot/slack-app-manifest.json` (Slack, Your Apps, Create New App, From a manifest), install it, and put the two keys in `.env`:
 
 ```env
 SLACK_BOT_TOKEN=xoxb-...
@@ -56,9 +67,7 @@ CROWSNEST_ALERT_CHANNEL=#security
 
 The manifest includes the `chat:write.public` permission, so the bot can post in any public channel without being invited. For a private channel, invite it with `/invite @Crowsnest`.
 
-If a key is missing, the bot stops and tells you to run `npm run setup`. If Crowsnest is not running yet, the bot keeps trying again with longer waits.
-
-## Which commands does it answer?
+## Commands
 
 | Command | What it does |
 |---|---|
@@ -67,21 +76,48 @@ If a key is missing, the bot stops and tells you to run `npm run setup`. If Crow
 | `/crowsnest-blast-radius some-login` | Lists what is affected if one publisher is compromised. A leading `@` is fine. |
 | `/crowsnest-status` | Shows how many packages Crowsnest has checked and how many serious calls are open. |
 
-The path in `/crowsnest-scan` is read by the Crowsnest service, so with Docker it must be a folder the container can see (see the [Quickstart](/docs/quickstart)).
+The path in `/crowsnest-scan` is read by the Crowsnest service, so with Docker it must be a folder the container can see ([Quickstart](/docs/quickstart)).
 
-## What does it post on its own?
+## What it posts on its own
 
-Only the most serious calls: Hold and Hold with "urgent". Watch and Note stay in the dashboard. Each post has a button that opens the dashboard at `http://localhost:3000` by default. Change it with `CROWSNEST_DASHBOARD_URL`.
+| Call | In Slack | In the dashboard |
+|---|---|---|
+| Hold, including Hold marked "urgent" | Posted to the channel | Yes |
+| Watch | No | Yes |
+| Note | No | Yes |
 
-## What if the bot cannot reach Crowsnest?
+Each post has a button that opens the [dashboard](/docs/dashboard) on the matching page: Horizon, Lookout, Installed or Log.
 
-Slack shows "Crowsnest API is unreachable" with the address it tried, `http://localhost:8000` by default. Start Crowsnest, or set `CROWSNEST_API_URL` in `.env`.
+## Settings
 
-## What this does not do
+Set these in `.env`. Only the two keys are required.
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `SLACK_BOT_TOKEN` | none | The bot key. |
+| `SLACK_APP_TOKEN` | none | The app key. |
+| `CROWSNEST_ALERT_CHANNEL` | `#security` | Where serious calls are posted. |
+| `CROWSNEST_API_URL` | `http://localhost:8000` | Where Crowsnest runs. |
+| `CROWSNEST_DASHBOARD_URL` | `http://localhost:3000` | Where the buttons in each post point. |
+
+If a key is missing, the bot stops and tells you to run `npm run setup`. If Crowsnest is not running yet, the bot keeps trying again with longer waits.
+
+## If something goes wrong
+
+| You see | Do this |
+|---|---|
+| "Crowsnest API is unreachable" in Slack | Start Crowsnest, or set `CROWSNEST_API_URL`. The message names the address it tried. |
+| The bot stops at start | Run `npm run setup`, or `npm run doctor` to see which key is wrong. |
+| A button opens the wrong page | Set `CROWSNEST_DASHBOARD_URL` to where your dashboard runs. |
+| Nothing is posted | Only Hold calls are posted. Watch and Note stay in the dashboard. |
+
+More fixes are on the [Troubleshooting](/docs/troubleshooting) page.
+
+## Limits
 
 - It does not post Watch or Note calls. Open the [dashboard](/docs/dashboard) for those.
 - It does not check installs. Only [`crowsnest install`](/docs/cli) does that.
 - It does not store your Slack keys safely. They sit in a plain text `.env` file, so keep it out of version control.
 - It does not run itself. Start it again after a restart of your machine.
 
-Related pages: [Configuration](/docs/configuration), [Troubleshooting](/docs/troubleshooting) and the [VS Code extension](/docs/integrations/vscode).
+See also [Configuration](/docs/configuration) and the [VS Code extension](/docs/integrations/vscode).

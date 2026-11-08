@@ -25,6 +25,7 @@
   ],
   "scripts": {
     "dev": "pnpm --parallel --if-present run dev",
+    "dev:site": "pnpm --filter @crowsnest/dashboard run dev:site",
     "build": "pnpm --parallel --if-present run build",
     "lint": "pnpm --parallel --if-present run lint",
     "typecheck": "pnpm --parallel --if-present run typecheck",
