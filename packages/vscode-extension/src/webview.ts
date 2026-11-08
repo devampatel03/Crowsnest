@@ -76,11 +76,6 @@ function buildHtml(result: InvestigationResult): string {
       border-bottom: 1px solid #223049;
     }
 
-    .header-logo {
-      font-size: 32px;
-      line-height: 1;
-    }
-
     .header-title h1 {
       font-size: 22px;
       color: #35e6d6;
@@ -296,7 +291,6 @@ function buildHtml(result: InvestigationResult): string {
 
   <!-- Header -->
   <div class="header">
-    <div class="header-logo">⛵</div>
     <div class="header-title">
       <h1>Crowsnest Analysis</h1>
       <p>Package: <span class="pill">${esc(result.packageName)}</span></p>

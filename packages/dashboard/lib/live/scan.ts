@@ -25,14 +25,14 @@ export type ScanAction =
   | { type: 'event'; scanId: string | null; phase: 'started' | 'ingestion_complete' | 'complete' | 'failed'; found?: number; error?: string }
   | { type: 'reset' };
 
-const NO_FOLDER = "Crowsnest can't find that folder. If you use Docker, it can only see folders you share with it.";
+const NO_FOLDER = "Crowsnest can't find that folder. In Docker it can only read the folder it shares with you, so pick one from the list or type a folder inside it.";
 
 const NO_LOCKFILE = "That folder has no lockfile Crowsnest can read. It reads package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, Cargo.lock and go.sum.";
 
 /** Backend scan errors to one plain reason. Anything unrecognised becomes a generic line. */
 export function plainScanReason(raw: string | undefined | null): string {
   if (raw && /no supported lockfile/i.test(raw)) return NO_LOCKFILE;
-  if (raw && /no such|not found|does not exist|doesn't exist|not a directory|cannot find|can't find/i.test(raw)) return NO_FOLDER;
+  if (raw && /no such|not found|does not exist|doesn't exist|not a directory|cannot find|can't find|can only read|outside the shared/i.test(raw)) return NO_FOLDER;
   return 'Check the folder and try again.';
 }
 

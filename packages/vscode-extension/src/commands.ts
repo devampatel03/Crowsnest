@@ -88,7 +88,7 @@ export async function scanFileCommand(
         });
 
         if (!result) {
-          channel.appendLine(`  ⚪  ${pkg}  (API unreachable)`);
+          channel.appendLine(`  -  ${pkg}  (API unreachable)`);
           continue;
         }
 

@@ -96,6 +96,10 @@ async function apiChecks() {
     const r = await fetch(`${api}/health`); const j = await r.json();
     expect(r.status === 200 && j.status === 'ok', `status ${r.status}`);
   });
+  await check('GET /api/projects answers with the shared folder and a list', async () => {
+    const r = await fetch(`${api}/api/projects`); const j = await r.json();
+    expect(r.status === 200 && Array.isArray(j.projects) && 'root' in j && 'host' in j, `status ${r.status} body ${JSON.stringify(j).slice(0, 120)}`);
+  });
   await check('GET /api/stats returns table_counts', async () => {
     const r = await fetch(`${api}/api/stats`); const j = await r.json();
     expect(r.status === 200 && j.table_counts, `status ${r.status}`);

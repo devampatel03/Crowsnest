@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext): CrowsnestExtensionAp
     void context.globalState.update('crowsnest.welcomeShown', true);
     vscode.window
       .showInformationMessage(
-        '⛵ Crowsnest is active. Supply chain risk warnings will appear on import lines.',
+        'Crowsnest is active. Supply chain risk warnings will appear on import lines.',
         'Open Dashboard',
         'Learn More'
       )

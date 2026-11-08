@@ -38,7 +38,7 @@ No. Every key is optional. Without keys, Crowsnest uses cached data and still ru
 
 Only when you install through Crowsnest. `crowsnest install <package>` checks first and stops at risk 0.6 or above. A plain `npm install` is not checked.
 
-If Crowsnest is not running, the install falls back to a quick check against the public malware list and says so. Add `--strict` to refuse to install when a check could not be completed. See [CLI usage](/docs/cli).
+If Crowsnest is not running, the install stops, installs nothing, and tells you to run `crowsnest start`. It asks every time, so a Crowsnest you stopped is noticed. Add `--quick` to install with only the public malware list and release age checked. See [CLI usage](/docs/cli).
 
 ## Does my code leave my machine?
 

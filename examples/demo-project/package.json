@@ -1,0 +1,15 @@
+{
+  "name": "crowsnest-demo-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A deliberately risky sample project for trying Crowsnest. Never install it.",
+  "dependencies": {
+    "@tanstack/query-core": "5.40.0",
+    "axios": "1.7.2",
+    "express": "4.19.2",
+    "expresss": "1.0.0",
+    "lodash": "4.17.21",
+    "lodash-helper-utils": "1.0.2",
+    "react-codeshift": "1.0.0"
+  }
+}

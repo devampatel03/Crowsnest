@@ -304,6 +304,7 @@ export const KEYS = {
   stats: '/api/stats',
   maintainers: `/api/maintainers/reputation?limit=${MAINTAINER_LIMIT}`,
   lockfiles: '/api/lockfiles',
+  projects: '/api/projects',
 } as const;
 
 export async function fetchIncidents(limit: number = INCIDENT_LIMIT): Promise<Incident[]> {
@@ -324,6 +325,25 @@ export async function fetchStats(): Promise<StatsResult> {
 
 export async function fetchScanStatus(scanId: string): Promise<ScanStatus> {
   return normaliseScanStatus(await apiFetch<unknown>(`/api/scan/${encodeURIComponent(scanId)}/status`));
+}
+
+/** A folder Crowsnest can scan: its name as shown, and the path it reads. */
+export type SharedProject = { name: string; path: string };
+
+/** Where Crowsnest can read when it runs in Docker. `root` is null when it can read any path on the machine. */
+export type SharedProjects = { root: string | null; host: string | null; projects: SharedProject[] };
+
+export function normaliseProjects(raw: unknown): SharedProjects {
+  const r = rec(raw);
+  const projects = (Array.isArray(r.projects) ? r.projects : [])
+    .map((p) => rec(p))
+    .map((p) => ({ name: str(p.name), path: str(p.path) }))
+    .filter((p) => p.name !== '' && p.path !== '');
+  return { root: str(r.root) || null, host: str(r.host) || null, projects };
+}
+
+export async function fetchProjects(): Promise<SharedProjects> {
+  return normaliseProjects(await apiFetch<unknown>('/api/projects'));
 }
 
 /** Starts a scan. Only the scan dialog calls this, and only on the user's explicit action. */

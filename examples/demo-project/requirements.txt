@@ -1,0 +1,5 @@
+requests==2.32.3
+flask==3.0.3
+# Names an AI assistant might invent; Crowsnest should flag these.
+flask-helper-utils==0.1.0
+python-requests-helper==1.0.0
