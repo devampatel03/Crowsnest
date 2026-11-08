@@ -211,14 +211,14 @@ export function extractFaq(body: string): FaqSource[] {
 }
 
 /** True when two sentences share most of their words (a lightly reworded repeat). */
-function similar(a: string, b: string): boolean {
+export function similar(a: string, b: string): boolean {
   const words = (t: string) => new Set(t.toLowerCase().replace(/[^a-z0-9s]/g, ' ').split(/s+/).filter(Boolean));
   const x = words(a);
   const y = words(b);
   if (x.size < 8 || y.size < 8) return false;
   let shared = 0;
   for (const w of x) if (y.has(w)) shared += 1;
-  return shared / Math.min(x.size, y.size) >= 0.8;
+  return shared / Math.min(x.size, y.size) >= 0.7;
 }
 
 /** Drop the first paragraph of the body when it repeats the frontmatter answer (the lead is rendered separately). */
