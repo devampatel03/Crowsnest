@@ -69,8 +69,9 @@ it.
 
 Install with `-g`. Without it npm leaves the command in the current folder, where your shell will not find it.
 
-No Docker yet? `crowsnest install <package>` and `crowsnest check` still work. They fall back to a quick check against
-the public malware list, and they tell you when they have.
+No Docker yet? `crowsnest check` still works as a quick check against the public malware list, and tells you
+when it has. `crowsnest install` needs Crowsnest running: it stops and tells you to run `crowsnest start`, unless you add
+`--quick`.
 
 ### Want the dashboard?
 
@@ -79,13 +80,15 @@ The dashboard comes with the Docker Compose setup, which builds both images from
 ```bash
 git clone https://github.com/devampatel03/Crowsnest.git
 cd Crowsnest
-cp .env.example .env        # every key inside is optional
-docker compose -f infra/docker-compose.yml up --build
+docker compose up --build
 ```
 
-The first run builds two images, so give it a few minutes. Then open **http://localhost:3000**, press **Scan a
-project**, and enter the folder you want checked. To see whether the service is up, open http://localhost:8000/health.
-To stop it, run `docker compose -f infra/docker-compose.yml down`.
+The first run builds two images, so give it a few minutes. There is no settings file to create. Then open
+**http://localhost:3000**, press **Scan a project**, and pick `demo-project`: an example with risky packages on purpose.
+To see whether the service is up, open http://localhost:8000/health. To stop it, run `docker compose down`.
+
+To scan your own projects, put `CROWSNEST_PROJECTS=<the folder that holds them>` in a file named `.env` in this folder
+and run `docker compose up -d`. They then appear in the scan list, and you can type a project's name too.
 
 Prefer to run it from source on macOS, Linux or Windows? See
 [Installation](https://crowsnest.co.in/docs/installation).

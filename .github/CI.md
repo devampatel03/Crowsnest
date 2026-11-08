@@ -10,7 +10,7 @@ All workflows live in `.github/workflows/`. Top-level permissions are `contents:
 | ci / Python tests | pytest, coverage floor (`fail_under` in pyproject), Linux 3.12 and 3.13, Windows 3.12 | `python -m pytest -q --cov` |
 | ci / JS lint, typecheck, build | eslint, tsc, next build, package builds | `pnpm install --frozen-lockfile && pnpm run lint && pnpm run typecheck && NEXT_PUBLIC_SITE_URL=https://crowsnest.example pnpm run build` |
 | ci / JS tests | vitest in every workspace, Node 20 and 22 on Linux, Node 22 on Windows | `pnpm run test` |
-| ci / Backend smoke | 16 API checks against a started backend (temp DB, no keys) | `node scripts/smoke.mjs` |
+| ci / Backend smoke | 18 API checks against a started backend (temp DB, no keys) | `node scripts/smoke.mjs` |
 | ci / ci-ok | aggregate of the five above | n/a |
 | codeql | Python, JS/TS, Actions | GitHub only |
 | dependency-review (PR) | fails on high severity, denies GPL/AGPL/SSPL/BUSL | GitHub only |
