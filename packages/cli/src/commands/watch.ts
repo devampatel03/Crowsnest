@@ -36,7 +36,7 @@ export async function watchCommand(): Promise<void> {
   };
 
   es.onerror = () => {
-    console.log(theme.status.warning(`  ⚡ Connection lost, reconnecting...`));
+    console.log(theme.status.warning(`  Connection lost, reconnecting...`));
   };
 
   // Keep process alive
