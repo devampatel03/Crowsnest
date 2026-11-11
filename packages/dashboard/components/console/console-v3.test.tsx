@@ -359,3 +359,90 @@ describe('Toasts and the Scan dialog', () => {
     expect(within(dialog).getByRole('link', { name: /See them/ })).toBeInTheDocument();
   });
 });
+
+describe('Scan dialog: choosing a folder', () => {
+  beforeEach(() => vi.stubGlobal('EventSource', FakeES));
+
+  const DOCKER = {
+    root: '/projects',
+    host: 'C:\Users\me\code',
+    projects: [
+      { name: 'demo-project', path: '/projects/demo-project' },
+      { name: 'team/web', path: '/projects/team/web' },
+    ],
+  };
+
+  async function openDialog() {
+    render(<HorizonPage />, { wrapper: Harness });
+    act(() => FakeES.last!.open());
+    fireEvent.keyDown(document.body, { key: 's' });
+    return within(await screen.findByRole('dialog'));
+  }
+
+  it('lists the folders Crowsnest can see, and one click starts the scan', async () => {
+    const { calls } = stubApi({ projects: DOCKER });
+    const dialog = await openDialog();
+    expect(await dialog.findByText('Folders Crowsnest can see. Pick one to scan it.')).toBeInTheDocument();
+    const list = dialog.getByRole('list', { name: /Folders Crowsnest can see/ });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    await act(async () => {
+      fireEvent.click(dialog.getByRole('button', { name: 'Scan demo-project' }));
+    });
+    expect(await dialog.findByText('Checking your packages…')).toBeInTheDocument();
+    const post = calls.find((c) => c.startsWith('POST') && c.includes('/api/scan'));
+    expect(post).toBeDefined();
+  });
+
+  it('sends the path of the folder that was picked', async () => {
+    const stub = stubApi({ projects: DOCKER });
+    const dialog = await openDialog();
+    await dialog.findByRole('button', { name: 'Scan team/web' });
+    await act(async () => {
+      fireEvent.click(dialog.getByRole('button', { name: 'Scan team/web' }));
+    });
+    const call = stub.fetch.mock.calls.find(([u, init]) => String(u).includes('/api/scan') && init?.method === 'POST');
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ project_path: '/projects/team/web' });
+  });
+
+  it('still lets you type a name, and says where it is looked up', async () => {
+    stubApi({ projects: DOCKER });
+    const dialog = await openDialog();
+    expect(await dialog.findByText('A name, or a path inside C:\Users\me\code.')).toBeInTheDocument();
+    const field = dialog.getByLabelText('Or type a folder');
+    expect(field).toHaveAttribute('placeholder', 'my-app');
+    fireEvent.change(field, { target: { value: 'demo-project' } });
+    expect(dialog.getByRole('button', { name: /^Scan$/ })).toBeEnabled();
+  });
+
+  it('says how to share a folder when none holds a project', async () => {
+    stubApi({ projects: { root: '/projects', host: null, projects: [] } });
+    const dialog = await openDialog();
+    expect(await dialog.findByText(/No project with a lockfile in \/projects/)).toBeInTheDocument();
+    expect(dialog.getByText(/CROWSNEST_PROJECTS/)).toBeInTheDocument();
+    expect(dialog.queryByRole('list')).toBeNull();
+  });
+
+  it('outside Docker there is no list and the field takes any path', async () => {
+    stubApi({ projects: { root: null, host: null, projects: [] } });
+    const dialog = await openDialog();
+    const field = await dialog.findByLabelText('Project folder');
+    expect(field).toHaveAttribute('placeholder', '/path/to/project');
+    expect(dialog.queryByRole('list')).toBeNull();
+  });
+
+  it('typing still works when the list cannot be loaded', async () => {
+    stubApi({ projects: 500 });
+    const dialog = await openDialog();
+    const field = await dialog.findByLabelText('Project folder');
+    fireEvent.change(field, { target: { value: '/some/project' } });
+    expect(dialog.getByRole('button', { name: /^Scan$/ })).toBeEnabled();
+  });
+
+  it('does not offer one-click scans while Crowsnest is unreachable', async () => {
+    stubApi({ projects: DOCKER });
+    const dialog = await openDialog();
+    await dialog.findByRole('button', { name: 'Scan demo-project' });
+    act(() => FakeES.last!.fail());
+    expect(await dialog.findByRole('button', { name: 'Scan demo-project' })).toBeDisabled();
+  });
+});

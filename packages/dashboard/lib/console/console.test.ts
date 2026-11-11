@@ -181,3 +181,10 @@ describe('connection status and keys', () => {
     expect(decideKey(k('?'), { ...ctx, singleKeys: false })).toEqual({ kind: 'help' });
   });
 });
+
+describe('plainScanReason: a folder outside the one Docker shares', () => {
+  it('is the same plain folder reason as a folder that does not exist', () => {
+    const raw = '{"detail":"That folder is outside the shared folder. Crowsnest runs in Docker and can only read the folder shared as /projects."}';
+    expect(plainScanReason(raw)).toMatch(/can't find that folder/);
+  });
+});

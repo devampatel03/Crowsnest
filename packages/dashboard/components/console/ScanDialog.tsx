@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import useSWR from 'swr';
 import { Nib } from '@/components/mascot';
 import { Button, Dialog, DialogContent, DialogFooter, TextInput } from '@/components/system';
+import { fetchProjects, KEYS } from '@/lib/api';
 import { docsUrl } from '@/lib/console/docs-url';
 import { doneLine } from '@/lib/live/scan';
 import { useConsoleLive } from './ConsoleLiveProvider';
@@ -15,6 +17,8 @@ function ScanBody() {
   const [path, setPath] = useState(state.path);
   const inputRef = useRef<HTMLInputElement>(null);
   const formShown = state.phase === 'idle';
+  // What Crowsnest can read, asked only while the form is showing. A failure just means no list: typing still works.
+  const projects = useSWR(formShown ? KEYS.projects : null, fetchProjects, { shouldRetryOnError: false });
 
   // Radix focuses the first control (Close); the folder field is what people came for.
   useEffect(() => {
@@ -88,6 +92,15 @@ function ScanBody() {
   const unreachable = live.status === 'offline' || live.status === 'reconnecting';
   const empty = path.trim() === '';
   const reason = unreachable ? "Crowsnest isn't reachable. Start it first." : empty ? 'Enter a folder to scan.' : undefined;
+  const shared = projects.data;
+  // In Docker Crowsnest reads one shared folder, so a bare name is enough. Anywhere else it reads any path.
+  const inDocker = !!shared?.root;
+  const where = shared?.host ?? shared?.root ?? '';
+  // In Docker the field's hint says where a name is looked up, so it stays useful while the field is empty.
+  const dockerHint =
+    (shared?.projects.length ?? 0) > 0
+      ? `A name, or a path inside ${where}.`
+      : `No project with a lockfile in ${where}. Put one there, or set CROWSNEST_PROJECTS to the folder that holds yours and restart.`;
 
   return (
     <form
@@ -97,11 +110,33 @@ function ScanBody() {
         if (!reason) void scan.start(path.trim());
       }}
     >
+      {inDocker && shared.projects.length > 0 ? (
+        <div className="flex flex-col gap-s2">
+          <p id="scan-choices" className="m-0 text-body-s text-fg-soft">
+            Folders Crowsnest can see. Pick one to scan it.
+          </p>
+          <ul aria-labelledby="scan-choices" className="m-0 flex max-h-[11rem] list-none flex-col gap-s1 overflow-y-auto p-0">
+            {shared.projects.map((p) => (
+              <li key={p.path}>
+                <Button
+                  variant="tertiary"
+                  type="button"
+                  disabled={unreachable}
+                  aria-label={`Scan ${p.name}`}
+                  onClick={() => void scan.start(p.path)}
+                >
+                  {p.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <TextInput
         id="scan-folder"
-        label="Project folder"
-        placeholder="/path/to/project"
-        hint={reason ?? 'Crowsnest reads the lockfile in this folder.'}
+        label={inDocker && shared.projects.length > 0 ? 'Or type a folder' : 'Project folder'}
+        placeholder={inDocker ? 'my-app' : '/path/to/project'}
+        hint={unreachable ? reason : inDocker ? dockerHint : (reason ?? 'Crowsnest reads the lockfile in this folder.')}
         value={path}
         onChange={setPath}
         inputRef={inputRef}

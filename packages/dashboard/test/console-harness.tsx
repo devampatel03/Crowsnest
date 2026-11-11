@@ -39,7 +39,7 @@ export function Harness({ children }: { children: ReactNode }) {
   );
 }
 
-type Routes = Partial<Record<'incidents' | 'lockfiles' | 'maintainers' | 'stats' | 'blast' | 'veto', unknown>>;
+type Routes = Partial<Record<'incidents' | 'lockfiles' | 'maintainers' | 'stats' | 'blast' | 'veto' | 'projects', unknown>>;
 
 /**
  * Stubs `fetch` so the real `lib/api.ts` (and its normalisers) run against
@@ -64,7 +64,9 @@ export function stubApi(over: { [K in keyof Routes]?: Routes[K] | 'down' | numbe
               ? 'blast'
               : u.includes('/api/veto')
                 ? 'veto'
-                : '';
+                : u.includes('/api/projects')
+                  ? 'projects'
+                  : '';
     const v = table[key];
     if (v === 'down') throw new TypeError('Failed to fetch');
     if (typeof v === 'number') return new Response('nope', { status: v });
