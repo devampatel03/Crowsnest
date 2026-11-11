@@ -5,12 +5,20 @@ services:
       dockerfile: infra/Dockerfile.api
     ports:
       - "127.0.0.1:8000:8000"
+    # Optional: API keys and settings. Nothing breaks if there is no .env file (needs Docker Compose 2.24 or newer).
+    env_file:
+      - path: ../.env
+        required: false
     volumes:
       - crowsnest-data:/data
-      - ../.env:/app/.env:ro
+      # The folder Crowsnest can read, mounted read only. CROWSNEST_PROJECTS is the folder on this machine that holds
+      # your projects; without it the example project in this repository is shared, so a first scan works at once.
+      - ${CROWSNEST_PROJECTS:-../examples}:/projects:ro
     environment:
       - CROWSNEST_DB_PATH=/data/crowsnest.duckdb
       - CROWSNEST_SNAPSHOT_DIR=/data/snapshots
+      # Lets a path typed as it appears on this machine be mapped to the shared folder (empty when the example is used).
+      - CROWSNEST_PROJECTS_HOST=${CROWSNEST_PROJECTS:-}
     restart: unless-stopped
 
   crowsnest-dashboard:
