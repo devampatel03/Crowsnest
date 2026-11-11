@@ -6,6 +6,34 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Starting the dashboard is two commands: `git clone`, then `docker compose up --build` from the repository root. The
+  settings file is optional, and a missing `.env` no longer makes Docker create a folder with that name.
+- The scan dialog lists the folders Crowsnest can read, and one click scans one. A project can also be typed by name,
+  or as the path appears on your machine (`C:\Users\you\code\my-app`). The example project in `examples/demo-project`
+  is shared by default, so a first scan needs no setup. `CROWSNEST_PROJECTS` shares your own folder.
+- `crowsnest install` checks on every run that Crowsnest is running. If nothing answers it installs nothing and says
+  to run `crowsnest start`. It no longer drops to a weaker check by itself, and it no longer installs when Crowsnest
+  stops answering part-way through. `--quick` remains for installing on the malware list and release age alone.
+
+### Added
+
+- `GET /api/projects` lists the folders the backend can scan when it runs in Docker, and `/health` reports `projects_host`.
+- `examples/demo-project`, a small project with risky dependencies on purpose, for trying Crowsnest.
+
+### Fixed
+
+- A scan of a folder the Docker container cannot see now says where Crowsnest looks and how to share more.
+- Emoji left in the watch command, the VS Code output channel, the VS Code notice and the analysis panel are gone, and
+  a test keeps them out of the command line's output.
+- A second scan of the same project reported no findings, because only findings not seen before were counted. A scan
+  now reports everything it found, and `new_incident_count` says how many were new.
+- In Docker, a scan or `crowsnest check` can no longer read outside the shared folder, through `..` or a symlink.
+- `crowsnest check` on a folder Docker cannot see crashed with an exit code of 127 on Windows, and API errors showed raw
+  JSON. Commands now set an exit code instead of calling `process.exit` after a network call, and print the backend's
+  plain reason.
+
 ## [0.1.2] - 2026-11-08
 
 ### Fixed

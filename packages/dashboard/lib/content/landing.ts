@@ -135,10 +135,9 @@ export const INSTALL = {
       needs: 'Needs Docker and Git. Allow a few minutes the first time, then open http://localhost:3000.',
       rows: [
         { id: 'get', short: 'clone', label: 'Get the code', command: 'git clone https://github.com/devampatel03/Crowsnest.git && cd Crowsnest' },
-        { id: 'env', short: 'settings file', label: 'Create your settings file', command: 'cp .env.example .env' },
-        { id: 'start', short: 'start', label: 'Start it', command: 'docker compose -f infra/docker-compose.yml up --build' },
+        { id: 'start', short: 'start', label: 'Start it', command: 'docker compose up --build' },
       ],
-      after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000. API keys are optional.',
+      after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000 and press Scan a project: an example project is ready to scan. API keys are optional.',
       link: { label: 'Dashboard guide', href: '/docs/dashboard' },
     },
     {
@@ -151,7 +150,7 @@ export const INSTALL = {
         { id: 'run', short: 'start', label: 'Start the backend', command: 'crowsnest start' },
         { id: 'scan', short: 'scan', label: 'Scan this folder', command: 'crowsnest scan .' },
       ],
-      after: 'Use -g when you install. The first start downloads the backend, about 430 MB. No Docker yet? install and check still work as a quick check.',
+      after: 'Use -g when you install. The first start downloads the backend, about 430 MB. No Docker yet? crowsnest check still works as a quick check, and crowsnest install --quick does too.',
       link: { label: 'Command line guide', href: '/docs/cli' },
     },
     {
@@ -166,7 +165,6 @@ export const INSTALL = {
       link: { label: 'VS Code guide', href: '/docs/integrations/vscode' },
     },
   ] as InstallWay[],
-  windowsNote: 'On Windows Command Prompt, use `copy .env.example .env`.',
   slack: 'Alerts in Slack are available too. The bot runs from the repository.',
   slackLink: 'Slack guide',
   other: 'Other ways to install',
@@ -175,7 +173,7 @@ export const INSTALL = {
   earlyLink: 'Troubleshooting',
   earlyTail: 'has the details.',
   closing:
-    'No sign-up. No key. Stop the dashboard with `docker compose -f infra/docker-compose.yml down`, and the terminal setup with `crowsnest stop`.',
+    'No sign-up. No key. Stop the dashboard with `docker compose down`, and the terminal setup with `crowsnest stop`.',
   howToName: 'Install Crowsnest with Docker',
 };
 

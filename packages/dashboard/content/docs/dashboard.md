@@ -25,7 +25,7 @@ The dashboard runs on your own machine at http://localhost:3000 and opens on Hor
 
 | Start it with | Command |
 |---|---|
-| Docker Compose | `docker compose -f infra/docker-compose.yml up --build` |
+| Docker Compose | `docker compose up --build` from the Crowsnest folder |
 | From source | `npm run dev` in `packages/dashboard` |
 
 Compose starts the dashboard and Crowsnest together; the steps are in the [Quickstart](/docs/quickstart). `crowsnest start` runs Crowsnest only, with no dashboard, but both read the same backend, so whatever the terminal finds also shows here. If the status at the top right says Offline, see [Troubleshooting](/docs/troubleshooting).
@@ -75,7 +75,7 @@ Everything Crowsnest has called. Filter by Hold, Watch or Note, search by name o
 
 Press **Scan a project**, or press `s`, enter the folder and press **Scan**. The page says "Checking your packages…" and, when it finishes, "Done. 2 packages need your attention." with **See them →**.
 
-The folder is read by the Crowsnest service, not by your browser. With Docker, share the folder first ([Quickstart](/docs/quickstart)).
+The folder is read by the Crowsnest service, not by your browser. With Docker, the dialog lists the projects in the folder you share. Pick one, or type its name. To use your own projects, set `CROWSNEST_PROJECTS` ([Quickstart](/docs/quickstart)).
 
 ## Keyboard shortcuts
 
