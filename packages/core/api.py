@@ -333,7 +333,9 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) 
         _scan_store[scan_id].update({
             "status": "complete",
             "finished_at": datetime.now(UTC).isoformat(),
-            "incidents": new_incidents,
+            # Everything this scan detected, not only what is new: a project scanned twice has the same Holds twice.
+            "incidents": incidents,
+            "new_incident_count": len(new_incidents),
             "token_usage": result.get("token_usage", 0),
             "remediation_drafts": result.get("remediation_drafts", []),
             "failed_queries": result.get("query_errors", {}),
@@ -346,7 +348,8 @@ async def _run_scan_task(scan_id: str, req: ScanRequest, llm: LLMClient | None) 
         await _push_event("scan_progress", {
             "scan_id": scan_id,
             "phase": "complete",
-            "incidents_found": len(new_incidents),
+            "incidents_found": len(incidents),
+            "new_incident_count": len(new_incidents),
             "token_usage": result.get("token_usage", 0),
         })
 
