@@ -207,7 +207,7 @@ export async function openDashboardCommand(): Promise<void> {
   await vscode.env.openExternal(vscode.Uri.parse(consoleUrl(vscode.workspace.getConfiguration('crowsnest').get<string>('dashboardUrl'))));
 }
 
-/** `http://localhost:3000` -> `http://localhost:3000/horizon`. Falls back to the local default for a blank or invalid setting. */
+/** `http://localhost:3000/anything` -> `http://localhost:3000`: the dashboard opens on Horizon at its root. Falls back to the local default for a blank or invalid setting. */
 export function consoleUrl(setting: string | undefined): string {
   const fallback = 'http://localhost:3000';
   let base = fallback;
@@ -219,7 +219,7 @@ export function consoleUrl(setting: string | undefined): string {
   } catch {
     // keep the fallback
   }
-  return `${base}/horizon`;
+  return base;
 }
 
 /** Dispose the output channel — called on extension deactivate. */

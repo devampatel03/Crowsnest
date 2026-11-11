@@ -7,7 +7,7 @@ import { HUBS } from './hubs';
 import { FAQ } from './landing';
 import { contentProblems, getAllEntries, getDocs, getPosts, getTerms } from './loader';
 import { entryMarkdown, llmsFullTxt, llmsTxt, rssXml } from './machine';
-import { dropLeadDuplicate, extractFaq, extractSteps, similar, toMarkdown } from './mdx';
+import { dropLeadDuplicate, extractFaq, extractSteps, similar, slugify, toMarkdown } from './mdx';
 import { allPublicRoutes, PLANNED_PATHS } from './routes';
 
 const require = createRequire(import.meta.url);
@@ -56,6 +56,23 @@ describe('content loader', () => {
       if (lead) expect(similar(paragraphs[0] ?? '', lead), `${e.path} repeats its lead`).toBe(false);
       const last = (paragraphs[paragraphs.length - 1] ?? '').trim();
       expect(/^\*\*[^\n]+\*\*$/.test(last), `${e.path} ends on a bold slogan`).toBe(false);
+    }
+  });
+
+  it('every in-page link points at a heading on the same page', () => {
+    for (const e of getAllEntries()) {
+      const ids = new Set([...e.body.matchAll(/^#{2,4}\s+(.+)$/gm)].map((m) => slugify(m[1].replace(/[`*]/g, ''))));
+      for (const m of e.body.matchAll(/\]\(#([^)\s]+)\)/g)) {
+        expect(ids.has(m[1]), `${e.path} links to #${m[1]}`).toBe(true);
+      }
+    }
+  });
+
+  it('describes the dashboard as it is: Horizon at the root, and the third page called Installed', () => {
+    for (const e of getAllEntries()) {
+      const text = `${e.meta.description} ${e.meta.answer ?? ''} ${e.body}`;
+      expect(text, e.path).not.toMatch(/\/horizon/);
+      expect(text, e.path).not.toMatch(/Lookout, Hold(,| and) (and )?Log|page named Hold|Go to Hold/);
     }
   });
 

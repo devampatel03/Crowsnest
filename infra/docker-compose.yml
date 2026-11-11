@@ -19,6 +19,11 @@ services:
       dockerfile: packages/dashboard/Dockerfile
     ports:
       - "127.0.0.1:3000:3000"
+    environment:
+      # Docker Desktop delivers the request to the container from its own gateway address, which the dashboard
+      # would take for another machine and answer with 404. The port above is published on this machine only,
+      # so nothing else can reach it.
+      - CROWSNEST_CONSOLE=on
     # NEXT_PUBLIC_API_URL is read when the image is built (Next.js inlines it into the browser code), so it
     # cannot be set here. The default, http://localhost:8000, is the published API port, which is what a
     # browser on this machine needs. A different address needs an ARG/ENV in the dashboard Dockerfile.

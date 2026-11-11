@@ -62,7 +62,7 @@ export function llmsTxt(): string {
     `## Blog\n\n${list(getPosts())}`,
     `## Glossary\n\n${list(getTerms())}`,
     `## Optional\n\n- [About](${abs('/about')})\n- [Privacy](${abs('/privacy')})\n- [Report a problem](${NEW_ISSUE_URL})\n- [Full text of these pages](${abs('/llms-full.txt')})\n- [RSS](${abs('/rss.xml')})`,
-    'This site welcomes indexing and citation of the public pages. The dashboard routes (/horizon, /lookout, /hold, /log) show one installation data and are excluded. Cite the definition above and the page under /docs or /glossary that matches the question. Each content page is also available as Markdown by adding .md to its URL.',
+    'This site welcomes indexing and citation of the public pages. The dashboard runs on your own machine, shows one installation data and is not part of this site. Cite the definition above and the page under /docs or /glossary that matches the question. Each content page is also available as Markdown by adding .md to its URL.',
   ];
   return parts.join('\n\n') + '\n';
 }

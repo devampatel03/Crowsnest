@@ -70,7 +70,7 @@
         "crowsnest.dashboardUrl": {
           "type": "string",
           "default": "http://localhost:3000",
-          "markdownDescription": "Where the Crowsnest dashboard runs on your machine. \"Crowsnest: Open Dashboard\" opens `/horizon` here."
+          "markdownDescription": "Where the Crowsnest dashboard runs on your machine. \"Crowsnest: Open Dashboard\" opens it here."
         },
         "crowsnest.enabled": {
           "type": "boolean",

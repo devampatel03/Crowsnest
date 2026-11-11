@@ -5,21 +5,24 @@ import { usePathname } from 'next/navigation';
 import { Compass, Package, ScrollText, Users, type LucideIcon } from 'lucide-react';
 import { NibMini } from '@/components/mascot';
 import { Wordmark } from '@/components/system';
+import { docsUrl } from '@/lib/console/docs-url';
 import { cn } from '@/lib/format';
 import { useConsoleLive } from './ConsoleLiveProvider';
 import { RailLantern } from './RailLantern';
 
 export const CONSOLE_PAGES = [
-  { href: '/horizon', name: 'Horizon', about: 'What needs your attention' },
+  { href: '/', name: 'Horizon', about: 'What needs your attention' },
   { href: '/lookout', name: 'Lookout', about: 'Who maintains your packages' },
   { href: '/hold', name: 'Installed', about: 'What is installed' },
   { href: '/log', name: 'Log', about: 'Everything Crowsnest has called' },
 ] as const;
 
-const ICONS: Record<string, LucideIcon> = { '/horizon': Compass, '/lookout': Users, '/hold': Package, '/log': ScrollText };
+const ICONS: Record<string, LucideIcon> = { '/': Compass, '/lookout': Users, '/hold': Package, '/log': ScrollText };
 
+/** Horizon is the front page (`/`); `/horizon` is the route behind it and still counts as Horizon. */
 export function pageFor(pathname: string) {
-  return CONSOLE_PAGES.find((p) => pathname === p.href || pathname.startsWith(`${p.href}/`));
+  if (pathname === '/' || pathname === '/horizon') return CONSOLE_PAGES[0];
+  return CONSOLE_PAGES.find((p) => p.href !== '/' && (pathname === p.href || pathname.startsWith(`${p.href}/`)));
 }
 
 const VERSION = process.env.NEXT_PUBLIC_BUILD || '0.1.2';
@@ -78,9 +81,9 @@ export function Rail() {
           <span role="img" aria-label={footText} title={footText} data-live-status={live.status} className="flex min-h-11 items-center">
             <RailLantern lit={lit} />
           </span>
-          <Link href="/docs" className="label flex min-h-9 items-center whitespace-nowrap text-fg-mute hover:text-fg">
+          <a href={docsUrl()} rel="noopener" className="label flex min-h-9 items-center whitespace-nowrap text-fg-mute hover:text-fg">
             Docs ↗
-          </Link>
+          </a>
           <p className="m-0 whitespace-nowrap text-[0.6875rem] text-fg-mute">v{VERSION}</p>
         </div>
       </nav>

@@ -60,7 +60,7 @@ Follow the [Quickstart](/docs/quickstart). It is three commands.
    npm install
    npm run dev
    ```
-   Open http://localhost:3000.
+   Open http://localhost:3000. It opens on Horizon.
 
 ## How do I install from source on Windows PowerShell?
 

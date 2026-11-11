@@ -27,6 +27,8 @@ WORKDIR /app/packages/dashboard
 FROM node:26-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# This image is the dashboard (Horizon at /), not the public website. See lib/app-mode.ts.
+ENV CROWSNEST_APP=console
 # Pick up Debian security fixes published after the base image was built, and drop npm: the server
 # starts with `next start` directly, so the package manager (and its bundled dependencies) is not needed.
 RUN apt-get update \

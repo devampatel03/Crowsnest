@@ -332,7 +332,7 @@ export function formatInvestigation(
 
   blocks.push(
     DIVIDER,
-    dashboardButton(`${dashboardUrl}/hold?package=${encodeURIComponent(pkg)}`, 'View in Hold')
+    dashboardButton(`${dashboardUrl}/hold?package=${encodeURIComponent(pkg)}`, 'View in Installed')
   );
 
   return blocks;

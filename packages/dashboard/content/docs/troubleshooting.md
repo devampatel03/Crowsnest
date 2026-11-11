@@ -1,18 +1,18 @@
 ---
 title: Troubleshooting
-description: "Fix common Crowsnest problems: a dashboard showing Offline, port 8000 in use, the file-in-use error, Docker not starting, and a scan that finds nothing."
+description: "Fix common Crowsnest problems: a dashboard showing Offline or a 404, a port in use, the file-in-use error, Docker not starting and a scan that finds nothing."
 slug: troubleshooting
 order: 10
 section: Help
-updated: 2026-11-08
+updated: 2026-11-09
 question: Why is Crowsnest not working?
-answer: "Most problems are one of three: another process is using port 8000, Crowsnest is not running, or a folder is not visible to it. Find your symptom below. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
+answer: "Most problems are one of three: Crowsnest is not running, another process is using its port, or a folder is not visible to it. Find your symptom in the first table. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
 facts:
-  - "Crowsnest listens on port 8000 and the dashboard on port 3000 (infra/docker-compose.yml, 2026-10-07)."
-  - "Health check: http://localhost:8000/health (API source, 2026-10-07)."
+  - "Crowsnest listens on port 8000 and the dashboard on port 3000 (infra/docker-compose.yml, 2026-11-09)."
+  - "Health check: http://localhost:8000/health (API source, 2026-11-09)."
   - "Windows fix for a locked data file: netstat -ano | findstr :8000, then taskkill /PID <pid> /F (project notes, 2026-10-07)."
   - "macOS and Linux fix: lsof -i :8000, then kill <pid> (project notes, 2026-10-07)."
-  - "A scan with no API keys finished normally on the published 0.1.1 image on 2026-11-04 (real run). The older 'Forbidden keyword in query: REPLACE' failure is fixed."
+  - "The dashboard answers only requests from this machine unless CROWSNEST_CONSOLE=on is set; the Docker Compose file sets it (dashboard proxy, 2026-11-09)."
 related:
   - /docs/quickstart
   - /docs/configuration
@@ -20,72 +20,81 @@ related:
   - /docs/contributing
 ---
 
-Most problems are one of three: something else is using port 8000, Crowsnest is not running, or a folder is not visible to it. Find your symptom below. Each fix is a command or a click.
+## Start here
 
-## The dashboard says Offline. What do I do?
+| What you see | Most likely cause | Fix |
+|---|---|---|
+| Dashboard says Offline | Crowsnest is not running | [Check that Crowsnest is running](#check-that-crowsnest-is-running) |
+| `localhost:3000` shows a 404 page | The request looks like it came from elsewhere | [The dashboard shows a 404 page](#the-dashboard-shows-a-404-page) |
+| Port 3000 or 8000 is in use | Another program, or an earlier Crowsnest | [A port is in use](#a-port-is-in-use) |
+| "being used by another process" | An earlier Crowsnest holds the data file | [The data file is in use](#the-data-file-is-in-use) |
+| Docker stops at once | The `.env` file is missing | [Docker fails at the start](#docker-fails-at-the-start) |
+| A scan finds nothing | The folder is not visible, or has no lockfile | [A scan finds nothing](#a-scan-finds-nothing) |
+| `command not found` | Installed without `-g` | [The terminal says command not found](#the-terminal-says-command-not-found) |
+| Slack or VS Code shows nothing | Crowsnest is not reachable | [Slack](#slack-says-crowsnest-api-is-unreachable), [VS Code](#vs-code-shows-no-marks) |
 
-Crowsnest is not running or is on another address.
+## Check that Crowsnest is running
 
-1. Run `crowsnest doctor`. It checks Docker, the backend and the internet lookups, and says how to fix what it finds. Or open http://localhost:8000/health, which should answer `{"status":"ok", ...}` with the version.
-2. If it does not answer, start Crowsnest again with `crowsnest start`, or with Docker Compose (see the [Quickstart](/docs/quickstart)).
-3. If it loads, check that `NEXT_PUBLIC_API_URL` points to it.
+Run `crowsnest doctor`. It checks Docker, Crowsnest and the internet lookups, and says how to fix what it finds. Or open http://localhost:8000/health, which should answer `{"status":"ok", ...}` with the version.
 
-## What if I see "IO Error: Cannot open file ... being used by another process"?
+If it does not answer, start Crowsnest again with `crowsnest start`, or with Docker Compose ([Quickstart](/docs/quickstart)). If it answers but the dashboard still says Offline, check that `NEXT_PUBLIC_API_URL` points to it.
 
-An earlier Crowsnest process is still running and holds the data file. Stop it. On Windows this happens when a `--reload` start leaves a process behind.
+| Port | What uses it |
+|---|---|
+| 8000 | Crowsnest |
+| 3000 | The dashboard |
 
-Windows:
+## The dashboard shows a 404 page
 
-```text
-netstat -ano | findstr :8000
-taskkill /PID <pid> /F
+The dashboard answers only requests that come from your own machine. Behind a Docker port mapping or a reverse proxy, a request can look as if it came from elsewhere, and the dashboard answers 404 as though the page did not exist.
+
+The Compose file in the repository already sets `CROWSNEST_CONSOLE=on` for the dashboard, so a fresh clone works. If you wrote your own Compose file, or run the dashboard behind a proxy, add it to the dashboard service:
+
+```yaml
+environment:
+  - CROWSNEST_CONSOLE=on
 ```
 
-The number in the last column of the first command is the PID. Use it in the second.
+Set it only when the port is reachable by you alone. The Compose file publishes it on `127.0.0.1`, so nothing else can connect. The dashboard has no login.
 
-macOS and Linux:
+If `/docs` or `/blog` gives the 404 on port 3000, that is expected. The dashboard carries no website pages; they are at https://crowsnest.co.in.
 
-```text
-lsof -i :8000
-kill <pid>
-```
+## A port is in use
 
-Use `kill -9 <pid>` only if the plain `kill` does not stop it. Then start Crowsnest again. If port 8000 looks empty but the error stays, close any leftover `python` process that was started from the project's Python environment. These steps come from the project's own notes and were not re-run on a machine with a stale lock.
+Port 8000: `crowsnest start --port 8001`, then `crowsnest config set apiUrl http://localhost:8001` so other tools find it.
 
-## Docker fails at the start, or the Crowsnest container stops at once. Why?
+Port 3000: with Docker, change the first `3000` in `"127.0.0.1:3000:3000"` in `infra/docker-compose.yml`. From source, set `PORT` before `npm run dev`. Either way, add the new address to `CROWSNEST_CORS_ORIGINS` in `.env`, or the browser will be refused.
 
-The compose file needs a `.env` file in the Crowsnest folder, next to the `infra` folder. If it was missing, Docker may have created a folder named `.env`. Delete that folder, create the file with `cp .env.example .env`, and start again.
+## The data file is in use
 
-## My scan finds nothing, or says the folder cannot be found. Why?
+The error reads "IO Error: Cannot open file ... being used by another process". An earlier Crowsnest process is still running and holds the data file. On Windows this happens when a `--reload` start leaves a process behind. Stop it, then start Crowsnest again.
 
-Crowsnest reads the folder from where it runs. With Docker, the service cannot see your computer's folders unless you share them (see the [Quickstart](/docs/quickstart)). Also check that the folder has a lockfile, such as `package-lock.json`.
+| System | Find the process | Stop it |
+|---|---|---|
+| Windows | `netstat -ano \| findstr :8000` | `taskkill /PID <pid> /F` |
+| macOS, Linux | `lsof -i :8000` | `kill <pid>` |
 
-## My scan failed with "Forbidden keyword in query: REPLACE". What now?
+The number in the last column of the Windows command is the PID. Use `kill -9 <pid>` only if the plain `kill` does not stop it. If port 8000 looks empty but the error stays, close any leftover `python` process started from the project's Python environment. These steps come from the project's own notes and were not re-run on a machine with a stale lock.
 
-This came from an early build of 0.1.0 and is fixed. A scan with no API keys on the published 0.1.1 image, checked on 2026-11-04, finished normally. If you still see it, you are running an older image. Update, then start again:
+## Docker fails at the start
 
-```bash
-npm install -g @crowsnest/cli@latest
-crowsnest stop
-crowsnest start
-```
+The Compose file needs a `.env` file in the Crowsnest folder, next to the `infra` folder. If it was missing, Docker may have created a folder named `.env`. Delete that folder, create the file with `cp .env.example .env`, and start again.
 
-The old output, from the command line:
+If `crowsnest start` says Docker is not running, start Docker Desktop (or the Docker service) and run `crowsnest doctor`.
 
-```text
-- Initiating Crowsnest scan on /projects/my-app...
-✖ Scan failed: Forbidden keyword in query: REPLACE
-```
+## A scan finds nothing
 
-Your project and your setup were fine. I checked the command line scan only. The dashboard scan button and the Slack scan command use the same service, but I did not run them for this note.
+Crowsnest reads the folder from where it runs. With Docker, the service cannot see your computer's folders unless you share them ([Quickstart](/docs/quickstart)). Also check that the folder has a lockfile, such as `package-lock.json`.
 
-For any other failed scan, run `crowsnest scan /path -f json` and read the `error` line, then open an issue with it and remove any keys first.
+For any other failed scan, run `crowsnest scan /path -f json`, read the `error` line, and open an issue with it. Remove any keys first.
 
-## It shows no live details, or very little. Is that a fault?
+An old message, "Forbidden keyword in query: REPLACE", came from an early build of 0.1.0 and is fixed. If you still see it you are running an older image: run `npm install -g @crowsnest/cli@latest`, then `crowsnest stop` and `crowsnest start`.
+
+## It shows no live details, or very little
 
 No key is set, so Crowsnest is using cached data. That is normal. Add a key on the [Configuration](/docs/configuration) page if you want live lookups.
 
-## The terminal says "command not found". What now?
+## The terminal says command not found
 
 You most likely installed without `-g`, so npm put the command in the current folder where your shell cannot find it. Install it globally:
 
@@ -96,27 +105,25 @@ crowsnest --version
 
 If it is still not found, open a new terminal window. To try it once with no install, run `npx @crowsnest/cli doctor`. See [Installation](/docs/installation).
 
-## `crowsnest start` says Docker is not running, or the port is busy. What now?
+## crowsnest install let something through
 
-Start Docker Desktop (or the Docker service) and run `crowsnest doctor`. If port 8000 is taken by something else, pick another with `crowsnest start --port 8001`, and point other tools at it with `crowsnest config set apiUrl http://localhost:8001`.
+If Crowsnest is not running, `crowsnest install` falls back to a quick check and says so. The quick check does not look for look-alike names or invented names, so start Crowsnest with `crowsnest start` for the full check, or add `--strict` to refuse to install when a check could not be completed.
 
-## crowsnest install installed something I expected it to stop. Why?
+A package Crowsnest knows nothing about scores only 0.2, which is under the 0.6 limit, so it installs.
 
-If Crowsnest is not running, `crowsnest install` falls back to a quick check and says so ("Quick check: the public malware list, what changed since the previous release, and release age"). The quick check does not look for look-alike names or invented names, so start Crowsnest with `crowsnest start` for the full check, or add `--strict` to refuse to install when a check could not be completed. Also, a package Crowsnest knows nothing about scores only 0.2, which is under the 0.6 limit, so it installs.
+## Slack says Crowsnest API is unreachable
 
-## Slack says "Crowsnest API is unreachable". What now?
+Start Crowsnest, or set `CROWSNEST_API_URL` in the bot's `.env`. See the [Slack bot](/docs/integrations/slack) page.
 
-Start Crowsnest, or set `CROWSNEST_API_URL` in `.env` for the bot. See the [Slack bot](/docs/integrations/slack) page.
-
-## VS Code shows no marks. Why?
+## VS Code shows no marks
 
 Check that Crowsnest is running, that `crowsnest.enabled` is on, and that the file is JavaScript, TypeScript or Python. Try lowering `crowsnest.riskThreshold`. See the [VS Code extension](/docs/integrations/vscode) page.
 
-## What this does not do
+## Still stuck
+
+Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form. Include your operating system, your Node version, the output of `crowsnest doctor`, and whether you run Docker Compose, `crowsnest start` or from source. Remove keys first. See [Contributing](/docs/contributing).
+
+## Limits
 
 - It does not cover every fault. It lists the ones seen in code or in a real run.
 - It does not replace a bug report. If you are still stuck, open an issue.
-
-## I am still stuck. What do I do?
-
-Open an issue on [GitHub](https://github.com/devampatel03/Crowsnest/issues/new/choose) with the Bug report form. Include your operating system, your Node version, the output of `crowsnest doctor`, and whether you run Docker Compose, `crowsnest start` or from source. Remove keys first. See [Contributing](/docs/contributing).

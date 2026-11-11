@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Nib } from '@/components/mascot';
-import { consoleAllowedByEnv } from '@/lib/console-access';
 import { FOOTER_SIGNOFF } from '@/lib/content/nib';
 import { LICENSE_NAME, REPO_URL } from '@/lib/seo/constants';
 import { FOOTER_TAGLINE } from '@/lib/seo/entity';
@@ -15,7 +14,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Install', href: '/#install' },
       { label: 'Docs', href: '/docs' },
-      ...(consoleAllowedByEnv(process.env) ? [{ label: 'Dashboard', href: '/horizon' }] : []),
+      { label: 'Dashboard', href: '/docs/dashboard' },
     ],
   },
   {
@@ -56,7 +55,7 @@ export function SiteFooter({ lastUpdated, quiet = false }: { lastUpdated?: strin
                         {l.label} ↗
                       </a>
                     ) : (
-                      <Link href={l.href} rel={l.href === '/horizon' ? 'nofollow' : undefined} className={LINK}>
+                      <Link href={l.href} className={LINK}>
                         {l.label}
                       </Link>
                     )}

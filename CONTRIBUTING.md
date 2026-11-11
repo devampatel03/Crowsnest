@@ -64,6 +64,10 @@ section is about the day-to-day dev loop once you're set up.
   See each package's own `README.md` (`packages/cli`, `packages/dashboard`,
   `packages/slack-bot`, `packages/vscode-extension`) for package-specific
   env vars and run instructions.
+- **Dashboard and website** share one Next.js build but run as two apps:
+  `pnpm run dev` starts the dashboard on http://localhost:3000 (it opens on
+  Horizon) and `pnpm run dev:site` starts the public website on
+  http://localhost:3001. Work on the docs and landing page at 3001.
 - From the repo root, `pnpm run dev|build|lint|typecheck` runs
   `--parallel` across the JS workspaces (cli, dashboard, slack-bot,
   vscode-extension). These do not touch `packages/core`.

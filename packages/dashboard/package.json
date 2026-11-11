@@ -4,10 +4,12 @@
   "license": "Apache-2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/serve.mjs console dev",
+    "dev:site": "node scripts/serve.mjs site dev",
     "prebuild": "node scripts/check-site-url.mjs",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/serve.mjs console start",
+    "start:site": "node scripts/serve.mjs site start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

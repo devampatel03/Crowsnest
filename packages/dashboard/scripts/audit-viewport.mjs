@@ -1,6 +1,6 @@
-// Viewport audit for every sitemap URL plus the four console routes
-// (/horizon /lookout /hold /log), driven over CDP (no dependencies).
-//   node scripts/audit-viewport.mjs http://localhost:3101 [chrome.exe]
+// Viewport audit for every sitemap URL on the website plus the four dashboard pages
+// (/ /lookout /hold /log), driven over CDP (no dependencies).
+//   node scripts/audit-viewport.mjs http://localhost:3001 http://localhost:3000 [chrome.exe]
 // Per page, at 375x812 and 1440x900: no horizontal scroll
 // (documentElement.scrollWidth <= innerWidth). At 375 it also lists links and
 // buttons whose hit area is under 44px in either dimension (inline links in
@@ -10,8 +10,9 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const base = (process.argv[2] ?? 'http://localhost:3000').replace(/\/$/, '');
-const chrome = process.argv[3] ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const base = (process.argv[2] ?? 'http://localhost:3001').replace(/\/$/, '');
+const consoleBase = (process.argv[3] ?? 'http://localhost:3000').replace(/\/$/, '');
+const chrome = process.argv[4] ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const port = 9300 + Math.floor(Math.random() * 500);
 const dir = mkdtempSync(join(tmpdir(), 'audit-'));
 const proc = spawn(chrome, [`--remote-debugging-port=${port}`, '--headless=new', '--no-first-run', `--user-data-dir=${dir}`, 'about:blank'], { stdio: 'ignore' });
@@ -46,8 +47,11 @@ const send = (method, params = {}) =>
 const evalJs = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result.result.value;
 
 const xml = await (await fetch(`${base}/sitemap.xml`)).text();
-const CONSOLE = ['/horizon', '/lookout', '/hold', '/log'];
-const paths = [...[...xml.matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map((m) => m[1] || '/'), ...CONSOLE];
+const CONSOLE = ['/', '/lookout', '/hold', '/log'];
+const paths = [
+  ...[...xml.matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map((m) => base + (m[1] || '/')),
+  ...CONSOLE.map((p) => consoleBase + p),
+];
 
 const TAP = `(() => {
   const bad = [];
@@ -67,7 +71,7 @@ const smallTargets = {};
 for (const [w, h] of [[375, 812], [1440, 900]]) {
   await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 500 });
   for (const p of paths) {
-    await send('Page.navigate', { url: base + p });
+    await send('Page.navigate', { url: p });
     await sleep(CONSOLE.includes(p) ? 2500 : 500); // console pages fetch live data first
     const status = await evalJs("performance.getEntriesByType('navigation')[0]?.responseStatus ?? 0");
     if (status && (status < 200 || status >= 300)) {

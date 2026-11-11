@@ -100,7 +100,7 @@ export function ConsoleLiveProvider({ children }: { children: ReactNode }) {
             tone: 'hold',
             id: id ? `hold-${id}` : undefined,
             message: `New Hold: ${headline}`,
-            action: id ? { label: 'View →', onSelect: () => routerRef.current.push(`/horizon?focus=${encodeURIComponent(id)}`) } : undefined,
+            action: id ? { label: 'View →', onSelect: () => routerRef.current.push(`/?focus=${encodeURIComponent(id)}`) } : undefined,
           });
         }
       }

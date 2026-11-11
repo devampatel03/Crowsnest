@@ -5,8 +5,9 @@ import type { ChartError } from '@/components/charts/contracts';
 import { ErrorNib, Nib, OfflineNib, type NibPose } from '@/components/mascot';
 import { Button, ErrorBlock, Panel, PanelGrid, Skeleton, SkeletonRows, StatStrip } from '@/components/system';
 import { describeError, isUnreachable } from '@/lib/api';
+import { docsUrl } from '@/lib/console/docs-url';
 
-const HELP = { href: '/docs/troubleshooting', label: 'How to start it' } as const;
+const HELP = { href: docsUrl('/docs/troubleshooting'), label: 'How to start it' } as const;
 
 /**
  * Plain-words error for a failed data request. `describeError` is the only

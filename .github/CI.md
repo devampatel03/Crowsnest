@@ -26,7 +26,7 @@ All workflows live in `.github/workflows/`. Top-level permissions are `contents:
 
 ### Smoke test scope
 
-CI runs the backend half only. The dashboard half (`SMOKE_DASH`) needs a started Next server, which was not verified to be reliable on a runner. Run it locally with `SMOKE_DASH=http://localhost:3000 node scripts/smoke.mjs`.
+CI runs the backend half only. The dashboard and website halves need started Next servers, which were not verified to be reliable on a runner. Run them locally with `SMOKE_DASH=http://localhost:3000 SMOKE_SITE=http://localhost:3001 node scripts/smoke.mjs` while `pnpm dev` and `pnpm dev:site` are running.
 
 ## Required status checks (branch protection on `main`)
 

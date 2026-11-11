@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Nib } from '@/components/mascot';
 import { Button, Dialog, DialogContent, DialogFooter, TextInput } from '@/components/system';
+import { docsUrl } from '@/lib/console/docs-url';
 import { doneLine } from '@/lib/live/scan';
 import { useConsoleLive } from './ConsoleLiveProvider';
 import { useScan } from './ScanProvider';
@@ -58,7 +59,7 @@ function ScanBody() {
           <Button variant="secondary" onClick={scan.retry}>
             Scan another folder
           </Button>
-          <Button href="/horizon" onClick={scan.closeDialog}>
+          <Button href="/" onClick={scan.closeDialog}>
             See them
           </Button>
         </DialogFooter>
@@ -76,7 +77,7 @@ function ScanBody() {
           <Button variant="tertiary" onClick={scan.retry}>
             Try again
           </Button>
-          <Button variant="tertiary" href="/docs/troubleshooting" onClick={scan.closeDialog}>
+          <Button variant="tertiary" href={docsUrl('/docs/troubleshooting')} onClick={scan.closeDialog}>
             How to fix it
           </Button>
         </div>
