@@ -26,7 +26,8 @@ export async function scanCommand(
     scanId = result.scan_id;
   } catch (err) {
     spinner.fail(theme.error(err instanceof Error ? err.message : String(err)));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   // The scan runs in the backend; poll until it finishes.
@@ -51,7 +52,8 @@ export async function scanCommand(
 
   if (status!.status === 'failed') {
     spinner.fail(theme.error(`Scan failed: ${status!.error}`));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   if (opts.format === 'json') {
@@ -66,7 +68,7 @@ export async function scanCommand(
 
   // Exit code 1 if incidents found (CI-friendly)
   if (status!.incidents && status!.incidents.length > 0) {
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

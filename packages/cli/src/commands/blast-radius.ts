@@ -29,7 +29,8 @@ export async function blastRadiusCommand(
     result = await api.blastRadius(maintainer, ecosystem);
   } catch (err) {
     spinner.fail(theme.error(err instanceof Error ? err.message : String(err)));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   spinner.succeed(theme.success(`Blast radius computed for ${maintainer}`));
@@ -59,7 +60,8 @@ async function showAllMaintainersRisk(): Promise<void> {
     scores = await api.getMaintainerReputation();
   } catch (err) {
     spinner.fail(theme.error(err instanceof Error ? err.message : String(err)));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   spinner.succeed(theme.success('Maintainer reputation scores loaded'));

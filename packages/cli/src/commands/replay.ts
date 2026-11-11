@@ -23,7 +23,8 @@ export async function replayCommand(
     result = await api.replay(opts.ioc, opts.date);
   } catch (err) {
     spinner.fail(theme.error(err instanceof Error ? err.message : String(err)));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   if (opts.format === 'json') {

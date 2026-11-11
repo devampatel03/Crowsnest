@@ -41,12 +41,9 @@ export function toBackendPath(
 export async function backendPath(hostPath: string): Promise<string> {
   const health = await api.health().catch(() => null);
   if (!health?.projects_root) return hostPath;
-  const shared = getConfig().sharedFolder;
-  if (!shared) {
-    throw new Error(
-      'Crowsnest is running in Docker but does not know which of your folders it shares.\n' +
-        'Restart it with: crowsnest start --projects <folder>',
-    );
-  }
+  // The folder `crowsnest start` saved, or else the one a Docker Compose backend says it shares. With neither known the
+  // path goes as typed: the backend maps a name or a path it can see, and otherwise says where it looks and how to share more.
+  const shared = getConfig().sharedFolder || health.projects_host;
+  if (!shared) return hostPath;
   return toBackendPath(hostPath, shared, health.projects_root);
 }

@@ -176,5 +176,5 @@ configCmd
 program.parseAsync(process.argv).catch((err: Error) => {
   // A StartError is a problem with a plain fix, so it is shown as advice, not as a failure with a stack.
   console.error(theme.error(err instanceof StartError ? `\n${err.message}` : `\nError: ${err.message}`));
-  process.exit(2);
+  process.exitCode = 2;
 });
