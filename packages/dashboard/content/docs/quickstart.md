@@ -1,17 +1,16 @@
 ---
 title: Quickstart
-description: "Start Crowsnest and its dashboard with two commands, scan an example project with one click, then point it at your own. No account and no API keys needed."
+description: "Start Crowsnest and its dashboard with two commands, pick your project from a list and scan it. No account and no API keys needed. A quickstart for both ways."
 slug: quickstart
 order: 2
 section: Get started
 updated: 2026-11-09
 howTo: true
 question: How do I start Crowsnest?
-answer: Clone the repository and run docker compose up --build, then open localhost:3000 and press Scan a project. An example project is ready to scan, and your own folder is one setting away. Or run npm install -g @crowsnest/cli and crowsnest start for the terminal. You need Docker, no account and no API keys.
+answer: Clone the repository and run docker compose up --build, then open localhost:3000 and press Scan a project. Tell it once which folder holds your projects, and they are listed there to scan with one click. Or run npm install -g @crowsnest/cli and crowsnest start for the terminal. You need Docker, no account and no API keys.
 facts:
   - "Dashboard port: 3000. Crowsnest service port: 8000 (infra/docker-compose.yml)."
   - "docker compose up --build runs from the repository root, with no settings file needed (compose.yaml, infra/docker-compose.yml)."
-  - "The example project in examples/demo-project is shared with the container by default, so a first scan needs no setup (infra/docker-compose.yml)."
   - "CROWSNEST_PROJECTS names the folder on your machine that holds your projects; it is shared read only at /projects (infra/docker-compose.yml)."
   - "Stored data lives in one Docker volume named crowsnest-data (infra/docker-compose.yml)."
 related:
@@ -40,35 +39,27 @@ Start with the dashboard if you want to look around: it shows every call in one 
    git clone https://github.com/devampatel03/Crowsnest.git
    cd Crowsnest
    ```
-2. **Start Crowsnest.**
+2. **Say which folder holds your projects.** Crowsnest runs in Docker, so it can only read a folder you share with it. Create a file called `.env` in the Crowsnest folder with one line:
+   ```text
+   CROWSNEST_PROJECTS=C:Usersyoucode
+   ```
+   Use the folder that *contains* your projects. On macOS and Linux it looks like `CROWSNEST_PROJECTS=/home/you/code`. The folder is shared read only: Crowsnest never changes it.
+3. **Start Crowsnest.**
    ```bash
    docker compose up --build
    ```
    The first run builds two images, so it takes a few minutes. There is no settings file to create: every key is optional.
-3. **Open the dashboard** at http://localhost:3000. The status at the top right should say **Live**. If it says Offline, go to [Troubleshooting](/docs/troubleshooting).
-4. **Scan a project.** Press **Scan a project** and pick `demo-project` from the list. It is a small example with risky packages on purpose, so you see what a finding looks like. Calls appear under **Needs your attention**.
-5. **Stop Crowsnest.**
+4. **Open the dashboard** at http://localhost:3000. The status at the top right should say **Live**. If it says Offline, go to [Troubleshooting](/docs/troubleshooting).
+5. **Scan a project.** Press **Scan a project** (or press `s`). Every project in that folder that has a lockfile is listed, two levels down. Pick one, or type its name, such as `my-app`. A path as it appears on your machine, such as `C:Usersyoucodemy-app`, works too. Calls appear under **Needs your attention**.
+6. **Stop Crowsnest.**
    ```bash
    docker compose down
    ```
    Your data stays in the Docker volume `crowsnest-data`. Add `-v` to delete it.
 
-## How do I scan my own project?
+## What if I want to scan a different folder later?
 
-Crowsnest runs in Docker, so it can only read the folder you share with it. Tell it which folder holds your projects, once.
-
-1. **Name the folder.** Create a file called `.env` in the Crowsnest folder with one line, using the folder that *contains* your projects:
-   ```text
-   CROWSNEST_PROJECTS=C:\Users\you\code
-   ```
-   On macOS and Linux it looks like `CROWSNEST_PROJECTS=/home/you/code`.
-2. **Restart.**
-   ```bash
-   docker compose up -d
-   ```
-3. **Scan.** Press **Scan a project** (or press `s`). Every project in that folder that has a lockfile is listed. Pick one, or type its name, such as `my-app`. A path as it appears on your machine, such as `C:\Users\you\code\my-app`, works too.
-
-Crowsnest only reads the folder, never changes it. It looks two levels down, so `code/my-app` and `code/team/web` are both listed.
+Change the line in `.env` and run `docker compose up -d`. It looks two levels down, so `code/my-app` and `code/team/web` are both listed. Without `.env` nothing is shared, and the scan dialog says so.
 
 ## How do I start the terminal command?
 
@@ -84,7 +75,7 @@ Use `-g`. Without it npm leaves the command in the current folder and your shell
 
 ## What should I see the first time?
 
-On a fresh start Crowsnest has no calls of your own, so pages are empty until a scan runs. Scan `demo-project` to see findings at once. Do not read an empty page as a result for your own project.
+On a fresh start Crowsnest has no calls of your own, so pages are empty until a scan runs. Do not read an empty page as a result for your own project.
 
 ## What this does not do
 

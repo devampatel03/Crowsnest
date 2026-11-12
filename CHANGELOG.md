@@ -11,8 +11,7 @@ All notable changes to Crowsnest are listed here. The format follows
 - Starting the dashboard is two commands: `git clone`, then `docker compose up --build` from the repository root. The
   settings file is optional, and a missing `.env` no longer makes Docker create a folder with that name.
 - The scan dialog lists the folders Crowsnest can read, and one click scans one. A project can also be typed by name,
-  or as the path appears on your machine (`C:\Users\you\code\my-app`). The example project in `examples/demo-project`
-  is shared by default, so a first scan needs no setup. `CROWSNEST_PROJECTS` shares your own folder.
+  or as the path appears on your machine (`C:\Users\you\code\my-app`). `CROWSNEST_PROJECTS` shares your own folder.
 - `crowsnest install` checks on every run that Crowsnest is running. If nothing answers it installs nothing and says
   to run `crowsnest start`. It no longer drops to a weaker check by itself, and it no longer installs when Crowsnest
   stops answering part-way through. `--quick` remains for installing on the malware list and release age alone.
@@ -20,7 +19,6 @@ All notable changes to Crowsnest are listed here. The format follows
 ### Added
 
 - `GET /api/projects` lists the folders the backend can scan when it runs in Docker, and `/health` reports `projects_host`.
-- `examples/demo-project`, a small project with risky dependencies on purpose, for trying Crowsnest.
 
 ### Fixed
 

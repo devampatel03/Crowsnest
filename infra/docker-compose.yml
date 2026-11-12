@@ -12,12 +12,12 @@ services:
     volumes:
       - crowsnest-data:/data
       # The folder Crowsnest can read, mounted read only. CROWSNEST_PROJECTS is the folder on this machine that holds
-      # your projects; without it the example project in this repository is shared, so a first scan works at once.
+      # your projects. Without it an empty ./examples folder is shared, and the scan dialog says how to set this.
       - ${CROWSNEST_PROJECTS:-../examples}:/projects:ro
     environment:
       - CROWSNEST_DB_PATH=/data/crowsnest.duckdb
       - CROWSNEST_SNAPSHOT_DIR=/data/snapshots
-      # Lets a path typed as it appears on this machine be mapped to the shared folder (empty when the example is used).
+      # Lets a path typed as it appears on this machine be mapped to the shared folder (empty when it is not set).
       - CROWSNEST_PROJECTS_HOST=${CROWSNEST_PROJECTS:-}
     restart: unless-stopped
 

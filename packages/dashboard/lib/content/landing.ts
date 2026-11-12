@@ -137,7 +137,7 @@ export const INSTALL = {
         { id: 'get', short: 'clone', label: 'Get the code', command: 'git clone https://github.com/devampatel03/Crowsnest.git && cd Crowsnest' },
         { id: 'start', short: 'start', label: 'Start it', command: 'docker compose up --build' },
       ],
-      after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000 and press Scan a project: an example project is ready to scan. API keys are optional.',
+      after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000 and press Scan a project. To list your own projects there, set CROWSNEST_PROJECTS to the folder that holds them. API keys are optional.',
       link: { label: 'Dashboard guide', href: '/docs/dashboard' },
     },
     {

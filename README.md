@@ -80,15 +80,13 @@ The dashboard comes with the Docker Compose setup, which builds both images from
 ```bash
 git clone https://github.com/devampatel03/Crowsnest.git
 cd Crowsnest
+echo "CROWSNEST_PROJECTS=/path/to/the/folder/that/holds/your/projects" > .env
 docker compose up --build
 ```
 
-The first run builds two images, so give it a few minutes. There is no settings file to create. Then open
-**http://localhost:3000**, press **Scan a project**, and pick `demo-project`: an example with risky packages on purpose.
+The first run builds two images, so give it a few minutes. Then open
+**http://localhost:3000**, press **Scan a project**, and pick one of your projects.
 To see whether the service is up, open http://localhost:8000/health. To stop it, run `docker compose down`.
-
-To scan your own projects, put `CROWSNEST_PROJECTS=<the folder that holds them>` in a file named `.env` in this folder
-and run `docker compose up -d`. They then appear in the scan list, and you can type a project's name too.
 
 Prefer to run it from source on macOS, Linux or Windows? See
 [Installation](https://crowsnest.co.in/docs/installation).

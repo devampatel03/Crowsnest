@@ -96,7 +96,7 @@ If `crowsnest start` says Docker is not running, start Docker Desktop (or the Do
 
 ## A scan finds nothing
 
-Crowsnest reads the folder from where it runs. With Docker it reads only the folder it shares, which is the example project until you set `CROWSNEST_PROJECTS` to the folder that holds yours and run `docker compose up -d` ([Quickstart](/docs/quickstart)). The scan dialog lists what it can see, and an error says where it looks. If you started Crowsnest with `crowsnest start`, scan from inside the folder you shared. Also check that the folder has a lockfile, such as `package-lock.json`.
+Crowsnest reads the folder from where it runs. With Docker it reads only the folder it shares, which is nothing until you set `CROWSNEST_PROJECTS` to the folder that holds yours and run `docker compose up -d` ([Quickstart](/docs/quickstart)). The scan dialog lists what it can see, and an error says where it looks. If you started Crowsnest with `crowsnest start`, scan from inside the folder you shared. Also check that the folder has a lockfile, such as `package-lock.json`.
 
 For any other failed scan, run `crowsnest scan /path -f json`, read the `error` line, and open an issue with it. Remove any keys first.
 
