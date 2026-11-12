@@ -25,7 +25,7 @@ export function pageFor(pathname: string) {
   return CONSOLE_PAGES.find((p) => p.href !== '/' && (pathname === p.href || pathname.startsWith(`${p.href}/`)));
 }
 
-const VERSION = process.env.NEXT_PUBLIC_BUILD || '0.1.2';
+const VERSION = process.env.NEXT_PUBLIC_BUILD || '0.1.3';
 
 /**
  * Fixed rail: an icon over the page name, centred, with the active page on a

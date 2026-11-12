@@ -6,6 +6,8 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-12
+
 ### Changed
 
 - Starting the dashboard is two commands: `git clone`, then `docker compose up --build` from the repository root. The

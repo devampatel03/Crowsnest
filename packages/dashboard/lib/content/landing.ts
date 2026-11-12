@@ -169,7 +169,7 @@ export const INSTALL = {
   slackLink: 'Slack guide',
   other: 'Other ways to install',
   haulCaption: "Pick a crate. I'll steady it.",
-  early: 'Version 0.1.2 is early, and the API may change between minor versions.',
+  early: 'Version 0.1.3 is early, and the API may change between minor versions.',
   earlyLink: 'Troubleshooting',
   earlyTail: 'has the details.',
   closing:

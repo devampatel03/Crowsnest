@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Crowsnest API",
     description="Supply chain forensics agent — see the storm before it hits your ship",
-    version="0.1.2",
+    version="0.1.3",
     lifespan=lifespan,
 )
 
@@ -183,7 +183,7 @@ async def health() -> dict[str, str | None]:
     settings = get_settings()
     return {
         "status": "ok",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "projects_root": settings.crowsnest_projects_root or None,
         # The folder on the user's machine that is shared there; the command line maps typed paths with it.
         "projects_host": settings.crowsnest_projects_host or None,
