@@ -50,7 +50,7 @@ describe('Landing page', () => {
     const t = text(html);
     expect(t).not.toMatch(/Total \d|capped|starts to show|install stops at|\+0\.\d\d|\b1\.00\b/);
     expect(t).toContain('Almost nobody downloads it.');
-    expect(text(html)).toContain('Version 0.1.2 is early, and the API may change between minor versions. Troubleshooting has the details.');
+    expect(text(html)).toContain('Version 0.1.3 is early, and the API may change between minor versions. Troubleshooting has the details.');
     expect(html).toContain('href="/docs/troubleshooting"');
   });
 

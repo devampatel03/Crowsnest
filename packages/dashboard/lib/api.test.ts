@@ -75,7 +75,7 @@ describe('contract: real /api/lockfiles and /api/stats payloads', () => {
     expect(s.active_incidents.CRITICAL).toBe(4);
   });
   it('health payload is the documented shape', () => {
-    expect(health).toEqual({ status: 'ok', version: '0.1.2' });
+    expect(health).toEqual({ status: 'ok', version: '0.1.3' });
   });
 });
 

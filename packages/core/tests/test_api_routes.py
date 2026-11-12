@@ -23,7 +23,7 @@ class TestHealthAndStats:
     def test_health(self, api_client):
         r = api_client.get("/health")
         assert r.status_code == 200
-        assert r.json() == {"status": "ok", "version": "0.1.2", "projects_root": None, "projects_host": None}
+        assert r.json() == {"status": "ok", "version": "0.1.3", "projects_root": None, "projects_host": None}
 
     def test_health_reports_the_shared_projects_folder(self, api_client, monkeypatch):
         from packages.core.config import get_settings

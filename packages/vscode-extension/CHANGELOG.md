@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- The output channel, the activation notice and the analysis panel no longer show emoji.
+
 ## 0.1.2
 
 - "Investigate Package Under Cursor" now shows the same call the install check gives (Hold, Watch, Clear or Not fully
