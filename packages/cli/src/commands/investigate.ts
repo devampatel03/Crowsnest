@@ -55,7 +55,8 @@ export async function investigateCommand(
     result = await api.investigate(pkgName, version || null, ecosystem);
   } catch (err) {
     spinner.fail(theme.error(err instanceof Error ? err.message : String(err)));
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   spinner.succeed(theme.success(`Investigation complete: ${pkgName}${version ? '@' + version : ''}`));

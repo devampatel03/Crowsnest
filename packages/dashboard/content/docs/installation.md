@@ -85,7 +85,7 @@ crowsnest start
 
 Use `-g`. Without it npm puts the command in the current folder, and your shell cannot find it. The npm page's own install box leaves `-g` out. `crowsnest start` downloads the backend the first time (about 430 MB) and runs it at http://localhost:8000. It needs Docker running. `crowsnest stop` stops it, and `crowsnest doctor` checks what is wrong.
 
-Without Docker, `crowsnest install` and `crowsnest check` still work as a quick check. See [CLI usage](/docs/cli).
+Without Docker, `crowsnest check` still works as a quick check, and `crowsnest install --quick` runs a reduced check. Plain `crowsnest install` needs Crowsnest running. See [CLI usage](/docs/cli).
 
 To run the command from a source checkout instead, build it in `packages/cli` with `npm install` and `npm run build`, then type `node dist/index.js` where the docs say `crowsnest`.
 
@@ -97,7 +97,7 @@ Follow the [Slack bot](/docs/integrations/slack) and [VS Code extension](/docs/i
 
 ```bash
 git pull
-docker compose -f infra/docker-compose.yml up --build
+docker compose up --build
 ```
 
 From source, run `git pull`, then `pip install -e .` and `npm install` again.
@@ -105,7 +105,7 @@ From source, run `git pull`, then `pip install -e .` and `npm install` again.
 ## How do I uninstall?
 
 ```bash
-docker compose -f infra/docker-compose.yml down -v
+docker compose down -v
 ```
 
 Then delete the `Crowsnest` folder. The `-v` deletes the stored data. If you used the terminal command, its saved settings live in your user settings folder; remove them with your usual cleanup.

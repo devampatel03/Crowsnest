@@ -13,7 +13,7 @@ export const VERSION = '0.1.2';
 export const AUTHOR_NAME = 'Crowsnest contributors';
 
 /** Docker path from README "Fastest path: Docker". */
-export const DOCKER_COMMAND = 'docker compose -f infra/docker-compose.yml up --build';
+export const DOCKER_COMMAND = 'docker compose up --build';
 
 export const OPERATING_SYSTEMS = 'Linux, macOS, Windows';
 

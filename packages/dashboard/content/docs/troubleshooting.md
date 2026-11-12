@@ -78,13 +78,25 @@ The number in the last column of the Windows command is the PID. Use `kill -9 <p
 
 ## Docker fails at the start
 
-The Compose file needs a `.env` file in the Crowsnest folder, next to the `infra` folder. If it was missing, Docker may have created a folder named `.env`. Delete that folder, create the file with `cp .env.example .env`, and start again.
+Compose needs to be version 2.24 or newer, because the settings file is optional only from that version. Run `docker compose version` to check, and update Docker Desktop if it is older. You do not need to create a `.env` file to start.
+
+If the Crowsnest container stops at once and its log says `Permission denied` for `/data/crowsnest.duckdb`, the Docker volume was created by an older version and is owned by another user. Delete it and start again; this removes the stored scan history, nothing else:
+
+```bash
+docker compose down
+docker volume rm crowsnest_crowsnest-data
+docker compose up --build
+```
+
+Run `docker volume ls` if the volume has another name. To keep the data instead, run `docker run --rm -v <volume>:/data alpine chown -R 10001:10001 /data`.
+
+If a port is already in use, `crowsnest stop` or `docker compose down` frees it. Crowsnest uses ports 3000 and 8000.
 
 If `crowsnest start` says Docker is not running, start Docker Desktop (or the Docker service) and run `crowsnest doctor`.
 
 ## A scan finds nothing
 
-Crowsnest reads the folder from where it runs. With Docker, the service cannot see your computer's folders unless you share them ([Quickstart](/docs/quickstart)). Also check that the folder has a lockfile, such as `package-lock.json`.
+Crowsnest reads the folder from where it runs. With Docker it reads only the folder it shares, which is nothing until you set `CROWSNEST_PROJECTS` to the folder that holds yours and run `docker compose up -d` ([Quickstart](/docs/quickstart)). The scan dialog lists what it can see, and an error says where it looks. If you started Crowsnest with `crowsnest start`, scan from inside the folder you shared. Also check that the folder has a lockfile, such as `package-lock.json`.
 
 For any other failed scan, run `crowsnest scan /path -f json`, read the `error` line, and open an issue with it. Remove any keys first.
 
@@ -107,7 +119,7 @@ If it is still not found, open a new terminal window. To try it once with no ins
 
 ## crowsnest install let something through
 
-If Crowsnest is not running, `crowsnest install` falls back to a quick check and says so. The quick check does not look for look-alike names or invented names, so start Crowsnest with `crowsnest start` for the full check, or add `--strict` to refuse to install when a check could not be completed.
+`crowsnest install` does not fall back to a weaker check by itself. If Crowsnest is not running it stops, installs nothing, and tells you to run `crowsnest start`. A package passes only a check that was made. If you added `--quick`, that check was only the public malware list and release age, which does not look for look-alike or invented names, so drop `--quick` and start Crowsnest for the full check.
 
 A package Crowsnest knows nothing about scores only 0.2, which is under the 0.6 limit, so it installs.
 

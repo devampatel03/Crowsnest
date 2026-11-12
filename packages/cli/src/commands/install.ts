@@ -14,7 +14,7 @@ import { api, VetoResult } from '../api.js';
 import { theme } from '../display/theme.js';
 import { icons } from '../display/icons.js';
 import { banner } from '../display/banner.js';
-import { QUICK_NOTE, chooseMode } from '../standalone/mode.js';
+import { QUICK_NOTE, chooseInstallMode } from '../standalone/mode.js';
 import { quickVeto } from '../standalone/verdict.js';
 
 export interface InstallOptions {
@@ -41,7 +41,8 @@ export async function installCommand(
     process.exit(2);
   }
   const minAge = parseMinReleaseAge(options.minReleaseAge);
-  const mode = await chooseMode(options);
+  // Crowsnest has to be running, and that is checked on every install before anything else happens.
+  const mode = await chooseInstallMode(options);
 
   const spinner = ora({
     text: theme.muted(`Checking ${pkgName} before install...`),
@@ -58,16 +59,11 @@ export async function installCommand(
         ? await api.vetoCheck(pkgName, version, 'npm', minAge)
         : await quickVeto(pkgName, version, { minReleaseAgeDays: minAge });
   } catch {
-    // Only the full check can fail here: Crowsnest answered a moment ago and then stopped.
-    if (options.strict) {
-      spinner.fail(theme.error('Crowsnest stopped answering — not installing (--strict)'));
-      console.log(theme.muted('Start it with: crowsnest start, or run without --strict to install unchecked.'));
-      process.exitCode = 3;
-      return;
-    }
-    spinner.fail(theme.error('Crowsnest stopped answering — proceeding without a check'));
-    console.log(theme.muted('Start it with: crowsnest start'));
-    await runNpmInstall(packageSpec);
+    // Only the full check can fail here: Crowsnest answered a moment ago and then stopped. An unchecked package is
+    // never installed, with or without --strict.
+    spinner.fail(theme.error('Crowsnest stopped answering, so nothing was installed.'));
+    console.log(theme.muted('Start it with: crowsnest start, then run this command again.'));
+    process.exitCode = 3;
     return;
   }
 

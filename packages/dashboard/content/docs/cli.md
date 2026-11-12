@@ -9,7 +9,7 @@ question: How do I use the crowsnest command?
 answer: Scan a project, check a package, vet a pull request or stop a risky install, all from your terminal. A scan exits with 1 when it finds something, and a stopped install or check exits with 3, so both can fail a build.
 facts:
   - "Eleven commands: start, stop, doctor, scan, investigate, blast-radius, replay, watch, install, check and config (crowsnest --help, 2026-10-31)."
-  - "Without Crowsnest running, install and check use a quick check: the public malware list, release changes against the previous version, and release age; --quick and --full choose a mode (CLI source, 2026-10-31)."
+  - "crowsnest install needs Crowsnest running and stops with the way to start it when nothing answers; crowsnest check falls back to a quick check without it; --quick and --full choose a mode (CLI source, 2026-11-09)."
   - "crowsnest start runs the backend in Docker, listening on this machine only, and shares one folder with it read only; stored data is kept in a Docker volume (CLI source, 2026-10-31)."
   - "Install stops at risk 0.6 or above, shown as 60 percent in the terminal; that limit is fixed. It also stops a version a public malware list names, and a version younger than two days unless you change that (install check, 2026-10-24)."
   - "Exit codes: scan returns 0 when clean, 1 when it finds something, 2 when it fails; a stopped install or check returns 3 (CLI source, 2026-10-24)."
@@ -24,7 +24,7 @@ related:
 
 ## Before you start
 
-Most commands need Crowsnest running on port 8000; `install` and `check` also work without it, as a quick check. [Install the command](/docs/installation), then start Crowsnest. With Docker installed, one command does it:
+Most commands need Crowsnest running on port 8000, and `install` checks that first. Only `check` also works without it, as a quick check. [Install the command](/docs/installation), then start Crowsnest. With Docker installed, one command does it:
 
 ```bash
 crowsnest start
@@ -125,14 +125,14 @@ To install anyway, run the override line, and only after you have read the reaso
 | Option | Effect |
 |---|---|
 | `--min-release-age <days>` | Sets the minimum age of a release. `0` turns it off. |
-| `--quick` | Uses the quick check even when Crowsnest is running. |
-| `--full` | Refuses to run unless Crowsnest is running. |
+| `--quick` | Installs with only the public malware list and release age checked, without Crowsnest running. |
+| `--full` | Requires Crowsnest to be running. This is already the default. |
 | `--strict` | Refuses to install when any check could not be completed. |
 
 Things to know:
 
 - If Crowsnest could not look something up, the result says "Not checked" and names it. A failed lookup is never shown as clean.
-- Without Crowsnest running, the command runs a **quick check**: the malware list, what changed since the previous release, and the release's age. Start Crowsnest for the full check, which adds look-alike names, invented names and registry history.
+- `install` asks every time whether Crowsnest is running. If nothing answers it stops, installs nothing, and tells you to run `crowsnest start`. A Crowsnest that stops answering partway through also stops the install. Add `--quick` to install with only the malware list, what changed since the previous release, and the release's age checked. Start Crowsnest for the full check, which adds look-alike names, invented names and registry history.
 - Names and versions are checked for plain characters before anything reaches your shell, so a name such as `@scope/name` with a version such as `^1.2.0` is accepted without quoting.
 - Only `crowsnest install` is checked. A plain `npm install` is not.
 

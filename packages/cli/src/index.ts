@@ -117,8 +117,8 @@ program
   )
   .option('--min-release-age <days>', 'days a version must have been public (0 turns the rule off)')
   .option('--strict', 'refuse to install if any check could not be completed')
-  .option('--quick', 'use the built-in quick check even when Crowsnest is running')
-  .option('--full', 'require Crowsnest to be running; do not fall back to the quick check')
+  .option('--quick', 'install with only the public malware list and release age checked, without Crowsnest running')
+  .option('--full', 'require Crowsnest to be running (this is already the default)')
   .action(
     async (
       pkg: string,
@@ -176,5 +176,5 @@ configCmd
 program.parseAsync(process.argv).catch((err: Error) => {
   // A StartError is a problem with a plain fix, so it is shown as advice, not as a failure with a stack.
   console.error(theme.error(err instanceof StartError ? `\n${err.message}` : `\nError: ${err.message}`));
-  process.exit(2);
+  process.exitCode = 2;
 });
