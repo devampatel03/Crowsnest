@@ -37,13 +37,13 @@ const FACTS: string[] = [
   'Four ways to use it: the crowsnest command in a terminal, a VS Code extension, a Slack bot and a dashboard at http://localhost:3000.',
   'Published: the command line tool is on npm as @crowsnest/cli and the VS Code extension is on the Marketplace as crowsnest.crowsnest-vscode. The command line tool starts the backend in Docker with `crowsnest start`.',
   'Every call is Clear, Watch or Hold, with a plain sentence for what happened and a first step. "No flags" is not the same as Clear.',
-  '`crowsnest install <package>` stops at risk 0.6 or above and on any known harmful package. The limit is fixed. A plain `npm install` is not checked. If Crowsnest cannot be reached, the install proceeds with a warning.',
+  '`crowsnest install <package>` stops at risk 0.6 or above and on any known harmful package. The limit is fixed. A plain `npm install` is not checked. If Crowsnest is not running, the install stops and says to run `crowsnest start`; `--quick` installs on the malware list and release age alone.',
   'The install check looks at how new the package is (under 30 days), weekly downloads (under 1,000), a link to a code repository, a name close to a package with over 1,000,000 weekly downloads, names AI assistants are known to invent, and known harmful packages.',
-  'Every API key is optional. Without keys Crowsnest uses cached data. Optional: Anthropic, GitHub, Socket, npm. Slack keys are needed only for the bot.',
+  'Every API key is optional. Without keys Crowsnest uses cached data. Optional: an AI model provider (Anthropic, OpenAI, Gemini, Groq, Ollama and others), GitHub, Socket, npm. Slack keys are needed only for the bot.',
   'Requirements: Docker, or Python 3.12+ and Node 20+. Crowsnest listens on port 8000 and the dashboard on port 3000.',
   'Slack has four commands: `/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius` and `/crowsnest-status`. It posts only the most serious calls to `#security` by default.',
   'VS Code covers JavaScript, TypeScript, JSX, TSX and Python. It warns from risk 0.5 by default (`crowsnest.riskThreshold`), waits 1 second after typing and remembers a result for 5 minutes.',
-  'Lockfiles and results stay on your machine. Optional calls to Anthropic, Socket and GitHub happen only when you set a key. Crowsnest sends no usage data to its authors. The website counts page views with Vercel Web Analytics and sets no cookies; the tool on your machine has no analytics.',
+  'Lockfiles and results stay on your machine. Optional calls to an AI model provider, Socket and GitHub happen only when you set a key. Crowsnest sends no usage data to its authors. The website counts page views with Vercel Web Analytics and sets no cookies; the tool on your machine has no analytics.',
 ];
 
 function faqSection(): string {

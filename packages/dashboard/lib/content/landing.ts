@@ -210,7 +210,7 @@ export const FAQ: LandingFaq[] = [
     id: 'keys',
     question: 'Do I need API keys?',
     answer:
-      'No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub token for repository details, and an Anthropic key for AI-assisted analysis.',
+      'No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub token for repository details, and a key for an AI model (Anthropic, OpenAI, Gemini and others, or one on your own machine) for written explanations.',
   },
   {
     id: 'npm',
@@ -222,7 +222,7 @@ export const FAQ: LandingFaq[] = [
     id: 'privacy',
     question: 'Does my code leave my machine?',
     answer:
-      "Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list. Optional keys add calls to Socket, GitHub and Anthropic, and only when you set them. The Privacy page lists every one.",
+      "Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list. Optional keys add calls to Socket, GitHub and your AI model provider, and only when you set them. The Privacy page lists every one.",
   },
   {
     id: 'cost',

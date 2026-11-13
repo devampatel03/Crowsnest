@@ -6,7 +6,7 @@ order: 8
 section: Reference
 updated: 2026-11-13
 question: Which settings and API keys does Crowsnest need?
-answer: None. Crowsnest runs with no settings, and every API key is optional. Put keys in a file named .env in the Crowsnest folder, or save them with crowsnest config set. Without keys, Crowsnest uses cached data and fixed rules.
+answer: None. Crowsnest runs with no settings, and every API key is optional. Put keys in a file named .env in the Crowsnest folder, or hand a file to crowsnest start with --env-file. Without keys, Crowsnest uses cached data and fixed rules.
 facts:
   - "Five optional lookup settings: ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_ORG, SOCKET_API_KEY and NPM_TOKEN (.env.example, 2026-10-07)."
   - "Two Slack keys are needed, plus an optional channel name and dashboard address (slack-bot source, 2026-11-13)."
@@ -20,7 +20,7 @@ related:
   - /docs/cli
 ---
 
-Crowsnest needs no settings to run. Every API key is optional. Put keys in a file named `.env` in the Crowsnest folder, or save them with `crowsnest config set`. Without keys, Crowsnest uses cached data.
+Crowsnest needs no settings to run. Every API key is optional. Put keys in a file named `.env` in the Crowsnest folder, or hand a file to `crowsnest start` with `--env-file`. Without keys, Crowsnest uses cached data.
 
 ## Which API keys can I add?
 
@@ -61,12 +61,13 @@ Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `CROWSNEST_ALERT_
 ## How do I save settings in the terminal command?
 
 ```bash
-crowsnest config set anthropicApiKey your-key
 crowsnest config set apiUrl http://localhost:8000
 crowsnest config get
 ```
 
 A value saved this way beats the matching environment variable. `config get` shows secrets as `***set***` or `(not set)`.
+
+Only `apiUrl` changes anything today. `config set` also accepts `githubToken`, `npmToken`, `socketApiKey` and `anthropicApiKey`, but the terminal command does not pass them to Crowsnest, so saving one has no effect. To give a backend started with `crowsnest start` a key, put it in a file and run `crowsnest start --env-file <file>`. With Docker Compose, put it in `.env`.
 
 ## What happens when a key is missing?
 

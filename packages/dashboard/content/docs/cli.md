@@ -231,10 +231,7 @@ crowsnest config set apiUrl http://localhost:8000
 | Key | Purpose |
 |---|---|
 | `apiUrl` | Where Crowsnest is running. |
-| `githubToken` | Optional. Repository details. |
-| `npmToken` | Optional. Registry lookups. |
-| `socketApiKey` | Optional. Threat alerts from Socket. |
-| `anthropicApiKey` | Optional. AI-assisted analysis. |
+| `githubToken`, `npmToken`, `socketApiKey`, `anthropicApiKey` | Accepted and saved, but not yet passed to Crowsnest, so they change nothing. Give a key to the backend with `crowsnest start --env-file <file>` ([Choose your AI model](/docs/integrations/models)). |
 
 A saved value beats the matching environment variable. `config get` shows secrets as `***set***` or `(not set)`.
 
