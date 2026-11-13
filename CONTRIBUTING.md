@@ -91,7 +91,7 @@ check is **`ci-ok`**, which passes only if all of these jobs pass:
   `pyproject.toml`) on Linux (3.12, 3.13) and Windows (3.12).
 - **JS lint, typecheck, build**: `pnpm install --frozen-lockfile`, then
   `pnpm run lint`, `pnpm run typecheck`, `pnpm run build`.
-- **JS tests**: `pnpm run test` on Linux (Node 20, 22) and Windows.
+- **JS tests**: `pnpm run test` on Linux (Node 20, 22) and Windows (Node 22).
 - **Backend smoke**: `node scripts/smoke.mjs`.
 
 Separate workflows run CodeQL, dependency review, audits, gitleaks, Docker

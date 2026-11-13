@@ -3,7 +3,7 @@
 A `@slack/bolt` Socket Mode bot that subscribes to the Crowsnest backend's
 `/api/events` SSE stream, posts CRITICAL/HIGH incident alerts as Block Kit
 messages to a security channel, and handles slash commands
-(`/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius`).
+(`/crowsnest-scan`, `/crowsnest-investigate`, `/crowsnest-blast-radius`, `/crowsnest-status`).
 
 ## First-time setup (about 3 minutes)
 
@@ -34,9 +34,8 @@ npm run typecheck      # tsc --noEmit
 directory via `dotenv`, so you can keep a single root `.env` (see
 `.env.example`) or a package-local one. The bot needs the Crowsnest FastAPI
 backend reachable at `CROWSNEST_API_URL` to fetch incidents and stream
-events. Missing Slack credentials print a warning (`warnMissingConfig`) but
-don't crash the process, so the dev loop stays usable without a live
-Slack app.
+events. Missing Slack credentials stop the bot at start with a message that
+points to `npm run setup`.
 
 ## Environment variables
 

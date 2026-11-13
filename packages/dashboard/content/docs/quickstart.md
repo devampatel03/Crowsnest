@@ -48,7 +48,7 @@ Start with the dashboard if you want to look around: it shows every call in one 
    ```bash
    docker compose up
    ```
-   The first run builds two images, so it takes a few minutes. There is no settings file to create: every key is optional.
+   The first run pulls the backend image (about 430 MB) and builds the dashboard, so it takes a few minutes. There is no settings file to create: every key is optional.
 4. **Open the dashboard** at http://localhost:3000. The status at the top right should say **Live**. If it says Offline, go to [Troubleshooting](/docs/troubleshooting).
 5. **Scan a project.** Press **Scan a project** (or press `s`). Every project in that folder that has a lockfile is listed, two levels down. Pick one, or type its name, such as `my-app`. A path as it appears on your machine, such as `C:\Users\you\code\my-app`, works too. Calls appear under **Needs your attention**.
 6. **Stop Crowsnest.**

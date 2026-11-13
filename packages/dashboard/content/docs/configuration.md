@@ -4,12 +4,12 @@ description: "Crowsnest runs with no settings. See which API keys are optional, 
 slug: configuration
 order: 8
 section: Reference
-updated: 2026-10-24
+updated: 2026-11-13
 question: Which settings and API keys does Crowsnest need?
-answer: None. Crowsnest runs with no settings, and every API key is optional. Put keys in a file named .env in the Crowsnest folder, or save them with crowsnest config set. Without keys, Crowsnest uses cached data and fixed rules.
+answer: None. Crowsnest runs with no settings, and every API key is optional. Put keys in a file named .env in the Crowsnest folder, or hand a file to crowsnest start with --env-file. Without keys, Crowsnest uses cached data and fixed rules.
 facts:
   - "Five optional lookup settings: ANTHROPIC_API_KEY, GITHUB_TOKEN, GITHUB_ORG, SOCKET_API_KEY and NPM_TOKEN (.env.example, 2026-10-07)."
-  - "Three optional Slack keys, plus a channel name (.env.example, 2026-10-07)."
+  - "Two Slack keys are needed, plus an optional channel name and dashboard address (slack-bot source, 2026-11-13)."
   - "Default Crowsnest address: http://localhost:8000 (CLI, Slack bot and VS Code defaults, 2026-10-07)."
   - "The install stop limit of 0.6 is fixed and cannot be configured (install check, 2026-10-07)."
   - "Saved terminal settings beat environment variables (CLI source, 2026-10-07)."
@@ -20,7 +20,7 @@ related:
   - /docs/cli
 ---
 
-Crowsnest needs no settings to run. Every API key is optional. Put keys in a file named `.env` in the Crowsnest folder, or save them with `crowsnest config set`. Without keys, Crowsnest uses cached data.
+Crowsnest needs no settings to run. Every API key is optional. Put keys in a file named `.env` in the Crowsnest folder, or hand a file to `crowsnest start` with `--env-file`. Without keys, Crowsnest uses cached data.
 
 ## Which API keys can I add?
 
@@ -45,9 +45,13 @@ Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `CROWSNEST_ALERT_
 | Setting | Default | Used by |
 |---|---|---|
 | `CROWSNEST_API_URL` | `http://localhost:8000` | Terminal command, Slack bot |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Dashboard (Docker sets it to the service name) |
-| `CROWSNEST_API_HOST` | `0.0.0.0` | Crowsnest, when started by its own entry point |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Dashboard. Fixed when the dashboard is built, so the Docker setup uses the default |
+| `CROWSNEST_API_HOST` | `127.0.0.1` | Crowsnest, when started by its own entry point. The Docker image listens on all addresses inside the container, and Docker publishes it on this machine only |
 | `CROWSNEST_API_PORT` | `8000` | Crowsnest, when started by its own entry point |
+| `CROWSNEST_PROJECTS` | none | Docker Compose. The folder on your machine that holds your projects, shared read only so the scan dialog can list them. Put it in `.env` |
+| `CROWSNEST_IMAGE` | `ghcr.io/devampatel03/crowsnest-api` | Docker Compose and `crowsnest start`. The backend image to run, if you want another |
+| `CROWSNEST_CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | Crowsnest. The dashboard addresses the browser may call it from. Add yours if you move the dashboard off port 3000 |
+| `CROWSNEST_CONSOLE` | off, except in the Docker Compose file | Dashboard. `on` lets it answer requests that do not look local, needed behind Docker Desktop |
 | `CROWSNEST_DB_PATH` | `./crowsnest.duckdb` | Where Crowsnest keeps its data file (Docker: `/data/crowsnest.duckdb`) |
 | `CROWSNEST_SNAPSHOT_DIR` | `./snapshots` | Where saved snapshots go (Docker: `/data/snapshots`) |
 | `CROWSNEST_MIN_RELEASE_AGE_DAYS` | `2` | Crowsnest. Days a package version must have been public before `crowsnest install` and `crowsnest check` allow it. `0` turns it off |
@@ -57,12 +61,13 @@ Only if you run the bot: `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `CROWSNEST_ALERT_
 ## How do I save settings in the terminal command?
 
 ```bash
-crowsnest config set anthropicApiKey your-key
 crowsnest config set apiUrl http://localhost:8000
 crowsnest config get
 ```
 
 A value saved this way beats the matching environment variable. `config get` shows secrets as `***set***` or `(not set)`.
+
+Only `apiUrl` changes anything today. `config set` also accepts `githubToken`, `npmToken`, `socketApiKey` and `anthropicApiKey`, but the terminal command does not pass them to Crowsnest, so saving one has no effect. To give a backend started with `crowsnest start` a key, put it in a file and run `crowsnest start --env-file <file>`. With Docker Compose, put it in `.env`.
 
 ## What happens when a key is missing?
 

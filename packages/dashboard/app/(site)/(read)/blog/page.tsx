@@ -41,7 +41,7 @@ export default function BlogIndex() {
             line: p.meta.dek ?? p.meta.description,
             href: p.path,
             thumb: <BlogCover slug={p.slug} decorative />,
-            meta: `${p.meta.published} · ${p.readingMinutes} min read${p.meta.status ? ' · Unreleased' : ''}`,
+            meta: `${p.meta.published} · ${p.readingMinutes} min read`,
           }))}
         />
         <div className="mt-s5">

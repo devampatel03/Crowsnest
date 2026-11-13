@@ -4,7 +4,7 @@ description: "Open the Crowsnest dashboard at localhost:3000 and read a call: wh
 slug: dashboard
 order: 5
 section: Use
-updated: 2026-11-09
+updated: 2026-11-13
 question: How do I read the Crowsnest dashboard?
 answer: "Open http://localhost:3000. Each call says what happened, how serious it is and what to do next: read the sentence, then take the first step. Four pages cover what needs you, who maintains your packages, what is installed and everything Crowsnest has called."
 facts:

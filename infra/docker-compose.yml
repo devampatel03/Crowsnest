@@ -22,6 +22,10 @@ services:
       - CROWSNEST_SNAPSHOT_DIR=/data/snapshots
       # Lets a path typed as it appears on this machine be mapped to the shared folder (empty when it is not set).
       - CROWSNEST_PROJECTS_HOST=${CROWSNEST_PROJECTS:-}
+    # Lets Crowsnest reach a model server on this machine (Ollama, LM Studio) at host.docker.internal. Docker Desktop
+    # already provides the name; on Linux this line is what makes it resolve. `crowsnest start` does the same.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   crowsnest-dashboard:

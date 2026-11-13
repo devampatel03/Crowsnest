@@ -4,7 +4,7 @@ description: "Fix common Crowsnest problems: a dashboard showing Offline or a 40
 slug: troubleshooting
 order: 10
 section: Help
-updated: 2026-11-09
+updated: 2026-11-13
 question: Why is Crowsnest not working?
 answer: "Most problems are one of three: Crowsnest is not running, another process is using its port, or a folder is not visible to it. Find your symptom in the first table. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
 facts:
@@ -28,7 +28,8 @@ related:
 | `localhost:3000` shows a 404 page | The request looks like it came from elsewhere | [The dashboard shows a 404 page](#the-dashboard-shows-a-404-page) |
 | Port 3000 or 8000 is in use | Another program, or an earlier Crowsnest | [A port is in use](#a-port-is-in-use) |
 | "being used by another process" | An earlier Crowsnest holds the data file | [The data file is in use](#the-data-file-is-in-use) |
-| Docker stops at once | The `.env` file is missing | [Docker fails at the start](#docker-fails-at-the-start) |
+| Docker stops at once | Compose is too old, or an old data volume | [Docker fails at the start](#docker-fails-at-the-start) |
+| The first start never finishes | Docker cannot reach the internet | [The first start is slow](#the-first-start-is-slow) |
 | A scan finds nothing | The folder is not visible, or has no lockfile | [A scan finds nothing](#a-scan-finds-nothing) |
 | `command not found` | Installed without `-g` | [The terminal says command not found](#the-terminal-says-command-not-found) |
 | Slack or VS Code shows nothing | Crowsnest is not reachable | [Slack](#slack-says-crowsnest-api-is-unreachable), [VS Code](#vs-code-shows-no-marks) |
@@ -93,6 +94,10 @@ Run `docker volume ls` if the volume has another name. To keep the data instead,
 If a port is already in use, `crowsnest stop` or `docker compose down` frees it. Crowsnest uses ports 3000 and 8000.
 
 If `crowsnest start` says Docker is not running, start Docker Desktop (or the Docker service) and run `crowsnest doctor`.
+
+## The first start is slow
+
+`docker compose up` downloads the backend image (about 430 MB). If the download crawls or stalls, or a build step reports `Read timed out`, Docker's own network is the problem, not Crowsnest. On Windows, quit Docker Desktop, run `wsl --shutdown`, then start it again. Next try setting DNS in Docker Desktop (Settings, Docker Engine) with `"dns": ["8.8.8.8", "1.1.1.1"]`, turn off a VPN or HTTPS scanning for a moment, or switch to another network. Run `docker compose pull` to resume the download.
 
 ## A scan finds nothing
 

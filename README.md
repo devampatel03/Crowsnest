@@ -75,7 +75,7 @@ when it has. `crowsnest install` needs Crowsnest running: it stops and tells you
 
 ### Want the dashboard?
 
-The dashboard comes with the Docker Compose setup, which builds both images from this repository:
+The dashboard comes with the Docker Compose setup. It pulls the published backend image and builds the dashboard from this repository:
 
 ```bash
 git clone https://github.com/devampatel03/Crowsnest.git
@@ -84,7 +84,7 @@ echo "CROWSNEST_PROJECTS=/path/to/the/folder/that/holds/your/projects" > .env
 docker compose up
 ```
 
-The first run builds two images, so give it a few minutes. Then open
+The first run pulls the backend image (about 430 MB) and builds the dashboard, so give it a few minutes. Then open
 **http://localhost:3000**, press **Scan a project**, and pick one of your projects.
 To see whether the service is up, open http://localhost:8000/health. To stop it, run `docker compose down`.
 
@@ -100,7 +100,7 @@ Prefer to run it from source on macOS, Linux or Windows? See
 | **VS Code** | A mark on the import line of a risky package while you type. Get it from the [Marketplace](https://marketplace.visualstudio.com/items?itemName=crowsnest.crowsnest-vscode). | [VS Code guide](https://crowsnest.co.in/docs/integrations/vscode) |
 | **Slack** | Alerts in a channel you choose, and four slash commands such as `/crowsnest-scan`. | [Slack guide](https://crowsnest.co.in/docs/integrations/slack) |
 
-Crowsnest reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `Cargo.lock` and `go.sum`.
+Crowsnest reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `uv.lock`, `Pipfile.lock`, `composer.lock`, `Gemfile.lock`, `Cargo.lock`, `go.sum` and `requirements.txt`.
 
 ## Optional keys
 

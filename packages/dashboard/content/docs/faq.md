@@ -4,7 +4,7 @@ description: "Answers to common questions about Crowsnest: what it is, whether i
 slug: faq
 order: 9
 section: Help
-updated: 2026-11-09
+updated: 2026-11-13
 question: What do people ask about Crowsnest?
 answer: Crowsnest is free, open source and runs on your machine. It needs no account and no API keys, and sends no usage data to its authors. It stops installs only when you use crowsnest install. Fifteen short answers follow.
 facts:
@@ -12,7 +12,7 @@ facts:
   - "Install stop: risk 0.6 or above, fixed, and only for crowsnest install (install check, 2026-11-09)."
   - "VS Code warning limit: 0.5 by default, configurable as crowsnest.riskThreshold (extension manifest, 2026-11-09)."
   - "Dashboard: http://localhost:3000, opening on Horizon (infra/docker-compose.yml, 2026-11-09)."
-  - "Optional keys: Anthropic, GitHub, Socket and npm (.env.example, 2026-11-09)."
+  - "Optional keys: one AI model provider (Anthropic, OpenAI, Gemini and others), GitHub, Socket and npm (.env.example, 2026-11-13)."
 related:
   - /docs
   - /docs/troubleshooting
@@ -42,9 +42,9 @@ If Crowsnest is not running, the install stops, installs nothing, and tells you 
 
 ## Does my code leave my machine?
 
-Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list, which also receives exact versions. Optional keys add calls to Socket, GitHub and Anthropic, and only when you set them.
+Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list, which also receives exact versions. Optional keys add calls to Socket, GitHub and your AI model provider, and only when you set them.
 
-With an Anthropic key set, scan details go to Anthropic's API: the project folder path, the kind of project, the time of the last scan, recent campaign names, your GitHub organisation name and up to 20 matching results for each check that finds something. Crowsnest sends no usage data to its authors, and the tool on your machine has no analytics. This website counts page views with Vercel Web Analytics and sets no cookies. [Configuration](/docs/configuration) lists what each key sends.
+With an AI model key set, scan details go to that provider (Anthropic's API by default; OpenAI, Gemini, Groq and others work the same way, and a model on your own machine sends nothing off it): the project folder path, the kind of project, the time of the last scan, recent campaign names, your GitHub organisation name and up to 20 matching results for each check that finds something. Crowsnest sends no usage data to its authors, and the tool on your machine has no analytics. This website counts page views with Vercel Web Analytics and sets no cookies. [Configuration](/docs/configuration) lists what each key sends.
 
 ## What does it cost?
 
@@ -54,12 +54,14 @@ Nothing. Crowsnest is free and open source under the Apache-2.0 licence. You run
 
 It reads these lockfiles. npm projects get the most checks; coverage elsewhere is thinner.
 
-| Lockfile | Kind of project (`-e`) |
+| Lockfile | Kind of project |
 |---|---|
-| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` | `npm` |
-| `poetry.lock` | `pypi` |
-| `Cargo.lock` | `cargo` |
-| `go.sum` | `go` |
+| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` | npm |
+| `poetry.lock`, `uv.lock`, `Pipfile.lock`, `requirements.txt` (exact versions) | PyPI |
+| `composer.lock` | Composer (PHP) |
+| `Gemfile.lock` | Bundler (Ruby) |
+| `Cargo.lock` | Cargo (Rust) |
+| `go.sum` | Go |
 
 ## Does it replace Dependabot or Snyk?
 

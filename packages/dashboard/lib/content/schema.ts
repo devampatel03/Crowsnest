@@ -113,7 +113,6 @@ export function validateFrontmatter<S extends ContentSection>(
       // No named author: the byline is the project.
       author: str(raw.author) ?? AUTHOR_NAME,
       ...(str(raw.dek) ? { dek: str(raw.dek) } : {}),
-      ...(str(raw.status) === 'draft-until-tagged' ? { status: 'draft-until-tagged' as const } : {}),
     };
   } else {
     const term = str(raw.term);

@@ -4,15 +4,15 @@ description: "Learn what Crowsnest is, who it is for, and how to read a call: Cl
 slug: introduction
 order: 1
 section: Get started
-updated: 2026-11-04
+updated: 2026-11-13
 question: What is Crowsnest?
 answer: "Crowsnest is a free, open-source supply chain security tool that you run yourself. It checks the packages in your software project and gives each one a plain call: Clear, Watch or Hold. A Hold means stop and check before you install or keep it."
 facts:
   - "Licence: Apache-2.0 (LICENSE file, 2026-10-07)."
-  - "Current version: 0.1.0, reported by the health check on 2026-10-07."
+  - "Current version: 0.1.3, reported by the health check on 2026-11-13."
   - "Four ways to use it: terminal, VS Code, Slack and the dashboard (repository packages, 2026-10-07)."
   - "Every API key is optional; without keys Crowsnest uses cached data (.env.example, 2026-10-07)."
-  - "Lockfiles read: package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, Cargo.lock and go.sum (lockfile reader, 2026-10-07)."
+  - "Lockfiles read: package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, uv.lock, Pipfile.lock, composer.lock, Gemfile.lock, Cargo.lock, go.sum and requirements.txt (lockfile reader, 2026-11-13)."
 related:
   - /docs/quickstart
   - /docs/dashboard

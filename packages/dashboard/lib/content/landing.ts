@@ -132,19 +132,19 @@ export const INSTALL = {
       title: 'The dashboard',
       blurb:
         'The whole picture in a browser: what needs you now, who publishes your packages, every call made.',
-      needs: 'Needs Docker and Git. Allow a few minutes the first time, then open http://localhost:3000.',
+      needs: 'Needs Docker and Git. Allow a few minutes the first time (a 430 MB download), then open http://localhost:3000.',
       rows: [
         { id: 'get', short: 'clone', label: 'Get the code', command: 'git clone https://github.com/devampatel03/Crowsnest.git && cd Crowsnest' },
         { id: 'start', short: 'start', label: 'Start it', command: 'docker compose up' },
       ],
-      after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000 and press Scan a project. To list your own projects there, set CROWSNEST_PROJECTS to the folder that holds them. API keys are optional.',
+      after: 'The first run pulls the backend image and builds the dashboard, so allow a few minutes. Then open http://localhost:3000 and press Scan a project. To list your own projects there, set CROWSNEST_PROJECTS to the folder that holds them. API keys are optional.',
       link: { label: 'Dashboard guide', href: '/docs/dashboard' },
     },
     {
       id: 'terminal',
       title: 'The terminal',
       blurb: 'Scan a project, check a package, vet a pull request, stop a risky install.',
-      needs: 'Needs Node.js 20 and Docker. The first start downloads about 430 MB.',
+      needs: 'Needs Node.js 20 or newer and Docker. The first start downloads about 430 MB.',
       rows: [
         { id: 'cli', short: 'install', label: 'Install the command', command: 'npm install -g @crowsnest/cli' },
         { id: 'run', short: 'start', label: 'Start the backend', command: 'crowsnest start' },
@@ -210,7 +210,7 @@ export const FAQ: LandingFaq[] = [
     id: 'keys',
     question: 'Do I need API keys?',
     answer:
-      'No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub token for repository details, and an Anthropic key for AI-assisted analysis.',
+      'No. Every key is optional. Without keys, Crowsnest uses cached data and still runs. Keys let it look things up live: a Socket key for threat alerts, a GitHub token for repository details, and a key for an AI model (Anthropic, OpenAI, Gemini and others, or one on your own machine) for written explanations.',
   },
   {
     id: 'npm',
@@ -222,7 +222,7 @@ export const FAQ: LandingFaq[] = [
     id: 'privacy',
     question: 'Does my code leave my machine?',
     answer:
-      "Your lockfile and results stay on your machine. A scan sends package names to the npm registry and OSV. Optional keys add calls to Socket, GitHub and Anthropic, and only when you set them. The Privacy page lists every one.",
+      "Your lockfile and results stay on your machine. A scan sends package names to the registries your packages come from and to the OSV malicious-package list. Optional keys add calls to Socket, GitHub and your AI model provider, and only when you set them. The Privacy page lists every one.",
   },
   {
     id: 'cost',

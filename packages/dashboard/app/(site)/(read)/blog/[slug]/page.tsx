@@ -96,11 +96,6 @@ export default async function PostPage({ params }: Props) {
             ]}
           />
           {POST_COVERS[post.slug] ? <BlogCover slug={post.slug} className="mb-s5 w-full max-w-[34rem]" /> : null}
-          {post.meta.status ? (
-            <p className="mb-s4 mt-0 border-l-2 border-field pl-s3 text-body-s text-fg-soft">
-              Unreleased. These notes describe version 0.1.0 while it is in development. There is no release tag yet.
-            </p>
-          ) : null}
           {lead ? (
             <div className="mb-s5">
               <AnswerBox>{lead}</AnswerBox>

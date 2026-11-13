@@ -44,8 +44,6 @@ export interface PostFrontmatter extends FrontmatterBase {
   published: string;
   /** Byline. Defaults to AUTHOR_NAME ("Crowsnest contributors") when the file has none. */
   author: string;
-  /** Optional publication state. "draft-until-tagged" marks release notes written before a GitHub release tag exists; update or remove it when the owner tags the release. The loader schema ignores it until it is wired in. */
-  status?: 'draft-until-tagged';
   /** One-line dek shown on the index and used by llms.txt. */
   dek?: string;
 }

@@ -72,12 +72,11 @@ wins over the environment variable.
 | Key | Environment variable | Default |
 | --- | --- | --- |
 | `apiUrl` | `CROWSNEST_API_URL` | `http://localhost:8000` |
-| `githubToken` | `GITHUB_TOKEN` | none |
-| `npmToken` | `NPM_TOKEN` | none |
-| `socketApiKey` | `SOCKET_API_KEY` | none |
-| `anthropicApiKey` | `ANTHROPIC_API_KEY` | none |
 
-Every key is optional. Without one, Crowsnest falls back to saved data.
+Only `apiUrl` changes anything. `config set` also accepts `githubToken`, `npmToken`, `socketApiKey` and
+`anthropicApiKey`, but they are not yet passed to the backend. To give the backend an optional key, including the key
+for any AI model provider, put it in a file and run `crowsnest start --env-file <file>`. Every key is optional.
+Without one, Crowsnest falls back to saved data.
 
 `config set` saves values as plain text in your user config folder. On a shared machine, use environment variables for
 secrets.

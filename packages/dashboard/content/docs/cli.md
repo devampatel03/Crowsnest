@@ -4,7 +4,7 @@ description: "Use the crowsnest command to scan a project, check one package, ve
 slug: cli
 order: 4
 section: Use
-updated: 2026-11-04
+updated: 2026-11-13
 question: How do I use the crowsnest command?
 answer: Scan a project, check a package, vet a pull request or stop a risky install, all from your terminal. A scan exits with 1 when it finds something, and a stopped install or check exits with 3, so both can fail a build.
 facts:
@@ -153,7 +153,7 @@ Checked 1 package version(s) changed since main.
 1 version(s) should not be merged.
 ```
 
-It exits with 3 when a version should not be merged, so it can fail a build. The folder must be a git repository.
+It exits with 3 when a version should not be merged, so it can fail a build. The folder must be a git repository. `--min-release-age <days>` changes the wait for a new release (`0` turns it off), `-f json` prints the raw result, and `--quick` or `--full` choose the quick or the full check.
 
 With Crowsnest running, `check` uses the full check. Without it, it falls back to a quick check that reads `package-lock.json` only, says which other lockfiles it skipped, and, without `--base`, checks only the malware list.
 
@@ -231,10 +231,7 @@ crowsnest config set apiUrl http://localhost:8000
 | Key | Purpose |
 |---|---|
 | `apiUrl` | Where Crowsnest is running. |
-| `githubToken` | Optional. Repository details. |
-| `npmToken` | Optional. Registry lookups. |
-| `socketApiKey` | Optional. Threat alerts from Socket. |
-| `anthropicApiKey` | Optional. AI-assisted analysis. |
+| `githubToken`, `npmToken`, `socketApiKey`, `anthropicApiKey` | Accepted and saved, but not yet passed to Crowsnest, so they change nothing. Give a key to the backend with `crowsnest start --env-file <file>` ([Choose your AI model](/docs/integrations/models)). |
 
 A saved value beats the matching environment variable. `config get` shows secrets as `***set***` or `(not set)`.
 

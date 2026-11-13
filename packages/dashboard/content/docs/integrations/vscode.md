@@ -4,17 +4,17 @@ description: "Get warnings in the margin of VS Code when you import a risky pack
 slug: integrations/vscode
 order: 7
 section: Integrations
-updated: 2026-11-04
+updated: 2026-11-13
 howTo: true
 question: How do I get Crowsnest warnings in VS Code?
 answer: Install it from the VS Code Marketplace (search for Crowsnest, publisher crowsnest), start Crowsnest with crowsnest start, and open a JavaScript, TypeScript or Python file. Risky imports get a mark in the margin. It needs Crowsnest running on port 8000 and VS Code 1.85 or newer.
 facts:
-  - "Version 0.1.0; needs VS Code 1.85 or newer (packages/vscode-extension/package.json, 2026-10-07)."
+  - "Version 0.1.3; needs VS Code 1.85 or newer (packages/vscode-extension/package.json, 2026-11-13)."
   - "Switches on for JavaScript, TypeScript, JSX, TSX and Python files (package.json, 2026-10-07)."
   - "Three commands and four settings (package.json, 2026-10-13)."
   - "Waits 1,000 ms after you stop typing, and remembers each package's result for 5 minutes (src/decorator.ts, 2026-10-07)."
   - "Warning limit defaults to 0.5, lower than the install stop of 0.6 (package.json and install check, 2026-10-07)."
-  - "On the VS Code Marketplace as crowsnest.crowsnest-vscode, version 0.1.0 (Marketplace, 2026-11-04)."
+  - "On the VS Code Marketplace as crowsnest.crowsnest-vscode, version 0.1.3 (Marketplace, 2026-11-13)."
 related:
   - /docs/cli
   - /docs/configuration

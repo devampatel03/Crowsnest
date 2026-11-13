@@ -6,6 +6,24 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Docker Compose now maps `host.docker.internal`, as `crowsnest start` already did, so a model server on the same
+  Linux machine (Ollama, LM Studio) can be reached from Compose too.
+- The FAQ, the landing page and the text served to AI crawlers named only Anthropic as the model provider, and said an
+  install "proceeds with a warning" when Crowsnest is unreachable. Any of twelve providers works, a model on your own
+  machine sends nothing off it, and the install stops. The Models page now has a Docker Compose section.
+- `crowsnest config set` was documented as saving `githubToken`, `npmToken`, `socketApiKey` and `anthropicApiKey` for
+  Crowsnest to use. The terminal command saves them but never passes them on. The pages now say so and point to
+  `crowsnest start --env-file`.
+- The documentation listed six lockfiles. Crowsnest reads eleven: it also reads `uv.lock`, `Pipfile.lock`,
+  `composer.lock`, `Gemfile.lock` and `requirements.txt`.
+- The Installation, Configuration, Troubleshooting and Introduction pages, the landing page and the READMEs described
+  the dashboard as building two images (the backend image is pulled), listed the wrong default for
+  `CROWSNEST_API_HOST`, and said Docker sets `NEXT_PUBLIC_API_URL`. The Configuration page now lists
+  `CROWSNEST_PROJECTS`, `CROWSNEST_IMAGE`, `CROWSNEST_CORS_ORIGINS` and `CROWSNEST_CONSOLE`.
+- The Slack bot README listed three slash commands (there are four) and said missing keys do not stop the bot.
+
 ### Changed
 
 - `docker compose up` pulls the published API image (`ghcr.io/devampatel03/crowsnest-api`) instead of building it, so
