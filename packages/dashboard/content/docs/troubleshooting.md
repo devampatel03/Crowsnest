@@ -4,7 +4,7 @@ description: "Fix common Crowsnest problems: a dashboard showing Offline or a 40
 slug: troubleshooting
 order: 10
 section: Help
-updated: 2026-11-09
+updated: 2026-11-13
 question: Why is Crowsnest not working?
 answer: "Most problems are one of three: Crowsnest is not running, another process is using its port, or a folder is not visible to it. Find your symptom in the first table. On Windows, the error \"being used by another process\" is fixed with netstat and taskkill."
 facts:
