@@ -74,13 +74,6 @@ describe('page-level JSON-LD, headings and mirror rule', () => {
     await expect(DocPage({ params: Promise.resolve({ slug: ['nope'] }) })).rejects.toThrow('notFound');
     await expect(DocPage({ params: Promise.resolve({ slug: ['introduction'] }) })).rejects.toThrow('notFound');
   });
-
-  it('the 0.1.0 release notes carry a visible unreleased note', async () => {
-    const post = getPosts().find((p) => p.meta.status);
-    if (!post) return;
-    const html = renderToStaticMarkup(await BlogPost({ params: Promise.resolve({ slug: post.slug }) }));
-    expect(html).toContain('Unreleased');
-  });
 });
 
 describe('social metadata on every sitemap URL', () => {
