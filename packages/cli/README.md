@@ -36,9 +36,10 @@ it listens on this machine and nowhere else. It works without API keys, and what
 (`crowsnest stop --delete-data` removes it). If something is off, `crowsnest doctor` checks Docker, the backend and the
 internet lookups, and says how to fix what it finds.
 
-`crowsnest install` and `crowsnest check` also work without the backend. They fall back to a quick check: the public
-malware list, what changed since the previous release, and how new the release is (`package-lock.json` only, for
-`check`). They tell you when they did. Start the backend for the full check and for every other command.
+`crowsnest install` checks on every run that the backend is running. If nothing answers, it installs nothing and tells
+you to run `crowsnest start`. To install without the backend, add `--quick`: it checks only the public malware list and
+how new the release is. `crowsnest check` still works without the backend as a quick check (`package-lock.json` only),
+and says so. Start the backend for the full check and for every other command.
 
 No Docker? Run the backend from source, following the
 [main README](https://github.com/devampatel03/Crowsnest#quickstart). If your backend lives somewhere else:

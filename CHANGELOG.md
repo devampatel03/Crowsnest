@@ -6,6 +6,20 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `docker compose up` pulls the published API image (`ghcr.io/devampatel03/crowsnest-api`) instead of building it, so
+  the first start no longer depends on downloading Python packages. Compose still builds from the Dockerfile if the
+  image cannot be pulled, and `CROWSNEST_IMAGE` picks another image. The dashboard is still built from source.
+
+### Fixed
+
+- The Quickstart showed the Windows folder as `C:Usersyoucode`, with no backslashes.
+- The 0.1.0 release notes, the command line README and the website FAQ said `crowsnest install` falls back to a quick
+  check when Crowsnest is not running. It stops and says to run `crowsnest start`. The release notes also called the
+  Installed page "Hold".
+
+
 ## [0.1.3] - 2026-11-12
 
 ### Changed
