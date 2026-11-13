@@ -23,7 +23,7 @@ default). The e2e fixtures in `test-e2e/fixtures` show the shape; their package 
 To try the packaged file exactly as a user would get it:
 
 ```bash
-code --install-extension crowsnest-vscode-0.1.0.vsix
+code --install-extension crowsnest-vscode-<version>.vsix
 ```
 
 ## One-time setup

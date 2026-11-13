@@ -27,11 +27,11 @@ Everything in the repo is ready. These are the steps only you can do, in order.
 
 1. Bump the version in `packages/cli/package.json`. `scripts/release-check.mjs` expects every manifest
    (root, cli, dashboard, slack-bot, vscode-extension, `pyproject.toml`) and `CHANGELOG.md` to agree with the
-   `vX.Y.Z` tag, so bump them together. For the very first release the versions already read `0.1.0`; rename
-   `## [Unreleased]` in `CHANGELOG.md` to `## [0.1.0] - <date>`. Check with `node scripts/release-check.mjs v0.1.0`.
+   `vX.Y.Z` tag, so bump them together. Rename `## [Unreleased]` in `CHANGELOG.md` to
+   `## [X.Y.Z] - <date>`, then check with `node scripts/release-check.mjs vX.Y.Z`.
 2. Push the tag. The existing `Release` workflow creates the GitHub release, and the `Publish API image` workflow
    pushes the backend image to `ghcr.io/devampatel03/crowsnest-api:<version>`. `crowsnest start` pulls exactly that
-   image, so **publish the CLI only after the image exists and is public**:
+   image, so **publish the CLI only after the image exists and is public**. The same run moves the `latest` tag, which `docker compose up` pulls, so a backend change reaches Compose users only once a tag is pushed:
    - Wait for the `Publish API image` run to finish (it builds, scans and starts the image before pushing).
    - The first time only: GitHub, your profile, Packages, `crowsnest-api`, Package settings, change visibility to
      **Public**. GitHub creates new packages as private.

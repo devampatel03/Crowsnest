@@ -4,7 +4,7 @@ description: "Answers to common questions about Crowsnest: what it is, whether i
 slug: faq
 order: 9
 section: Help
-updated: 2026-11-09
+updated: 2026-11-13
 question: What do people ask about Crowsnest?
 answer: Crowsnest is free, open source and runs on your machine. It needs no account and no API keys, and sends no usage data to its authors. It stops installs only when you use crowsnest install. Fifteen short answers follow.
 facts:
@@ -54,12 +54,14 @@ Nothing. Crowsnest is free and open source under the Apache-2.0 licence. You run
 
 It reads these lockfiles. npm projects get the most checks; coverage elsewhere is thinner.
 
-| Lockfile | Kind of project (`-e`) |
+| Lockfile | Kind of project |
 |---|---|
-| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` | `npm` |
-| `poetry.lock` | `pypi` |
-| `Cargo.lock` | `cargo` |
-| `go.sum` | `go` |
+| `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` | npm |
+| `poetry.lock`, `uv.lock`, `Pipfile.lock`, `requirements.txt` (exact versions) | PyPI |
+| `composer.lock` | Composer (PHP) |
+| `Gemfile.lock` | Bundler (Ruby) |
+| `Cargo.lock` | Cargo (Rust) |
+| `go.sum` | Go |
 
 ## Does it replace Dependabot or Snyk?
 

@@ -5,7 +5,7 @@ description: "A short checklist for installing packages safely: check age and do
 slug: how-to-stay-safe-from-malicious-packages
 order: 2
 published: 2026-10-07
-updated: 2026-11-08
+updated: 2026-11-13
 author: Crowsnest contributors
 dek: Five habits that take under a minute each.
 question: How do I stay safe from malicious packages?
@@ -14,7 +14,7 @@ facts:
   - "Reading time: about 4 minutes (estimate at 200 words a minute)."
   - "Five habits, each under a minute (this post)."
   - "crowsnest install stops at risk 0.6 or above, and only for installs run through it (install check, 2026-10-07)."
-  - "Crowsnest reads six lockfile types: package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, Cargo.lock and go.sum (lockfile reader, 2026-10-07)."
+  - "Crowsnest reads eleven lockfile types, including package-lock.json, pnpm-lock.yaml, yarn.lock, poetry.lock, Cargo.lock and go.sum (lockfile reader, 2026-11-13)."
 related:
   - /blog/what-is-slopsquatting
   - /blog/what-to-do-when-crowsnest-says-hold

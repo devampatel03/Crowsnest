@@ -6,6 +6,16 @@ All notable changes to Crowsnest are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The documentation listed six lockfiles. Crowsnest reads eleven: it also reads `uv.lock`, `Pipfile.lock`,
+  `composer.lock`, `Gemfile.lock` and `requirements.txt`.
+- The Installation, Configuration, Troubleshooting and Introduction pages, the landing page and the READMEs described
+  the dashboard as building two images (the backend image is pulled), listed the wrong default for
+  `CROWSNEST_API_HOST`, and said Docker sets `NEXT_PUBLIC_API_URL`. The Configuration page now lists
+  `CROWSNEST_PROJECTS`, `CROWSNEST_IMAGE`, `CROWSNEST_CORS_ORIGINS` and `CROWSNEST_CONSOLE`.
+- The Slack bot README listed three slash commands (there are four) and said missing keys do not stop the bot.
+
 ### Changed
 
 - `docker compose up` pulls the published API image (`ghcr.io/devampatel03/crowsnest-api`) instead of building it, so

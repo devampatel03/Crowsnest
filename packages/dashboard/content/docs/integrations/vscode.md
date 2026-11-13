@@ -14,7 +14,7 @@ facts:
   - "Three commands and four settings (package.json, 2026-10-13)."
   - "Waits 1,000 ms after you stop typing, and remembers each package's result for 5 minutes (src/decorator.ts, 2026-10-07)."
   - "Warning limit defaults to 0.5, lower than the install stop of 0.6 (package.json and install check, 2026-10-07)."
-  - "On the VS Code Marketplace as crowsnest.crowsnest-vscode, version 0.1.0 (Marketplace, 2026-11-04)."
+  - "On the VS Code Marketplace as crowsnest.crowsnest-vscode, version 0.1.3 (Marketplace, 2026-11-13)."
 related:
   - /docs/cli
   - /docs/configuration
