@@ -4,13 +4,13 @@ description: "Start Crowsnest and its dashboard with two commands, pick your pro
 slug: quickstart
 order: 2
 section: Get started
-updated: 2026-11-09
+updated: 2026-11-13
 howTo: true
 question: How do I start Crowsnest?
-answer: Clone the repository and run docker compose up --build, then open localhost:3000 and press Scan a project. Tell it once which folder holds your projects, and they are listed there to scan with one click. Or run npm install -g @crowsnest/cli and crowsnest start for the terminal. You need Docker, no account and no API keys.
+answer: Clone the repository and run docker compose up, then open localhost:3000 and press Scan a project. Tell it once which folder holds your projects, and they are listed there to scan with one click. Or run npm install -g @crowsnest/cli and crowsnest start for the terminal. You need Docker, no account and no API keys.
 facts:
   - "Dashboard port: 3000. Crowsnest service port: 8000 (infra/docker-compose.yml)."
-  - "docker compose up --build runs from the repository root, with no settings file needed (compose.yaml, infra/docker-compose.yml)."
+  - "docker compose up runs from the repository root, with no settings file needed (compose.yaml, infra/docker-compose.yml)."
   - "CROWSNEST_PROJECTS names the folder on your machine that holds your projects; it is shared read only at /projects (infra/docker-compose.yml)."
   - "Stored data lives in one Docker volume named crowsnest-data (infra/docker-compose.yml)."
 related:
@@ -28,7 +28,7 @@ There are two ways to start Crowsnest, and both run the same backend in Docker. 
 |---|---|---|
 | You get | The dashboard at http://localhost:3000, plus the backend | The `crowsnest` command, with the backend in Docker |
 | You need | Docker with Docker Compose, and Git | Node.js 20 or newer, and Docker |
-| Start with | `docker compose up --build` | `npm install -g @crowsnest/cli`, then `crowsnest start` |
+| Start with | `docker compose up` | `npm install -g @crowsnest/cli`, then `crowsnest start` |
 
 Start with the dashboard if you want to look around: it shows every call in one place. Start with the terminal if you want to scan from a shell, stop risky installs, or use the VS Code extension. Both use port 8000, so run one at a time.
 
@@ -41,16 +41,16 @@ Start with the dashboard if you want to look around: it shows every call in one 
    ```
 2. **Say which folder holds your projects.** Crowsnest runs in Docker, so it can only read a folder you share with it. Create a file called `.env` in the Crowsnest folder with one line:
    ```text
-   CROWSNEST_PROJECTS=C:Usersyoucode
+   CROWSNEST_PROJECTS=C:\Users\you\code
    ```
    Use the folder that *contains* your projects. On macOS and Linux it looks like `CROWSNEST_PROJECTS=/home/you/code`. The folder is shared read only: Crowsnest never changes it.
 3. **Start Crowsnest.**
    ```bash
-   docker compose up --build
+   docker compose up
    ```
    The first run builds two images, so it takes a few minutes. There is no settings file to create: every key is optional.
 4. **Open the dashboard** at http://localhost:3000. The status at the top right should say **Live**. If it says Offline, go to [Troubleshooting](/docs/troubleshooting).
-5. **Scan a project.** Press **Scan a project** (or press `s`). Every project in that folder that has a lockfile is listed, two levels down. Pick one, or type its name, such as `my-app`. A path as it appears on your machine, such as `C:Usersyoucodemy-app`, works too. Calls appear under **Needs your attention**.
+5. **Scan a project.** Press **Scan a project** (or press `s`). Every project in that folder that has a lockfile is listed, two levels down. Pick one, or type its name, such as `my-app`. A path as it appears on your machine, such as `C:\Users\you\code\my-app`, works too. Calls appear under **Needs your attention**.
 6. **Stop Crowsnest.**
    ```bash
    docker compose down

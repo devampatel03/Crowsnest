@@ -135,7 +135,7 @@ export const INSTALL = {
       needs: 'Needs Docker and Git. Allow a few minutes the first time, then open http://localhost:3000.',
       rows: [
         { id: 'get', short: 'clone', label: 'Get the code', command: 'git clone https://github.com/devampatel03/Crowsnest.git && cd Crowsnest' },
-        { id: 'start', short: 'start', label: 'Start it', command: 'docker compose up --build' },
+        { id: 'start', short: 'start', label: 'Start it', command: 'docker compose up' },
       ],
       after: 'The first run builds two images, so allow a few minutes. Then open http://localhost:3000 and press Scan a project. To list your own projects there, set CROWSNEST_PROJECTS to the folder that holds them. API keys are optional.',
       link: { label: 'Dashboard guide', href: '/docs/dashboard' },
@@ -216,7 +216,7 @@ export const FAQ: LandingFaq[] = [
     id: 'npm',
     question: 'Does it stop npm install?',
     answer:
-      'Only when you install through Crowsnest. crowsnest install <package> checks first and stops at risk 0.6 or above. A plain npm install is not checked. If Crowsnest is not running, the install falls back to a quick check against the public malware list and says so.',
+      'Only when you install through Crowsnest. crowsnest install <package> checks first and stops at risk 0.6 or above. A plain npm install is not checked. If Crowsnest is not running, the install stops and tells you to run crowsnest start; add --quick to install on the public malware list and release age alone.',
   },
   {
     id: 'privacy',

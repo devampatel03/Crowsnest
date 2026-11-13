@@ -25,7 +25,7 @@ The dashboard runs on your own machine at http://localhost:3000 and opens on Hor
 
 | Start it with | Command |
 |---|---|
-| Docker Compose | `docker compose up --build` from the Crowsnest folder |
+| Docker Compose | `docker compose up` from the Crowsnest folder |
 | From source | `npm run dev` in `packages/dashboard` |
 
 Compose starts the dashboard and Crowsnest together; the steps are in the [Quickstart](/docs/quickstart). `crowsnest start` runs Crowsnest only, with no dashboard, but both read the same backend, so whatever the terminal finds also shows here. If the status at the top right says Offline, see [Troubleshooting](/docs/troubleshooting).
