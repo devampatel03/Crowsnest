@@ -81,7 +81,7 @@ The dashboard comes with the Docker Compose setup, which builds both images from
 git clone https://github.com/devampatel03/Crowsnest.git
 cd Crowsnest
 echo "CROWSNEST_PROJECTS=/path/to/the/folder/that/holds/your/projects" > .env
-docker compose up --build
+docker compose up
 ```
 
 The first run builds two images, so give it a few minutes. Then open

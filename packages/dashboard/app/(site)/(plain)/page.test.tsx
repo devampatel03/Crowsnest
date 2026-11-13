@@ -120,7 +120,7 @@ describe('Landing page', () => {
 
   it('shows every way to install: the dashboard, the terminal command and the editor extension', () => {
     const t = text(html);
-    expect(t).toContain('docker compose up --build');
+    expect(t).toContain('docker compose up');
     expect(t).not.toContain('.env.example');
     expect(t).toContain('npm install -g @crowsnest/cli');
     expect(t).toContain('crowsnest start');

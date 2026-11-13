@@ -97,7 +97,8 @@ Follow the [Slack bot](/docs/integrations/slack) and [VS Code extension](/docs/i
 
 ```bash
 git pull
-docker compose up --build
+docker compose pull
+docker compose up -d --build crowsnest-dashboard
 ```
 
 From source, run `git pull`, then `pip install -e .` and `npm install` again.

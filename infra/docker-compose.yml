@@ -1,5 +1,8 @@
 services:
   crowsnest-api:
+    # The prebuilt image is pulled, so the first start takes a minute, not an hour on a slow connection. If it cannot
+    # be pulled (offline, or a branch newer than the last release), Compose builds it from the Dockerfile instead.
+    image: ${CROWSNEST_IMAGE:-ghcr.io/devampatel03/crowsnest-api:latest}
     build:
       context: ..
       dockerfile: infra/Dockerfile.api
